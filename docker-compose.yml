@@ -1,0 +1,19 @@
+services:
+
+  
+  database:
+    image: mongo:8.0
+    container_name: messaging_appdb-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+      MONGO_INITDB_DATABASE: messaging_app
+    volumes:
+      - mongo_data:/data/db
+      - ./infrastructure/mongo-init:/docker-entrypoint-initdb.d
+
+volumes:
+  mongo_data:

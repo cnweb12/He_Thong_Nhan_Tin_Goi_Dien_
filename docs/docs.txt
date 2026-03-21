@@ -1,1 +1,5 @@
 quan trọng khi làm việc nhóm trao đổi tài liệu
+
+** LƯU Ý khi code:
+- nhớ phải thêm comment ở các hàm hay biến hay class, sau này viết tài liệu các thứ dễ hơn
+- Nên giữ đúng cấu trúc project thế này.
