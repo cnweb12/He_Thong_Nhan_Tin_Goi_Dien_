@@ -1,19 +1,20 @@
 services:
-
-  
-  database:
-    image: mongo:8.0
-    container_name: messaging_appdb-mongo
+  mongo:
+    image: mongo:7.0
+    container_name: chat-app-mongo
     restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root123
-      MONGO_INITDB_DATABASE: messaging_app
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-rootpassword}
+      MONGO_INITDB_DATABASE: ${MONGO_APP_DB:-chat_app}
+      MONGO_APP_DB: ${MONGO_APP_DB:-chat_app}
+      MONGO_APP_USER: ${MONGO_APP_USER:-chat_app_user}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-chat_app_password}
     volumes:
       - mongo_data:/data/db
-      - ./infrastructure/mongo-init:/docker-entrypoint-initdb.d
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
 
 volumes:
   mongo_data:

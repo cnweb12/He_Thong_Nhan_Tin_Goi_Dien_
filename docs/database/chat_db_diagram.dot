@@ -1,0 +1,98 @@
+digraph ChatDB {
+  graph [
+    rankdir=LR,
+    splines=ortho,
+    pad=0.25,
+    nodesep=0.5,
+    ranksep=0.8,
+    bgcolor="white",
+    fontname="Helvetica"
+  ];
+  node [shape=plain, fontname="Helvetica"];
+  edge [color="#64748b", arrowsize=0.7, penwidth=1.2, fontname="Helvetica", fontsize=10];
+
+  users [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#0F172A"><FONT COLOR="white"><B>users</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id (ObjectId)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">phone, username, displayName</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">passwordHash, avatarUrl</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">settings, lastSeenAt</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">createdAt, updatedAt</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  user_devices [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#1D4ED8"><FONT COLOR="white"><B>user_devices</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, userId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">deviceId, platform</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">pushToken, isOnline</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastActiveAt</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  conversations [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#7C3AED"><FONT COLOR="white"><B>conversations</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, type (direct/group)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">directKey, title, avatarUrl</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">createdBy, memberCount</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastMessage, lastMessageSeq</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastActivityAt, createdAt, updatedAt</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  conversation_members [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#9333EA"><FONT COLOR="white"><B>conversation_members</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, conversationId, userId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">role, joinedAt</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">isMuted, isPinned, isActive</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastReadSeq, unreadCount</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  messages [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#DC2626"><FONT COLOR="white"><B>messages</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, conversationId, senderId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">seq, clientMessageId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">type, text, replyToMessageId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">attachments[] (embedded)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">reactions[] (embedded)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">createdAt, editedAt, deletedAt</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  inbox [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#0EA5E9"><FONT COLOR="white"><B>user_conversation_inbox</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, userId, conversationId</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">displayName, displayAvatarUrl</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastMessage, lastMessageSeq</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">unreadCount, isPinned, isMuted</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">lastActivityAt, updatedAt</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  calls [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" COLOR="#334155" BGCOLOR="#F8FAFC">
+      <TR><TD BGCOLOR="#059669"><FONT COLOR="white"><B>calls</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">_id, conversationId, initiatedBy</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">type, status</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">startedAt, endedAt, durationSec</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">participants[] (embedded)</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  users -> user_devices ;
+  users -> conversation_members ;
+  conversations -> conversation_members ;
+  conversations -> messages ;
+  users -> messages [style=dashed];
+  users -> inbox ;
+  conversations -> inbox ;
+  conversations -> calls ;
+  users -> calls [style=dashed];
+}
