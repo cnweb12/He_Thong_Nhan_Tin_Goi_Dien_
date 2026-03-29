@@ -1,0 +1,43 @@
+const { Schema, model, models } = require("mongoose");
+const { normalizePhone, normalizeUsername } = require("../../../../database/mongo/normalize");
+
+const UserSchema = new Schema(
+  {
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+      set: normalizePhone,
+    },
+    username: {
+      type: String,
+      trim: true,
+      set: normalizeUsername,
+    },
+    displayName: { type: String, required: true, trim: true },
+    passwordHash: { type: String, required: true },
+    avatarUrl: { type: String },
+    settings: {
+      theme: { type: String, enum: ["light", "dark"], default: "light" },
+      language: { type: String, default: "vi" },
+      allowStrangerMessages: { type: Boolean, default: true },
+    },
+    lastSeenAt: { type: Date },
+  },
+  { timestamps: true, versionKey: false }
+);
+
+UserSchema.index({ phone: 1 }, { unique: true });
+UserSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { username: { $type: "string" } },
+  }
+);
+
+const UserModel = models.users || model("users", UserSchema);
+
+module.exports = {
+  UserModel,
+};
