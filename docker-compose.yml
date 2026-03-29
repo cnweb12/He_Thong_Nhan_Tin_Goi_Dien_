@@ -1,10 +1,10 @@
 services:
   mongo:
-    image: mongo:7.0
+    image: mongo:8.0
     container_name: chat-app-mongo
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "27018:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-rootpassword}
@@ -14,7 +14,7 @@ services:
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-chat_app_password}
     volumes:
       - mongo_data:/data/db
-      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+      - ./infrastructure/mongo-init:/docker-entrypoint-initdb.d:ro
 
 volumes:
   mongo_data:
