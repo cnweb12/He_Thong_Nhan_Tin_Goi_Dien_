@@ -32,4 +32,5 @@ module.exports = {
   mongoRetryDelayMs: toNumber(process.env.MONGO_RETRY_DELAY_MS, 1000),
   mongoAutoIndex: process.env.MONGO_AUTO_INDEX !== "false",
   mongoServerSelectionTimeoutMs: toNumber(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 5000),
+  jwtSecret: process.env.JWT_SECRET || "your-default-secret-key-change-in-production",
 };
