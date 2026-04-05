@@ -1,6 +1,7 @@
 const { Schema, model, models } = require("mongoose");
 const { normalizePhone, normalizeUsername } = require("../../../../database/mongo/normalize");
 
+// Model mô tả cấu trúc của một record của user lưu trong database
 const UserSchema = new Schema(
   {
     phone: {

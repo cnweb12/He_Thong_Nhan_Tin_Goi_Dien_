@@ -9,14 +9,15 @@ Mongo infrastructure now lives in `backend/database/mongo`.
 - `npm run db:sync-indexes`
 - `npm run db:seed`
 - `npm run db:reset`
+- `npm run typecheck`
 
 ## Docker
 
-- `docker compose up --build`
-- Backend runs on `http://localhost:3000`
-- Healthcheck endpoint: `http://localhost:3000/health`
-- Sync indexes manually: `docker compose exec backend npm run db:sync-indexes`
-- Seed dev data manually: `docker compose exec backend npm run db:seed`
+- Development:
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
+- Production:
+  `docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d`
+- Backend health endpoint: `http://localhost:3000/health`
 
 ## Structure
 
@@ -36,3 +37,10 @@ Mongo infrastructure now lives in `backend/database/mongo`.
 - Keep `src/modules` for business/domain code grouped by bounded context.
 - Keep empty placeholder folders when they represent a real future layer in the target architecture.
 - Do not duplicate the same responsibility in both `src/*` and root-level folders.
+
+## Environment Docs
+
+- [docs/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\README.md)
+- [docs/development.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\development.md)
+- [docs/testing.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\testing.md)
+- [docs/production.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\production.md)

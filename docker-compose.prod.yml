@@ -1,0 +1,13 @@
+services:
+  backend:
+    image: chat-app-backend:prod
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      MONGO_AUTO_INDEX: "false"
