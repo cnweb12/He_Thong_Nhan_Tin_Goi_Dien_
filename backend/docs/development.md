@@ -1,39 +1,39 @@
-# Development Workflow
+# Quy Trinh Phat Trien
 
-## Goal
+## Muc tieu
 
-Run the backend and MongoDB locally with Docker, get hot reload for code changes, and use a repeatable development workflow for coding, checking health, and maintaining local data.
+Tai lieu nay mo ta cach chay backend va MongoDB local bang Docker, bat hot reload, va di theo mot quy trinh phat trien lap lai duoc.
 
-## 1. Requirements
+## 1. Dieu kien can co
 
-Before starting, make sure the machine has:
+Truoc khi bat dau, may can co:
 
-- Docker Desktop running
-- Docker Compose available through `docker compose`
-- a local `.env` file at the repository root
+- Docker Desktop dang chay
+- `docker compose` su dung duoc
+- file `.env` tai thu muc goc cua repository
 
-Recommended checks:
+Nen kiem tra nhanh:
 
 ```bash
 docker version
 docker compose version
 ```
 
-If `docker version` cannot connect to the daemon, start Docker Desktop first and wait until the engine is running.
+Neu `docker version` khong ket noi duoc toi daemon, hay mo Docker Desktop va cho den khi engine san sang.
 
-## 2. Environment Setup
+## 2. Cau hinh moi truong
 
-All runtime variables are loaded from the root `.env` file.
+Tat ca bien runtime duoc doc tu file `.env` o root project.
 
-### Create `.env`
+### Tao file `.env`
 
-Use the development template:
+Dung file mau cho moi truong phat trien:
 
 ```bash
 copy .env.development.example .env
 ```
 
-Suggested contents:
+Gia tri goi y:
 
 ```env
 NODE_ENV=development
@@ -47,79 +47,79 @@ MONGO_APP_USER=chat_app_user
 MONGO_APP_PASSWORD=chat_app_password
 ```
 
-### Important notes
+### Luu y
 
-- `.env` must be at the repository root
-- the backend container connects to Mongo using the service name `mongo`
-- Mongo is mapped to host port `27018` in development
+- file `.env` phai nam o root repository
+- backend container ket noi Mongo bang service name `mongo`
+- o moi truong dev, Mongo map ra host qua cong `27018`
 
-## 3. Start The Development Stack
+## 3. Khoi dong stack dev
 
-Run from the repository root:
+Tu root project, chay:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-What happens during startup:
+Qua trinh nay se:
 
-- MongoDB starts from the `mongo:8.0` image
-- the backend image is built from the `development` stage in `backend/Dockerfile`
-- `./backend` is bind-mounted into the container
-- `/app/node_modules` uses a named volume
-- `./docker/dev-entrypoint.sh` checks whether dependencies are installed
-- the backend starts with `npm run dev`
-- `tsx watch src/server.js` provides hot reload
+- khoi dong MongoDB bang image `mongo:8.0`
+- build backend bang stage `development` trong `backend/Dockerfile`
+- bind mount thu muc `./backend` vao container
+- mount volume `/app/node_modules`
+- chay `backend/docker/dev-entrypoint.sh`
+- chay backend bang `npm run dev`
+- bat `tsx watch src/server.js` de hot reload
 
-## 4. Verify The Stack Is Ready
+## 4. Kiem tra stack da san sang
 
-Wait for:
+Cho den khi thay:
 
-- Mongo log lines like `Waiting for connections`
-- backend log lines like `[server] Listening on port 3000.`
+- log Mongo co dong `Waiting for connections`
+- log backend co dong `[server] Listening on port 3000.`
 
-Then verify the health endpoint:
+Sau do kiem tra health endpoint:
 
 ```bash
 curl http://localhost:3000/health
 ```
 
-PowerShell alternative:
+Neu dung PowerShell:
 
 ```powershell
 Invoke-WebRequest http://localhost:3000/health
 ```
 
-## 5. Dev Environment Characteristics
+## 5. Dac diem cua moi truong dev
 
-- backend source is bind-mounted into the container
-- backend auto reloads on file changes
-- `MONGO_AUTO_INDEX=true` in development
-- Mongo data persists in the `mongo_data` Docker volume
-- Mongo healthchecks run with `mongosh`
+- ma nguon backend duoc bind mount vao container
+- backend tu reload khi file thay doi
+- `MONGO_AUTO_INDEX=true`
+- du lieu Mongo duoc luu trong volume `mongo_data`
+- Mongo co healthcheck bang `mongosh`
 
-## 6. Daily Development Workflow
+## 6. Quy trinh dev hang ngay
 
-Recommended day-to-day process:
+Quy trinh goi y:
 
-1. Open a terminal at the repository root.
-2. Start the dev stack with Docker Compose.
-3. Wait until Mongo is healthy and backend is listening.
-4. Edit code under `backend/`.
-5. Let `tsx watch` reload the server automatically.
-6. Run checks or tests from another terminal.
-7. Seed or reset the database if the task needs it.
-8. Stop containers when the session ends.
+1. Mo terminal tai root project.
+2. Khoi dong stack dev.
+3. Cho Mongo healthy va backend lang nghe cong `3000`.
+4. Sua code trong `backend/`.
+5. De `tsx watch` tu reload server.
+6. Mo terminal khac de chay test hoac typecheck.
+7. Seed/reset database neu task can.
+8. Dung stack khi ket thuc phien lam viec.
 
-## 7. Running Commands Inside The Backend Container
+## 7. Chay lenh trong backend container
 
-Use a second terminal for commands:
+Mo terminal thu hai va chay:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend <command>
 ```
 
-Common examples:
+Vi du:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run typecheck
@@ -130,19 +130,19 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:reset
 ```
 
-## 8. Database Operations During Development
+## 8. Thao tac voi database trong luc dev
 
-### Sync indexes
+### Dong bo index
 
-Use when schema indexes changed:
+Dung khi schema thay doi index:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:sync-indexes
 ```
 
-### Seed data
+### Seed du lieu
 
-Use when you need baseline sample data:
+Dung khi can du lieu mau:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:seed
@@ -150,75 +150,75 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 
 ### Reset local database
 
-Use when local data is inconsistent and you want a clean restart:
+Dung khi local data bi loi hoac can lam sach:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:reset
 ```
 
-This is intended for local development only.
+Lenh nay chi dung cho moi truong phat trien local.
 
-## 9. Stop The Development Stack
+## 9. Dung stack dev
 
-If running in the foreground:
+Neu dang chay foreground:
 
-- press `Ctrl + C`
+- nhan `Ctrl + C`
 
-Then stop containers cleanly:
+Sau do dung container gon gang:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 ```
 
-If you want to remove volumes too:
+Neu muon xoa ca volume:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 ```
 
-Be careful: removing volumes deletes local Mongo data.
+Can than vi lenh nay xoa du lieu Mongo local.
 
-## 10. Troubleshooting
+## 10. Su co thuong gap
 
-### Docker daemon is unavailable
+### Docker daemon khong san sang
 
-Symptoms:
+Dau hieu:
 
 - `open //./pipe/dockerDesktopLinuxEngine`
 - `failed to connect to the docker API`
 
-Actions:
+Cach xu ly:
 
-1. Start Docker Desktop
-2. Wait until the engine is running
-3. Retry `docker version`
-4. Retry `docker compose ... up --build`
+1. Mo Docker Desktop
+2. Cho engine san sang
+3. Chay lai `docker version`
+4. Chay lai lenh compose
 
-### Mongo reports unclean shutdown
+### Mongo bao unclean shutdown
 
-This usually means the previous container stop was abrupt. If recovery completes successfully, it is usually safe for local dev.
+Thuong la do lan dung truoc khong graceful. Neu log recovery thanh cong thi thuong van an toan trong local dev.
 
-### Backend does not come up
+### Backend khong len
 
-Check:
+Can kiem tra:
 
-- `.env` exists at the repository root
-- Mongo container is healthy
-- port `3000` is not already taken
-- backend logs show no startup exception
+- file `.env` co ton tai o root khong
+- Mongo container co healthy khong
+- cong `3000` co dang bi chiem khong
+- log backend co exception luc startup khong
 
-### Health endpoint fails
+### Health endpoint loi
 
-Check:
+Can kiem tra:
 
-- backend logs
-- Mongo logs
+- log backend
+- log Mongo
 - `docker compose -f docker-compose.yml -f docker-compose.dev.yml ps`
 
-## 11. Team Conventions
+## 11. Nguyen tac lam viec
 
-- keep business logic in module services
-- keep route files thin
-- keep Mongo infrastructure under `backend/database/mongo`
-- run typecheck before pushing code
-- run targeted tests while coding and broader tests before merging
+- de business logic trong `services`
+- giu route file gon
+- giu Mongo infrastructure trong `backend/database/mongo`
+- chay `typecheck` truoc khi day code
+- chay test muc tieu trong luc code, va chay test rong hon truoc khi ket task

@@ -1,22 +1,22 @@
-# Testing Workflow
+# Quy Trinh Kiem Thu
 
-## Goal
+## Muc tieu
 
-Provide a clear process for validating backend changes during local development.
+Tai lieu nay mo ta cach chay test backend trong luc phat trien local va cach chon dung loai test cho tung thay doi.
 
-## 1. Prerequisite
+## 1. Dieu kien tien quyet
 
-The standard path is to run tests inside the development container after the dev stack is running:
+Thong thuong, test duoc chay ben trong dev container sau khi stack da khoi dong:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Then use a second terminal to run test commands.
+Sau do mo terminal thu hai de chay cac lenh test.
 
-## 2. Available Commands
+## 2. Cac lenh san co
 
-Defined in `backend/package.json`:
+Trong `backend/package.json` hien co:
 
 ```bash
 npm test
@@ -24,23 +24,26 @@ npm run test:users
 npm run typecheck
 ```
 
-### Meaning
+### Y nghia
 
-- `npm test`: run all backend tests using Node's built-in test runner
-- `npm run test:users`: run only the users module tests
-- `npm run typecheck`: run static analysis through `tsc --noEmit`
+- `npm test`
+  Chay toan bo test backend bang Node test runner
+- `npm run test:users`
+  Chay toan bo test cua module `users`
+- `npm run typecheck`
+  Chay `tsc --noEmit` de kiem tra cau hinh va import/export
 
-## 3. Recommended Workflow While Coding
+## 3. Quy trinh kiem thu goi y trong luc code
 
-When working on one module:
+Khi sua mot module cu the:
 
-1. Start the dev stack.
-2. Make code changes.
-3. Run focused tests for the module you changed.
-4. Run typecheck.
-5. Run the full test suite before considering the task done.
+1. Bat dev stack.
+2. Sua code.
+3. Chay test tap trung vao module do.
+4. Chay typecheck.
+5. Chay full test suite truoc khi ket luan task da xong.
 
-Example for the users module:
+Vi du voi module `users`:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:users
@@ -48,84 +51,86 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm test
 ```
 
-## 4. Common Commands
+## 4. Cac lenh thuong dung
 
-### Run all tests
+### Chay toan bo backend test
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm test
 ```
 
-### Run users module tests
+### Chay test cua module users
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:users
 ```
 
-### Run typecheck
+### Chay typecheck
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run typecheck
 ```
 
-## 5. If The Change Needs Database State
+## 5. Neu thay doi can du lieu database
 
-Seed local data:
+Neu test hoac verify thu cong can data:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:seed
 ```
 
-Reset local database if needed:
+Neu local data bi loi:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:reset
 ```
 
-Then rerun the tests that matter.
+Sau do chay lai test lien quan.
 
-## 6. When To Run What
+## 6. Khi nao nen chay lenh nao
 
-### During implementation
+### Trong luc lap trinh
 
-Prefer focused feedback:
+Nen uu tien test muc tieu:
 
 ```bash
 npm run test:users
 ```
 
-### Before finalizing a task
+Dieu nay cho feedback nhanh hon.
 
-Run:
+### Truoc khi ket task
+
+Nen chay:
 
 ```bash
 npm run typecheck
 npm test
 ```
 
-## 7. Troubleshooting
+## 7. Su co thuong gap
 
-### Backend container is not running
+### Backend container chua chay
 
-Start the dev stack first:
+Hay bat stack dev truoc:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-### Typecheck fails
+### Typecheck loi
 
-Check:
+Can kiem tra:
 
 - `backend/tsconfig.json`
-- new files are covered by the `include` globs
-- imports/exports match the current module style
+- file moi co nam trong `include` khong
+- import/export co dung theo module style hien tai khong
 
-### Tests pass but manual verification fails
+### Test pass nhung verify thu cong van loi
 
-Check:
+Can kiem tra them:
 
-- `/health`
-- backend logs
-- Mongo connectivity
-- current `.env` values
+- endpoint `/health`
+- log backend
+- ket noi Mongo
+- gia tri trong `.env`
