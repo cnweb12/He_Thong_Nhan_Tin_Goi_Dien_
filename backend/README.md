@@ -9,6 +9,8 @@ Mongo infrastructure now lives in `backend/database/mongo`.
 - `npm run db:sync-indexes`
 - `npm run db:seed`
 - `npm run db:reset`
+- `npm run test:users`
+- `npm run test:messages`
 - `npm run typecheck`
 
 ## Docker

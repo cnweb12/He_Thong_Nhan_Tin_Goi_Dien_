@@ -5,116 +5,186 @@ const { ConversationMemberModel } = require("../../conversations/models/conversa
 const { UserConversationInboxModel } = require("../../conversations/models/user-conversation-inbox.model");
 const { MessageModel } = require("../models/message.model");
 
-async function sendMessage({ conversationId, senderId, type = "text", text, clientMessageId, attachments = [] }) {
-  const session = await mongoose.startSession();
+function createHttpError(statusCode, message, details) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  if (details) {
+    error.details = details;
+  }
 
-  try {
-    let createdMessage;
+  return error;
+}
 
-    await session.withTransaction(async () => {
-      const membership = await ConversationMemberModel.findOne({
-        conversationId,
-        userId: senderId,
-        isActive: true,
-      }).session(session);
+function sanitizeMessage(message) {
+  if (!message) {
+    return null;
+  }
 
-      if (!membership) {
-        const error = new Error("Sender is not an active conversation member");
-        error.statusCode = 403;
-        throw error;
-      }
+  if (typeof message.toObject === "function") {
+    return message.toObject();
+  }
 
-      const conversation = await ConversationModel.findOneAndUpdate(
-        { _id: conversationId },
-        { $inc: { lastMessageSeq: 1 } },
-        { new: true, session }
-      );
+  return message;
+}
 
-      if (!conversation) {
-        const error = new Error("Conversation not found");
-        error.statusCode = 404;
-        throw error;
-      }
+function createMessageService(dependencies = {}) {
+  const mongooseLib = dependencies.mongoose || mongoose;
+  const mongoErrorMapper = dependencies.mapMongoError || mapMongoError;
+  const conversationModel = dependencies.ConversationModel || ConversationModel;
+  const conversationMemberModel = dependencies.ConversationMemberModel || ConversationMemberModel;
+  const inboxModel = dependencies.UserConversationInboxModel || UserConversationInboxModel;
+  const messageModel = dependencies.MessageModel || MessageModel;
 
-      createdMessage = await MessageModel.create(
-        [
-          {
-            conversationId,
-            senderId,
-            seq: conversation.lastMessageSeq,
-            clientMessageId,
-            type,
-            text,
-            attachments,
-          },
-        ],
-        { session }
-      );
-
-      const message = createdMessage[0];
-      const lastActivityAt = message.createdAt || new Date();
-
-      await ConversationModel.updateOne(
-        { _id: conversationId },
-        {
-          $set: {
-            lastMessage: {
-              seq: message.seq,
-              senderId,
-              type,
-              text,
-              createdAt: lastActivityAt,
-            },
-            lastActivityAt,
-          },
-        },
-        { session }
-      );
-
-      await ConversationMemberModel.updateMany(
-        { conversationId, userId: { $ne: senderId }, isActive: true },
-        { $inc: { unreadCount: 1 } },
-        { session }
-      );
-
-      await UserConversationInboxModel.updateMany(
-        { conversationId },
-        {
-          $set: {
-            lastMessage: text || type,
-            lastMessageSeq: message.seq,
-            lastActivityAt,
-          },
-          $inc: { unreadCount: 1 },
-        },
-        { session }
-      );
-
-      await UserConversationInboxModel.updateOne(
-        { conversationId, userId: senderId },
-        {
-          $set: {
-            lastMessage: text || type,
-            lastMessageSeq: message.seq,
-            unreadCount: 0,
-            lastActivityAt,
-          },
-        },
-        { session }
-      );
+  async function ensureActiveMembership(conversationId, userId, session) {
+    const query = conversationMemberModel.findOne({
+      conversationId,
+      userId,
+      isActive: true,
     });
 
-    return createdMessage?.[0] || null;
-  } catch (error) {
-    const mapped = mapMongoError(error);
-    error.statusCode = error.statusCode || mapped.statusCode;
-    error.details = error.details || mapped.details;
-    throw error;
-  } finally {
-    await session.endSession();
+    const membership = session && typeof query.session === "function" ? await query.session(session) : await query;
+
+    if (!membership) {
+      throw createHttpError(403, "User is not an active conversation member");
+    }
+
+    return membership;
   }
+
+  async function sendMessage({ conversationId, senderId, type = "text", text, clientMessageId, attachments = [] }) {
+    const session = await mongooseLib.startSession();
+
+    try {
+      let createdMessage;
+
+      await session.withTransaction(async () => {
+        await ensureActiveMembership(conversationId, senderId, session);
+
+        const conversation = await conversationModel.findOneAndUpdate(
+          { _id: conversationId },
+          { $inc: { lastMessageSeq: 1 } },
+          { new: true, session }
+        );
+
+        if (!conversation) {
+          throw createHttpError(404, "Conversation not found");
+        }
+
+        createdMessage = await messageModel.create(
+          [
+            {
+              conversationId,
+              senderId,
+              seq: conversation.lastMessageSeq,
+              clientMessageId,
+              type,
+              text,
+              attachments,
+            },
+          ],
+          { session }
+        );
+
+        const message = createdMessage[0];
+        const lastActivityAt = message.createdAt || new Date();
+
+        await conversationModel.updateOne(
+          { _id: conversationId },
+          {
+            $set: {
+              lastMessage: {
+                seq: message.seq,
+                senderId,
+                type,
+                text,
+                createdAt: lastActivityAt,
+              },
+              lastActivityAt,
+            },
+          },
+          { session }
+        );
+
+        await conversationMemberModel.updateMany(
+          { conversationId, userId: { $ne: senderId }, isActive: true },
+          { $inc: { unreadCount: 1 } },
+          { session }
+        );
+
+        await inboxModel.updateMany(
+          { conversationId },
+          {
+            $set: {
+              lastMessage: text || type,
+              lastMessageSeq: message.seq,
+              lastActivityAt,
+            },
+            $inc: { unreadCount: 1 },
+          },
+          { session }
+        );
+
+        await inboxModel.updateOne(
+          { conversationId, userId: senderId },
+          {
+            $set: {
+              lastMessage: text || type,
+              lastMessageSeq: message.seq,
+              unreadCount: 0,
+              lastActivityAt,
+            },
+          },
+          { session }
+        );
+      });
+
+      return sanitizeMessage(createdMessage?.[0] || null);
+    } catch (error) {
+      const mapped = mongoErrorMapper(error);
+      error.statusCode = error.statusCode || mapped.statusCode;
+      error.details = error.details || mapped.details;
+      error.message = error.statusCode === 500 ? mapped.message : error.message;
+      throw error;
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async function getConversationMessages({ conversationId, userId, limit = 20, beforeSeq }) {
+    try {
+      await ensureActiveMembership(conversationId, userId);
+
+      const filter = {
+        conversationId,
+        deletedAt: null,
+      };
+
+      if (beforeSeq !== undefined && beforeSeq !== null) {
+        filter.seq = { $lt: beforeSeq };
+      }
+
+      const messages = await messageModel.find(filter).sort({ seq: -1 }).limit(limit).lean();
+      return messages.reverse().map(sanitizeMessage);
+    } catch (error) {
+      if (!error.statusCode) {
+        const mapped = mongoErrorMapper(error);
+        error.statusCode = mapped.statusCode;
+        error.details = mapped.details;
+        error.message = mapped.message;
+      }
+
+      throw error;
+    }
+  }
+
+  return {
+    sendMessage,
+    getConversationMessages,
+    sanitizeMessage,
+  };
 }
 
 module.exports = {
-  sendMessage,
+  createMessageService,
+  messageService: createMessageService(),
 };

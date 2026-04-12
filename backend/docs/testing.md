@@ -21,6 +21,7 @@ Trong `backend/package.json` hien co:
 ```bash
 npm test
 npm run test:users
+npm run test:messages
 npm run typecheck
 ```
 
@@ -30,6 +31,8 @@ npm run typecheck
   Chay toan bo test backend bang Node test runner
 - `npm run test:users`
   Chay toan bo test cua module `users`
+- `npm run test:messages`
+  Chay toan bo test cua module `messages`
 - `npm run typecheck`
   Chay `tsc --noEmit` de kiem tra cau hinh va import/export
 
@@ -51,6 +54,12 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm test
 ```
 
+Vi du voi module `messages`:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:messages
+```
+
 ## 4. Cac lenh thuong dung
 
 ### Chay toan bo backend test
@@ -63,6 +72,12 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:users
+```
+
+### Chay test cua module messages
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:messages
 ```
 
 ### Chay typecheck
@@ -98,6 +113,12 @@ npm run test:users
 ```
 
 Dieu nay cho feedback nhanh hon.
+
+Neu dang sua module messages:
+
+```bash
+npm run test:messages
+```
 
 ### Truoc khi ket task
 
