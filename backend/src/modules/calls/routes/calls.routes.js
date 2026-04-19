@@ -13,6 +13,9 @@ function createCallRouter(dependencies = {}) {
 
   router.use(authMiddleware);
   router.post("/", controller.create);
+  router.get("/conversations/:conversationId", controller.getConversationCalls);
+  router.patch("/:callId/status", controller.updateStatus);
+  router.patch("/:callId/participants", controller.updateParticipant);
 
   return router;
 }
