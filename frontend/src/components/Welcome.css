@@ -1,0 +1,84 @@
+.welcome-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.welcome-placeholder {
+  width: 200px;
+  height: 200px;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.welcome-features {
+  display: flex;
+  gap: 32px;
+  margin: 16px 0;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature-icon {
+  font-size: 28px;
+}
+
+.feature-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.theme-button {
+  padding: 10px 24px;
+  background: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.theme-button:hover {
+  background: #0073e6;
+}
+
+.welcome-footer {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  margin-top: 8px;
+}

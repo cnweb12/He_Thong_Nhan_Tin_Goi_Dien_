@@ -1,0 +1,29 @@
+.app {
+  display: flex;
+  height: 100vh;
+  background: #fff;
+}
+
+.app.light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
+  --text-primary: #000;
+  --text-secondary: #65676b;
+  --border-color: #e5e7eb;
+  --sidebar-bg: #ffffff;
+}
+
+.app.dark-mode {
+  --bg-primary: #17171a;
+  --bg-secondary: #232327;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b3b8;
+  --border-color: #3a3b40;
+  --sidebar-bg: #111114;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
