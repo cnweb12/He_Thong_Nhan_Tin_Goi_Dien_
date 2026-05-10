@@ -1,30 +1,13 @@
-import { useState } from 'react'
-import './App.css'
-import Sidebar from './components/Sidebar'
-import ChatWindow from './components/ChatWindow'
-import Welcome from './components/Welcome'
+import Sidebar from "./components/Sidebar";
+import ChatList from "./components/ChatList";
+import MainContent from "./components/MainContent";
 
-function App() {
-  const [selectedUserId, setSelectedUserId] = useState(null)
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
+export default function App() {
   return (
-    <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
-      <Sidebar 
-        selectedUserId={selectedUserId}
-        onSelectUser={setSelectedUserId}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-      />
-      <div className="main-content">
-        {selectedUserId ? (
-          <ChatWindow userId={selectedUserId} />
-        ) : (
-          <Welcome isDarkMode={isDarkMode} />
-        )}
-      </div>
+    <div className="flex h-screen">
+      <Sidebar />
+      <ChatList />
+      <MainContent />
     </div>
-  )
+  );
 }
-
-export default App

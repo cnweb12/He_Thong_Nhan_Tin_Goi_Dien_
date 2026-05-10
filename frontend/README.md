@@ -1,96 +1,16 @@
-# Zalo PC - Chat Application Frontend
+# React + Vite
 
-Ứng dụng nhắn tin kiểu Zalo được xây dựng với Vite + React
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Tính năng
+Currently, two official plugins are available:
 
-- 💬 Giao diện chat tương tác
-- 🌙 Chế độ Dark Mode
-- 🔍 Tìm kiếm người dùng
-- 📱 Responsive Design
-- 😊 Mock Data (chưa tích hợp backend)
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Cấu trúc Project
+## React Compiler
 
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   ├── Sidebar.jsx         # Sidebar danh sách chat
-│   │   ├── Sidebar.css
-│   │   ├── ChatWindow.jsx       # Cửa sổ chat chính
-│   │   ├── ChatWindow.css
-│   │   ├── Welcome.jsx          # Trang welcome
-│   │   └── Welcome.css
-│   ├── App.jsx                 # Component chính
-│   ├── App.css
-│   ├── main.jsx                # Entry point React
-│   ├── index.css               # CSS global
-│   └── mockData.js             # Dữ liệu giả
-├── index.html                  # HTML template
-├── vite.config.js              # Vite config
-└── package.json
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Cài đặt
+## Expanding the ESLint configuration
 
-```bash
-# Cài đặt dependencies
-npm install
-
-# Chạy dev server
-npm run dev
-
-# Build cho production
-npm run build
-
-# Preview build
-npm run preview
-```
-
-## Mock Data
-
-Hiện tại ứng dụng sử dụng mock data từ `src/mockData.js` bao gồm:
-- 6 người dùng mẫu
-- Tin nhắn mẫu cho các cuộc trò chuyện
-- Avatar từ DiceBear API
-
-## Bước tiếp theo - Tích hợp Backend
-
-Để kết nối với backend API:
-
-1. **Tạo API Service** - Tạo file `src/services/api.js` để gọi API từ backend
-2. **Replace Mock Data** - Thay thế `mockData.js` bằng API calls
-3. **State Management** - Cân nhắc sử dụng Context API hoặc Redux
-4. **Real-time Chat** - Tích hợp WebSocket cho tin nhắn real-time
-5. **Authentication** - Thêm login/logout functionality
-
-## Ví dụ - Gọi Backend API
-
-```javascript
-// src/services/api.js
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3000/api';
-
-export const getUsers = async () => {
-  const response = await axios.get(`${API_BASE_URL}/users`);
-  return response.data;
-};
-
-export const getMessages = async (userId) => {
-  const response = await axios.get(`${API_BASE_URL}/messages/${userId}`);
-  return response.data;
-};
-```
-
-## Styling
-
-- Sử dụng CSS Variables cho Light/Dark Mode
-- Variables được định nghĩa trong `App.css`
-- Responsive design với Flexbox
-
-## Browser Support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Hỗ trợ Mobile devices
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

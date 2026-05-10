@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test",
     "test:users": "node --test tests/modules/users/*.test.js",
-    "test:messages": "node --test tests/modules/messages/*.test.js"
+    "test:messages": "node --test tests/modules/messages/*.test.js",
+    "test:calls": "node --test tests/modules/calls/*.test.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
