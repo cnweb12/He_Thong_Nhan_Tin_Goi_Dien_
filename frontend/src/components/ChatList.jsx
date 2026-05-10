@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
+import { mockUsers } from "../mockData";
 
-export default function ChatList() {
+export default function ChatList({ selectedUserId, onSelectUser }) {
     return (
         <div className="w-[320px] bg-white border-r flex flex-col">
 
@@ -23,29 +24,42 @@ export default function ChatList() {
                 <span>Khác</span>
             </div>
 
-            {/* cảnh báo sync */}
-            <div className="mx-3 mt-3 p-3 bg-yellow-100 rounded-lg text-sm">
-                Đồng bộ tin nhắn bị gián đoạn
-            </div>
-
             {/* list */}
-            <div className="mt-2 overflow-y-auto">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className="mt-2 overflow-y-auto flex-1">
+                {mockUsers.map((user) => (
                     <div
-                        key={i}
-                        className="flex items-center justify-between px-4 py-3 hover:bg-gray-100 cursor-pointer"
+                        key={user.id}
+                        onClick={() => onSelectUser(user.id)}
+                        className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-all ${
+                            selectedUserId === user.id 
+                                ? "bg-yellow-100 border-l-4 border-primary" 
+                                : "hover:bg-gray-100"
+                        }`}
                     >
-                        <div className="flex gap-3 items-center">
-                            <div className="w-10 h-10 bg-gray-300 rounded-full" />
-                            <div>
-                                <div className="font-medium">User {i}</div>
-                                <div className="text-sm text-gray-500">
-                                    Tin nhắn gần nhất...
+                        <div className="flex gap-3 items-center flex-1">
+                            {/* Avatar with online indicator */}
+                            <div className="relative flex-shrink-0">
+                                <img 
+                                    src={user.avatar} 
+                                    alt={user.name}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                />
+                                {user.online && (
+                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                                )}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm">{user.name}</div>
+                                <div className="text-xs text-gray-500 truncate">
+                                    {user.lastMessage}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="text-xs text-gray-400">11 giờ</div>
+                        <div className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                            {user.timestamp}
+                        </div>
                     </div>
                 ))}
             </div>

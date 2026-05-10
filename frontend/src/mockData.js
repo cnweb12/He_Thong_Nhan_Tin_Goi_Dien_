@@ -89,6 +89,28 @@ export const mockMessages = {
     { id: 2, text: 'Bye! Have a great day', sender: 'self', timestamp: '07:05' },
     { id: 3, text: 'You too! Talk soon', sender: 'other', timestamp: '07:10' },
     { id: 4, text: 'Catch you later!', sender: 'self', timestamp: '07:15' },
+  ],
+  4: [
+    { id: 1, text: 'Chào bạn! 👋', sender: 'other', timestamp: '10:30' },
+    { id: 2, text: 'Chào! Bạn khỏe không?', sender: 'self', timestamp: '10:35' },
+    { id: 3, text: 'Mình khỏe, cảm ơn vì hỏi. Bạn sao?', sender: 'other', timestamp: '10:40' },
+    { id: 4, text: 'Mình cũng khỏe. Hôm nay bạn bận không?', sender: 'self', timestamp: '10:42' },
+    { id: 5, text: 'Không, mình có thời gian. Chúng ta có thể gặp nhau không?', sender: 'other', timestamp: '10:45' },
+    { id: 6, text: 'Được, mấy giờ bạn rảnh?', sender: 'self', timestamp: '10:48' },
+    { id: 7, text: 'Khoảng 3 giờ chiều được không?', sender: 'other', timestamp: '10:50' },
+    { id: 8, text: 'Được rồi, mình sẽ đón bạn', sender: 'self', timestamp: '10:52' },
+  ],
+  5: [
+    { id: 1, text: 'Cần tư vấn chút gì đó', sender: 'self', timestamp: '09:15' },
+    { id: 2, text: 'Ok, bạn muốn tư vấn về cái gì?', sender: 'other', timestamp: '09:20' },
+    { id: 3, text: 'Về công nghệ mới, bạn có ý kiến gì?', sender: 'self', timestamp: '09:25' },
+    { id: 4, text: 'Mình nghĩ nó là tương lai', sender: 'other', timestamp: '09:30' },
+  ],
+  6: [
+    { id: 1, text: 'Alo, bạn nhận được tài liệu chưa?', sender: 'self', timestamp: '11:00' },
+    { id: 2, text: 'Rồi, cảm ơn bạn!', sender: 'other', timestamp: '11:05' },
+    { id: 3, text: 'Có vấn đề gì không?', sender: 'self', timestamp: '11:10' },
+    { id: 4, text: 'Không, rất chi tiết. Cảm ơn một lần nữa 😊', sender: 'other', timestamp: '11:12' },
   ]
 }
 

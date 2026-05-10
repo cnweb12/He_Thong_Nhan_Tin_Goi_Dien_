@@ -1,6 +1,11 @@
 import { Moon } from "lucide-react";
+import ChatWindow from "./ChatWindow";
 
-export default function MainContent() {
+export default function MainContent({ selectedUserId }) {
+    if (selectedUserId) {
+        return <ChatWindow userId={selectedUserId} />;
+    }
+
     return (
         <div className="flex-1 flex items-center justify-center relative bg-gray-50">
 

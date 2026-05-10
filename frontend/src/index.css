@@ -1,3 +1,14 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
+  --text-primary: #000000;
+  --text-secondary: #65676b;
+  --border-color: #e5e7eb;
+  --accent: #0084ff;
+  --accent-bg: #e7f3ff;
+  --accent-border: #0073e6;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

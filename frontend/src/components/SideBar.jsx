@@ -1,6 +1,6 @@
 import { MessageCircle, Users, Settings } from "lucide-react";
 
-export default function Sidebar() {
+export default function SideBar() {
     return (
         <div className="w-16 bg-sidebar flex flex-col items-center py-4">
             {/* avatar */}

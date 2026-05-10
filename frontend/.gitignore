@@ -1,9 +1,19 @@
+# Dependencies
 node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Production
 dist
-.DS_Store
-*.local
+dist-ssr
+build
+
+# Environment
 .env
 .env.local
+.env.*.local
+
 # Logs
 logs
 *.log
@@ -13,18 +23,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# OS
+.DS_Store
+Thumbs.db
 
-# Editor directories and files
+# IDE
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Cache
+.cache
+.eslintcache
+
+# Local
+*.local
