@@ -23,13 +23,19 @@ function toPlainObject(value) {
  * @param {*} user record dữ liệu mục tiêu
  * @returns record đã lọc các field nhạy cảm
  */
-function sanitizeUser(user) {
+function sanitizeUser(user, options = {}) {
   if (!user) {
     return null;
   }
 
   const plainUser = toPlainObject(user);
-  const { passwordHash, __v, ...safeUser } = plainUser;
+  const { includePhone = false } = options;
+  const { passwordHash, __v, phone, ...safeUser } = plainUser;
+
+  if (includePhone) {
+    safeUser.phone = phone;
+  }
+
   return safeUser;
 }
 
@@ -75,7 +81,7 @@ function createUserService(dependencies = {}) {
       throw createHttpError(404, "User not found");
     }
 
-    return sanitizeUser(user);
+    return sanitizeUser(user, { includePhone: true });
   }
 
   /**
@@ -120,7 +126,7 @@ function createUserService(dependencies = {}) {
     };
 
     const users = await userModel.find(filter).sort({ displayName: 1, createdAt: -1 }).limit(limit);
-    return users.map(sanitizeUser);
+    return users.map((user) => sanitizeUser(user));
   }
 
   async function updateProfile(userId, payload = {}) {
@@ -145,7 +151,7 @@ function createUserService(dependencies = {}) {
         throw createHttpError(404, "User not found");
       }
 
-      return sanitizeUser(user);
+      return sanitizeUser(user, { includePhone: true });
     } catch (error) {
       if (error.statusCode) {
         throw error;
@@ -178,7 +184,7 @@ function createUserService(dependencies = {}) {
         throw createHttpError(404, "User not found");
       }
 
-      return sanitizeUser(user);
+      return sanitizeUser(user, { includePhone: true });
     } catch (error) {
       if (error.statusCode) {
         throw error;

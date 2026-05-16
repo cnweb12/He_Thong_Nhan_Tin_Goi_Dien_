@@ -19,12 +19,16 @@ function createResponse() {
 }
 
 test("create returns 201 with created call", async () => {
+  let receivedPayload;
   const controller = createCallController({
     validators: {
       validateCreateCallLogRequest: () => ({ isValid: true, errors: [] }),
     },
     callService: {
-      createCallLog: async (payload) => ({ _id: "call-1", ...payload }),
+      createCallLog: async (payload) => {
+        receivedPayload = payload;
+        return { _id: "call-1", ...payload };
+      },
     },
   });
   const req = {
@@ -33,6 +37,7 @@ test("create returns 201 with created call", async () => {
       conversationId: "conv-1",
       type: "audio",
       status: "completed",
+      initiatedBy: "spoofed-user",
     },
   };
   const res = createResponse();
@@ -44,6 +49,7 @@ test("create returns 201 with created call", async () => {
   assert.equal(res.statusCode, 201);
   assert.equal(res.payload.ok, true);
   assert.equal(res.payload.data.initiatedBy, "user-1");
+  assert.equal(receivedPayload.initiatedBy, "user-1");
 });
 
 test("getConversationCalls forwards validation errors", async () => {

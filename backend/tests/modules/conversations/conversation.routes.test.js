@@ -1,16 +1,16 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
-
 const express = require("express");
+
 const {
-  createUserRouter,
-} = require("../../../src/modules/users/routes/user.routes");
+  createConversationRouter,
+} = require("../../../src/modules/conversations/routes/conversation.routes");
 
 async function createTestServer(router) {
   const app = express();
   app.use(express.json());
-  app.use("/api/users", router);
+  app.use("/api/conversations", router);
   app.use((error, _req, res, _next) => {
     res.status(error.statusCode || 500).json({
       ok: false,
@@ -58,82 +58,60 @@ async function requestJson(server, { method, path, body }) {
     );
 
     req.on("error", reject);
-
     if (payload) {
       req.write(payload);
     }
-
     req.end();
   });
 }
 
-test("user routes call the expected controller handlers", async () => {
+test("conversation routes dispatch to expected handlers", async () => {
   const calls = [];
-  const router = createUserRouter({
+  const router = createConversationRouter({
     authenticate: (req, _res, next) => {
-      req.user = { userId: "viewer-1" };
+      req.user = { userId: "user-1" };
       next();
     },
-    userController: {
-      getMe: (req, res) => {
-        calls.push(["getMe", req.user.userId]);
-        res.json({ ok: true, route: "me" });
+    conversationController: {
+      createDirect: (req, res) => {
+        calls.push(["createDirect", req.body.peerUserId]);
+        res.status(201).json({ ok: true });
       },
-      updateMe: (_req, res) => {
-        calls.push(["updateMe"]);
-        res.json({ ok: true, route: "update-me" });
+      getInbox: (_req, res) => {
+        calls.push(["getInbox"]);
+        res.json({ ok: true });
       },
-      updateMySettings: (_req, res) => {
-        calls.push(["updateMySettings"]);
-        res.json({ ok: true, route: "settings" });
-      },
-      searchUsers: (req, res) => {
-        calls.push(["searchUsers", req.query.q]);
-        res.json({ ok: true, route: "search" });
-      },
-      getUserById: (req, res) => {
-        calls.push(["getUserById", req.params.userId]);
-        res.json({ ok: true, route: "detail" });
+      markAsRead: (req, res) => {
+        calls.push(["markAsRead", req.params.conversationId]);
+        res.json({ ok: true });
       },
     },
   });
   const server = await createTestServer(router);
 
   try {
-    const me = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/me",
+    const createResponse = await requestJson(server, {
+      method: "POST",
+      path: "/api/conversations/direct",
+      body: { peerUserId: "user-2" },
     });
-    const update = await requestJson(server, {
+    const inboxResponse = await requestJson(server, {
+      method: "GET",
+      path: "/api/conversations/inbox",
+    });
+    const readResponse = await requestJson(server, {
       method: "PATCH",
-      path: "/api/users/me",
-      body: { displayName: "Alice" },
-    });
-    const settings = await requestJson(server, {
-      method: "PATCH",
-      path: "/api/users/me/settings",
-      body: { theme: "dark" },
-    });
-    const search = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/search?q=ali",
-    });
-    const detail = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/user-22",
+      path: "/api/conversations/conv-1/read",
+      body: { lastSeenSeq: 8 },
     });
 
-    assert.equal(me.statusCode, 200);
-    assert.equal(update.statusCode, 200);
-    assert.equal(settings.statusCode, 200);
-    assert.equal(search.body.route, "search");
-    assert.equal(detail.body.route, "detail");
+    assert.equal(createResponse.statusCode, 201);
+    assert.equal(inboxResponse.statusCode, 200);
+    assert.equal(readResponse.statusCode, 200);
     assert.deepEqual(calls, [
-      ["getMe", "viewer-1"],
-      ["updateMe"],
-      ["updateMySettings"],
-      ["searchUsers", "ali"],
-      ["getUserById", "user-22"],
+      ["createDirect", "user-2"],
+      ["getInbox"],
+      ["markAsRead", "conv-1"],
     ]);
   } finally {
     await new Promise((resolve, reject) =>
@@ -142,17 +120,12 @@ test("user routes call the expected controller handlers", async () => {
   }
 });
 
-test("user routes surface auth errors before controller execution", async () => {
-  const router = createUserRouter({
+test("conversation routes stop at auth middleware on error", async () => {
+  const router = createConversationRouter({
     authenticate: (_req, _res, next) => {
       const error = new Error("Unauthorized");
       error.statusCode = 401;
       next(error);
-    },
-    userController: {
-      getMe: () => {
-        throw new Error("controller should not execute");
-      },
     },
   });
   const server = await createTestServer(router);
@@ -160,8 +133,9 @@ test("user routes surface auth errors before controller execution", async () => 
   try {
     const response = await requestJson(server, {
       method: "GET",
-      path: "/api/users/me",
+      path: "/api/conversations/inbox",
     });
+
     assert.equal(response.statusCode, 401);
     assert.equal(response.body.message, "Unauthorized");
   } finally {

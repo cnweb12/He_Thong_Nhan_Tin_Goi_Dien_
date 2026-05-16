@@ -1,14 +1,36 @@
 # Common Layer
 
-Use this directory for shared app-level code that does not belong to a single module.
+Thu mục `common` chứa code dùng chung ở cấp ứng dụng, không thuộc riêng một module business nào.
 
-## Intended subfolders
+## Mục đích
 
-- `constants`: shared constants and enums used across modules
-- `errors`: reusable application errors and error helpers
-- `response`: shared HTTP response builders and serializers
-- `utils`: generic helpers that are not database-specific and not module-specific
+Đây là nơi nên đặt các thành phần:
 
-## Rule
+- dùng chung giữa nhiều module
+- không phụ thuộc vào một domain cụ thể
+- không phải hạ tầng Mongo
 
-If logic is specific to one module, keep it inside that module instead of moving it here.
+## Các nhóm con hiện có
+
+- `constants`
+  Hằng số dùng chung
+- `errors`
+  Kiểu lỗi hoặc helper lỗi dùng lại được
+- `response`
+  Helper liên quan response HTTP
+- `utils`
+  Utility dùng chung không gắn với Mongo và không gắn với một module cụ thể
+
+## Khi nào không nên đưa code vào đây
+
+Nếu logic:
+
+- chỉ dành cho `users`
+- chỉ dành cho `messages`
+- chỉ dành cho `auth`
+
+thì nên để trong chính module đó.
+
+## Quy ước
+
+`common` là tầng dùng chung của app, không phải nơi gom bừa mọi helper.

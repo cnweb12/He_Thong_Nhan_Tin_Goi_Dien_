@@ -1,58 +1,86 @@
-# Auth Module
+# Module Auth
 
-Owns authentication-specific persistence, business logic, and API endpoints.
+Module `auth` chịu trách nhiệm xác thực người dùng, phát hành token, quản lý refresh token và các API liên quan tới phiên đăng nhập.
 
-## Module Structure
+## Vai trò trong hệ thống
 
-### Models (`models/`)
-- `refresh-token.model.js` - Refresh token schema with TTL index support
+Đây là module vào cửa của backend:
 
-### Services (`services/`)
-- `auth.service.js` - Core authentication business logic:
-  - `createRefreshToken()` - Create new refresh token
-  - `findRefreshToken()` - Find active token by user and device
-  - `findUserRefreshTokens()` - Get all active tokens for a user
-  - `verifyRefreshToken()` - Verify token validity and hash
-  - `revokeRefreshToken()` - Revoke single token
-  - `revokeAllUserRefreshTokens()` - Logout from all devices
-  - `revokeOtherDeviceTokens()` - Logout from other devices
-  - `deleteExpiredTokens()` - Clean up expired tokens
+- tạo tài khoản mới
+- đăng nhập và cấp `accessToken`
+- cấp lại access token bằng refresh token
+- đăng xuất một thiết bị hoặc toàn bộ thiết bị
+- cung cấp middleware xác thực JWT cho các module khác
 
-### Middleware (`middleware/`)
-- `auth.middleware.js` - JWT and token utilities:
-  - `generateJWTToken()` - Create JWT access token
-  - `verifyJWTToken()` - Validate JWT signature and expiration
-  - `hashToken()` - SHA256 token hashing
-  - `generateToken()` - Generate random tokens
-  - `extractTokenFromHeader()` - Parse Authorization header
-  - `authenticateJWT()` - Express middleware for protected routes
+Module này liên kết trực tiếp với:
 
-### Validators (`validators/`)
-- `auth.validator.js` - Request validation:
-  - `validateRegisterRequest()` - Register form validation
-  - `validateLoginRequest()` - Login form validation
-  - `validateRefreshTokenRequest()` - Token refresh validation
-  - `validateUpdateProfileRequest()` - Profile update validation
+- `users`
+  để tạo và đọc thông tin user
+- `devices`
+  để theo dõi trạng thái đăng nhập theo thiết bị
 
-### Controllers (`controllers/`)
-- `auth.controller.js` - Request handlers:
-  - `register()` - Create new user account
-  - `login()` - Authenticate user and issue tokens
-  - `refreshAccessToken()` - Issue new access token
-  - `logout()` - Revoke single device session
-  - `logoutAll()` - Revoke all sessions
-  - `getProfile()` - Get current user info
-  - `updateProfile()` - Update user profile
-  - `changePassword()` - Change user password
+## Cấu trúc module
 
-### Routes (`routes/`)
-- `auth.routes.js` - Auth API endpoints
+### Models
 
-## API Endpoints
+- `models/refresh-token.model.js`
+  Lưu refresh token đã hash, gắn với `userId` và `deviceId`
 
-### Public Routes
+### Services
+
+- `services/auth.service.js`
+  Xử lý nghiệp vụ refresh token:
+  - `createRefreshToken()`
+  - `findRefreshToken()`
+  - `findUserRefreshTokens()`
+  - `verifyRefreshToken()`
+  - `revokeRefreshToken()`
+  - `revokeAllUserRefreshTokens()`
+  - `revokeOtherDeviceTokens()`
+  - `deleteExpiredTokens()`
+
+### Middleware
+
+- `middleware/auth.middleware.js`
+  Chứa các utility JWT:
+  - tạo JWT
+  - verify JWT
+  - tách token từ Authorization header
+  - middleware `authenticateJWT()`
+
+### Validators
+
+- `validators/auth.validator.js`
+  Kiểm tra dữ liệu đầu vào cho:
+  - register
+  - login
+  - refresh token
+  - update profile
+
+### Controllers
+
+- `controllers/auth.controller.js`
+  Xử lý các request auth:
+  - `register()`
+  - `login()`
+  - `refreshAccessToken()`
+  - `logout()`
+  - `logoutAll()`
+  - `getProfile()`
+  - `updateProfile()`
+  - `changePassword()`
+
+### Routes
+
+- `routes/auth.routes.js`
+  Khai báo các endpoint `/auth`
+
+## Các API chính
+
+### Public routes
 
 **POST /auth/register**
+
 ```json
 {
   "phone": "0901234567",
@@ -63,6 +91,7 @@ Owns authentication-specific persistence, business logic, and API endpoints.
 ```
 
 **POST /auth/login**
+
 ```json
 {
   "phone": "0901234567",
@@ -73,6 +102,7 @@ Owns authentication-specific persistence, business logic, and API endpoints.
 ```
 
 **POST /auth/refresh**
+
 ```json
 {
   "refreshToken": "token-string",
@@ -80,47 +110,41 @@ Owns authentication-specific persistence, business logic, and API endpoints.
 }
 ```
 
-### Protected Routes (require Authorization header with JWT)
+### Protected routes
 
-**GET /auth/me**
-- Get current user profile
+Các route sau yêu cầu `Authorization: Bearer <accessToken>`:
 
-**PATCH /auth/profile**
-```json
-{
-  "displayName": "Jane Doe",
-  "avatarUrl": "https://..."
-}
-```
+- `GET /auth/me`
+  Lấy thông tin user hiện tại
+- `PATCH /auth/profile`
+  Cập nhật hồ sơ cơ bản
+- `POST /auth/change-password`
+  Đổi mật khẩu
+- `POST /auth/logout`
+  Đăng xuất một thiết bị
+- `POST /auth/logout-all`
+  Đăng xuất toàn bộ thiết bị
 
-**POST /auth/change-password**
-```json
-{
-  "currentPassword": "old-password",
-  "newPassword": "new-password",
-  "confirmPassword": "new-password"
-}
-```
+## Quản lý token
 
-**POST /auth/logout**
-```json
-{
-  "deviceId": "device-uuid"
-}
-```
+- **Access Token**
+  JWT sống ngắn, hiện tại mặc định 1 giờ
+- **Refresh Token**
+  Token sống dài hơn, được hash trước khi lưu DB
+- **Device tracking**
+  Mỗi lần login sẽ create/update `user_device`
+- **Multi-device support**
+  Một user có thể có nhiều phiên đăng nhập song song
 
-**POST /auth/logout-all**
-- Logout from all devices (no body required)
+## Biến môi trường liên quan
 
-## Token Management
+- `JWT_SECRET`
+  Secret dùng để ký và verify access token
+- `NODE_ENV`
+  Ảnh hưởng cách app trả lỗi
 
-- **Access Token**: JWT, 1 hour expiration, includes `userId` and `phone`
-- **Refresh Token**: Raw token, 7 days expiration, hashed in database
-- Device tracking: Each login creates/updates a device record
-- Multi-device support: Users can have multiple active sessions
+## Lưu ý quan trọng
 
-## Environment Variables
-
-- `JWT_SECRET` - Secret key for JWT signing
-- `REFRESH_TOKEN_SECRET` - Secret for refresh tokens (currently unused, using raw tokens)
-- `NODE_ENV` - Environment (production hides error details)
+- backend không tin dữ liệu identity từ frontend
+- `userId` của request protected luôn phải lấy từ JWT đã verify
+- refresh token hiện được quản lý trong DB thay vì chỉ dựa vào JWT stateless

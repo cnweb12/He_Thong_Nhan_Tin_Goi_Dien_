@@ -11,6 +11,8 @@
     "db:reset": "node scripts/database/reset-local-database.js",
     "typecheck": "tsc --noEmit",
     "test": "node --test",
+    "test:conversations": "node --test tests/modules/conversations/*.test.js",
+    "test:devices": "node --test tests/modules/devices/*.test.js",
     "test:users": "node --test tests/modules/users/*.test.js",
     "test:messages": "node --test tests/modules/messages/*.test.js",
     "test:calls": "node --test tests/modules/calls/*.test.js"

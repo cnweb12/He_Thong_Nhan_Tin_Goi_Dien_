@@ -3,12 +3,14 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 const express = require("express");
 
-const { createCallRouter } = require("../../../src/modules/calls/routes/calls.routes");
+const {
+  createCallRouter,
+} = require("../../../src/modules/calls/routes/calls.routes");
 
 async function createTestServer(router) {
   const app = express();
   app.use(express.json());
-  app.use("/calls", router);
+  app.use("/api/calls", router);
   app.use((error, _req, res, _next) => {
     res.status(error.statusCode || 500).json({
       ok: false,
@@ -41,18 +43,18 @@ async function requestJson(server, { method, path, body }) {
           : {},
       },
       (res) => {
-        let raw = "";
-        res.setEncoding("utf8");
+        const chunks = [];
         res.on("data", (chunk) => {
-          raw += chunk;
+          chunks.push(chunk);
         });
         res.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
           resolve({
             statusCode: res.statusCode,
             body: raw ? JSON.parse(raw) : null,
           });
         });
-      }
+      },
     );
 
     req.on("error", reject);
@@ -94,22 +96,25 @@ test("call routes dispatch to expected handlers", async () => {
   try {
     const createResponse = await requestJson(server, {
       method: "POST",
-      path: "/calls",
+      path: "/api/calls",
       body: { conversationId: "conv-1", type: "audio", status: "completed" },
     });
     const listResponse = await requestJson(server, {
       method: "GET",
-      path: "/calls/conversations/conv-1",
+      path: "/api/calls/conversations/conv-1",
     });
     const statusResponse = await requestJson(server, {
       method: "PATCH",
-      path: "/calls/call-1/status",
+      path: "/api/calls/call-1/status",
       body: { status: "completed" },
     });
     const participantResponse = await requestJson(server, {
       method: "PATCH",
-      path: "/calls/call-1/participants",
-      body: { participantUserId: "user-2", joinedAt: "2026-04-19T09:00:00.000Z" },
+      path: "/api/calls/call-1/participants",
+      body: {
+        participantUserId: "user-2",
+        joinedAt: "2026-04-19T09:00:00.000Z",
+      },
     });
 
     assert.equal(createResponse.statusCode, 201);
@@ -123,7 +128,9 @@ test("call routes dispatch to expected handlers", async () => {
       ["participant", "call-1"],
     ]);
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });
 
@@ -140,12 +147,14 @@ test("call routes stop at auth middleware on error", async () => {
   try {
     const response = await requestJson(server, {
       method: "GET",
-      path: "/calls/conversations/conv-1",
+      path: "/api/calls/conversations/conv-1",
     });
 
     assert.equal(response.statusCode, 401);
     assert.equal(response.body.message, "Unauthorized");
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });

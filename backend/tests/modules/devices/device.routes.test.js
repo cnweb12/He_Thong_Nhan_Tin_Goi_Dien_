@@ -1,16 +1,16 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
-
 const express = require("express");
+
 const {
-  createUserRouter,
-} = require("../../../src/modules/users/routes/user.routes");
+  createDeviceRouter,
+} = require("../../../src/modules/devices/routes/device.routes");
 
 async function createTestServer(router) {
   const app = express();
   app.use(express.json());
-  app.use("/api/users", router);
+  app.use("/api/devices", router);
   app.use((error, _req, res, _next) => {
     res.status(error.statusCode || 500).json({
       ok: false,
@@ -58,82 +58,60 @@ async function requestJson(server, { method, path, body }) {
     );
 
     req.on("error", reject);
-
     if (payload) {
       req.write(payload);
     }
-
     req.end();
   });
 }
 
-test("user routes call the expected controller handlers", async () => {
+test("device routes dispatch to expected handlers", async () => {
   const calls = [];
-  const router = createUserRouter({
+  const router = createDeviceRouter({
     authenticate: (req, _res, next) => {
-      req.user = { userId: "viewer-1" };
+      req.user = { userId: "user-1" };
       next();
     },
-    userController: {
-      getMe: (req, res) => {
-        calls.push(["getMe", req.user.userId]);
-        res.json({ ok: true, route: "me" });
+    deviceController: {
+      upsertCurrent: (req, res) => {
+        calls.push(["upsertCurrent", req.body.deviceId]);
+        res.status(201).json({ ok: true });
       },
-      updateMe: (_req, res) => {
-        calls.push(["updateMe"]);
-        res.json({ ok: true, route: "update-me" });
+      getMyDevices: (_req, res) => {
+        calls.push(["getMyDevices"]);
+        res.json({ ok: true });
       },
-      updateMySettings: (_req, res) => {
-        calls.push(["updateMySettings"]);
-        res.json({ ok: true, route: "settings" });
-      },
-      searchUsers: (req, res) => {
-        calls.push(["searchUsers", req.query.q]);
-        res.json({ ok: true, route: "search" });
-      },
-      getUserById: (req, res) => {
-        calls.push(["getUserById", req.params.userId]);
-        res.json({ ok: true, route: "detail" });
+      updateCurrentPresence: (req, res) => {
+        calls.push(["updateCurrentPresence", req.body.deviceId]);
+        res.json({ ok: true });
       },
     },
   });
   const server = await createTestServer(router);
 
   try {
-    const me = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/me",
+    const upsertResponse = await requestJson(server, {
+      method: "PUT",
+      path: "/api/devices/current",
+      body: { deviceId: "device-1", platform: "web" },
     });
-    const update = await requestJson(server, {
+    const listResponse = await requestJson(server, {
+      method: "GET",
+      path: "/api/devices/me",
+    });
+    const presenceResponse = await requestJson(server, {
       method: "PATCH",
-      path: "/api/users/me",
-      body: { displayName: "Alice" },
-    });
-    const settings = await requestJson(server, {
-      method: "PATCH",
-      path: "/api/users/me/settings",
-      body: { theme: "dark" },
-    });
-    const search = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/search?q=ali",
-    });
-    const detail = await requestJson(server, {
-      method: "GET",
-      path: "/api/users/user-22",
+      path: "/api/devices/current/presence",
+      body: { deviceId: "device-1", isOnline: false },
     });
 
-    assert.equal(me.statusCode, 200);
-    assert.equal(update.statusCode, 200);
-    assert.equal(settings.statusCode, 200);
-    assert.equal(search.body.route, "search");
-    assert.equal(detail.body.route, "detail");
+    assert.equal(upsertResponse.statusCode, 201);
+    assert.equal(listResponse.statusCode, 200);
+    assert.equal(presenceResponse.statusCode, 200);
     assert.deepEqual(calls, [
-      ["getMe", "viewer-1"],
-      ["updateMe"],
-      ["updateMySettings"],
-      ["searchUsers", "ali"],
-      ["getUserById", "user-22"],
+      ["upsertCurrent", "device-1"],
+      ["getMyDevices"],
+      ["updateCurrentPresence", "device-1"],
     ]);
   } finally {
     await new Promise((resolve, reject) =>
@@ -142,17 +120,12 @@ test("user routes call the expected controller handlers", async () => {
   }
 });
 
-test("user routes surface auth errors before controller execution", async () => {
-  const router = createUserRouter({
+test("device routes stop at auth middleware on error", async () => {
+  const router = createDeviceRouter({
     authenticate: (_req, _res, next) => {
       const error = new Error("Unauthorized");
       error.statusCode = 401;
       next(error);
-    },
-    userController: {
-      getMe: () => {
-        throw new Error("controller should not execute");
-      },
     },
   });
   const server = await createTestServer(router);
@@ -160,8 +133,9 @@ test("user routes surface auth errors before controller execution", async () => 
   try {
     const response = await requestJson(server, {
       method: "GET",
-      path: "/api/users/me",
+      path: "/api/devices/me",
     });
+
     assert.equal(response.statusCode, 401);
     assert.equal(response.body.message, "Unauthorized");
   } finally {
