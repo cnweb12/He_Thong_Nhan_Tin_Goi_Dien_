@@ -20,17 +20,17 @@ Module nay ho tro:
 - `controllers/device.controller.js`
   HTTP layer cho device APIs
 - `routes/device.routes.js`
-  Mount API duoi prefix `/devices`
+  Mount API duoi prefix `/api/devices`
 - `validators/device.validator.js`
   Kiem tra input cho device APIs
 
 ## API hien co
 
-- `PUT /devices/current`
+- `PUT /api/devices/current`
   Tao hoac cap nhat ban ghi thiet bi hien tai cua user
-- `GET /devices/me`
+- `GET /api/devices/me`
   Liet ke cac thiet bi cua chinh user dang dang nhap
-- `PATCH /devices/current/presence`
+- `PATCH /api/devices/current/presence`
   Cap nhat `isOnline` va `lastActiveAt` cua mot thiet bi
 
 ## Du lieu chinh

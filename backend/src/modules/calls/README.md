@@ -12,17 +12,17 @@ Module `calls` quan ly call log, lich su cuoc goi theo conversation, va trang th
 
 ## API dang duoc mount
 
-Module nay da duoc mount vao router tong tai `src/routes/index.js` voi prefix `/calls`.
+Module nay da duoc mount vao router tong tai `src/routes/index.js` voi prefix `/api/calls`.
 
 API hien co:
 
-- `POST /calls`
+- `POST /api/calls`
   Tao call log moi
-- `GET /calls/conversations/:conversationId`
+- `GET /api/calls/conversations/:conversationId`
   Lay lich su cuoc goi cua mot conversation
-- `PATCH /calls/:callId/status`
+- `PATCH /api/calls/:callId/status`
   Cap nhat trang thai call (`completed`, `missed`, `cancelled`, `rejected`)
-- `PATCH /calls/:callId/participants`
+- `PATCH /api/calls/:callId/participants`
   Cap nhat `joinedAt` / `leftAt` cua participant trong call
 
 ## Muc dich

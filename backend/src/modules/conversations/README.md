@@ -23,17 +23,17 @@ Day la module nen cho tinh nang nhan tin:
 - `controllers/conversation.controller.js`
   Nhan request HTTP va goi service
 - `routes/conversation.routes.js`
-  Mount API duoi prefix `/conversations`
+  Mount API duoi prefix `/api/conversations`
 - `validators/conversation.validator.js`
   Kiem tra body/query/params cho conversation APIs
 
 ## API hien co
 
-- `POST /conversations/direct`
+- `POST /api/conversations/direct`
   Tao hoac lay direct conversation giua user hien tai va `peerUserId`
-- `GET /conversations/inbox`
+- `GET /api/conversations/inbox`
   Lay inbox cua user dang dang nhap
-- `PATCH /conversations/:conversationId/read`
+- `PATCH /api/conversations/:conversationId/read`
   Danh dau da doc den `lastSeenSeq`
 
 ## Chuc nang da co

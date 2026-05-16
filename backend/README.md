@@ -24,12 +24,12 @@ Backend hien duoc to chuc theo huong chat app:
 Dang duoc mount vao router tong:
 
 - `/health`
-- `/auth`
-- `/users`
-- `/conversations`
-- `/messages`
-- `/devices`
-- `/calls`
+- `/api/auth`
+- `/api/users`
+- `/api/conversations`
+- `/api/messages`
+- `/api/devices`
+- `/api/calls`
 
 ## Quan he giua cac module
 

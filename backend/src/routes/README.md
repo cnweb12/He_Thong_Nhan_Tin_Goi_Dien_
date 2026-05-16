@@ -22,12 +22,12 @@ Day la noi tra loi cau hoi:
 Router tong hien dang mount:
 
 - `/health`
-- `/auth`
-- `/users`
-- `/conversations`
-- `/messages`
-- `/devices`
-- `/calls`
+- `/api/auth`
+- `/api/users`
+- `/api/conversations`
+- `/api/messages`
+- `/api/devices`
+- `/api/calls`
 
 ## Quy uoc
 

@@ -73,13 +73,13 @@ Module này liên kết trực tiếp với:
 ### Routes
 
 - `routes/auth.routes.js`
-  Khai báo các endpoint `/auth`
+  Khai báo các endpoint `/api/auth`
 
 ## Các API chính
 
 ### Public routes
 
-**POST /auth/register**
+**POST /api/auth/register**
 
 ```json
 {
@@ -90,7 +90,7 @@ Module này liên kết trực tiếp với:
 }
 ```
 
-**POST /auth/login**
+**POST /api/auth/login**
 
 ```json
 {
@@ -101,7 +101,7 @@ Module này liên kết trực tiếp với:
 }
 ```
 
-**POST /auth/refresh**
+**POST /api/auth/refresh**
 
 ```json
 {
@@ -114,15 +114,15 @@ Module này liên kết trực tiếp với:
 
 Các route sau yêu cầu `Authorization: Bearer <accessToken>`:
 
-- `GET /auth/me`
+- `GET /api/auth/me`
   Lấy thông tin user hiện tại
-- `PATCH /auth/profile`
+- `PATCH /api/auth/profile`
   Cập nhật hồ sơ cơ bản
-- `POST /auth/change-password`
+- `POST /api/auth/change-password`
   Đổi mật khẩu
-- `POST /auth/logout`
+- `POST /api/auth/logout`
   Đăng xuất một thiết bị
-- `POST /auth/logout-all`
+- `POST /api/auth/logout-all`
   Đăng xuất toàn bộ thiết bị
 
 ## Quản lý token

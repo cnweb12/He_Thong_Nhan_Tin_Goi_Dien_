@@ -1,8 +1,8 @@
-# Modules Layer
+# Lớp Modules (Modules Layer)
 
-Each domain area should own its own `models`, `services`, and later `controllers`, `dto`, `validators`, or `repositories` if needed.
+Mỗi một lĩnh vực nghiệp vụ (domain) nên sở hữu các `models`, `services`, và sau này có thể là `controllers`, `dto`, `validators`, hoặc `repositories` nếu cần.
 
-Current direction:
+Định hướng hiện tại:
 
 - `auth`
 - `users`
@@ -11,7 +11,7 @@ Current direction:
 - `messages`
 - `calls`
 
-Keep cross-collection business flows in services, not in Mongoose hooks.
+Nên giữ các luồng xử lý nghiệp vụ liên quan đến nhiều collection trong services, không nên đặt trong Mongoose hooks.
 
 ## Module status hien tai
 
