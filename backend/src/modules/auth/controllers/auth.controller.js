@@ -38,10 +38,14 @@ async function register(req, res, next) {
     const passwordHash = authMiddleware.hashToken(password);
 
     // Create user
+    const now = new Date();
     const user = await UserModel.create({
       phone,
+      username: phone, // Use phone as default username
       displayName,
       passwordHash,
+      createdAt: now,
+      updatedAt: now,
     });
 
     res.status(201).json({

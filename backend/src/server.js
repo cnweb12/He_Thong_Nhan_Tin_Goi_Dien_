@@ -1,6 +1,6 @@
 const http = require("http");
 const app = require("./app");
-const { connectMongo, disconnectMongo, registerModels } = require("../database/mongo");
+const { connectMongo, disconnectMongo, registerModels, mongoose } = require("../database/mongo");
 const config = require("./config/env");
 
 let server;
@@ -38,6 +38,9 @@ async function shutdown(signal) {
 
 async function startServer() {
   registerModels();
+
+  mongoose.set("debug", true);
+
   await connectMongo(config.mongoUri);
 
   server = http.createServer(app);
