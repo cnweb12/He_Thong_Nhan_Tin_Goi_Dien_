@@ -22,11 +22,11 @@ Muc tieu la doi chieu voi cac nguyen tac OWASP co ban:
 
 Tat ca cac route business chinh deu di qua JWT middleware:
 
-- `/users/*`
-- `/conversations/*`
-- `/messages/*`
-- `/devices/*`
-- `/calls/*`
+- `/api/users/*`
+- `/api/conversations/*`
+- `/api/messages/*`
+- `/api/devices/*`
+- `/api/calls/*`
 
 He qua:
 
@@ -70,7 +70,7 @@ Da ap dung cac rule sau:
 - `conversations` khong tra `directKey` ra response
 - `calls` khong cho client tu set `initiatedBy`
 - `users` khong tra `phone` trong luong public (`search`, `get by id`)
-- `users` chi tra `phone` cho chinh user qua cac luong self-service (`/users/me`, update profile/settings)
+- `users` chi tra `phone` cho chinh user qua cac luong self-service (`/api/users/me`, update profile/settings)
 
 ## 2. Cac thay doi bao mat da ap dung trong dot nay
 
@@ -93,7 +93,7 @@ Da ap dung cac rule sau:
 
 ### Users
 
-- phone number khong con bi lo qua `GET /users/:userId` va `GET /users/search`
+- phone number khong con bi lo qua `GET /api/users/:userId` va `GET /api/users/search`
 
 ## 3. Nhung diem on dinh tot hien tai
 

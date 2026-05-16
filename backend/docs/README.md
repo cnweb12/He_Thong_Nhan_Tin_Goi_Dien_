@@ -1,28 +1,28 @@
-# Backend Docs
+# Tài liệu Backend
 
-- `development.md`: local development workflow and dev environment setup
-- `testing.md`: local testing workflow and validation steps
-- `production.md`: production-oriented container setup and deploy notes
-- `security.md`: ket qua ra soat bao mat/privacy o muc code va API
+- `development.md`: quy trình phát triển cục bộ và thiết lập môi trường phát triển
+- `testing.md`: quy trình kiểm thử cục bộ và các bước xác thực
+- `production.md`: thiết lập container hướng đến sản phẩm và ghi chú triển khai
+- `security.md`: kết quả rà soát bảo mật/quyền riêng tư ở mức mã và API
 
-## Nen doc theo thu tu nay neu moi vao project
+## Nên đọc theo thứ tự này nếu mới vào dự án
 
 1. `../README.md`
-   Tong quan backend, module status, va API surface hien tai
+   Tổng quan backend, trạng thái mô-đun và bề mặt API hiện tại
 2. `development.md`
-   Cach dung moi truong dev
+   Cách dùng môi trường phát triển
 3. `testing.md`
-   Cach chay test/typecheck
+   Cách chạy kiểm thử/kiểm tra kiểu
 4. `production.md`
-   Cach chay stack production
+   Cách chạy stack sản phẩm
 5. `security.md`
-   Cac control bao mat da co va rui ro con lai
-6. README cua tung module trong `src/modules`
-   Hieu context nghiep vu cua tung domain
+   Các kiểm soát bảo mật đã có và rủi ro còn lại
+6. README của từng mô-đun trong `src/modules`
+   Hiểu bối cảnh nghiệp vụ của từng miền
 
-## Tai lieu bo tro khac
+## Tài liệu bổ trợ khác
 
 - `../scripts/README.md`
-  Giai thich cac script ho tro backend
+  Giải thích các tập lệnh hỗ trợ backend
 - `../database/mongo/README.md`
-  Giai thich tang ha tang MongoDB
+  Giải thích tầng hạ tầng MongoDB

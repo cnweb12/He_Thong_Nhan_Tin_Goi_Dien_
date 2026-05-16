@@ -1,18 +1,18 @@
-# Quy Trinh Phat Trien
+# Quy Trình Phát Triển
 
-## Muc tieu
+## Mục tiêu
 
-Tai lieu nay mo ta cach chay backend va MongoDB local bang Docker, bat hot reload, va di theo mot quy trinh phat trien lap lai duoc.
+Tài liệu này mô tả cách chạy backend và MongoDB local bằng Docker, bật hot reload, và đi theo một quy trình phát triển lặp lại được.
 
-## 1. Dieu kien can co
+## 1. Điều kiện cần có
 
-Truoc khi bat dau, may can co:
+Trước khi bắt đầu, máy cần có:
 
-- Docker Desktop dang chay
-- `docker compose` su dung duoc
-- file `.env` tai thu muc goc cua repository
+- Docker Desktop đang chạy
+- `docker compose` sử dụng được
+- file `.env` tại thư mục gốc của repository
 
-Nen kiem tra nhanh:
+Nên kiểm tra nhanh:
 
 ```bash
 docker version
@@ -21,19 +21,19 @@ docker compose version
 
 Neu `docker version` khong ket noi duoc toi daemon, hay mo Docker Desktop va cho den khi engine san sang.
 
-## 2. Cau hinh moi truong
+## 2. Cấu hình môi trường
 
-Tat ca bien runtime duoc doc tu file `.env` o root project.
+Tất cả biến runtime được đọc từ file `.env` ở root project.
 
-### Tao file `.env`
+### Tạo file `.env`
 
-Dung file mau cho moi truong phat trien:
+Dùng file mẫu cho môi trường phát triển:
 
 ```bash
 copy .env.development.example .env
 ```
 
-Gia tri goi y:
+Giá trị gợi ý:
 
 ```env
 NODE_ENV=development
@@ -47,56 +47,56 @@ MONGO_APP_USER=chat_app_user
 MONGO_APP_PASSWORD=chat_app_password
 ```
 
-### Luu y
+### Lưu ý
 
-- file `.env` phai nam o root repository
-- backend container ket noi Mongo bang service name `mongo`
-- o moi truong dev, Mongo map ra host qua cong `27018`
+- file `.env` phải nằm ở root repository
+- backend container kết nối Mongo bằng service name `mongo`
+- ở môi trường dev, Mongo map ra host qua cổng `27018`
 
-## 3. Khoi dong stack dev
+## 3. Khởi động stack dev
 
-Tu root project, chay:
+Từ root project, chạy:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Qua trinh nay se:
+Quá trình này sẽ:
 
-- khoi dong MongoDB bang image `mongo:8.0`
-- build backend bang stage `development` trong `backend/Dockerfile`
-- bind mount thu muc `./backend` vao container
+- khởi động MongoDB bằng image `mongo:8.0`
+- build backend bằng stage `development` trong `backend/Dockerfile`
+- bind mount thư mục `./backend` vào container
 - mount volume `/app/node_modules`
-- chay `backend/docker/dev-entrypoint.sh`
-- chay backend bang `npm run dev`
-- bat `tsx watch src/server.js` de hot reload
+- chạy `backend/docker/dev-entrypoint.sh`
+- chạy backend bằng `npm run dev`
+- bật `tsx watch src/server.js` để hot reload
 
-## 4. Kiem tra stack da san sang
+## 4. Kiểm tra stack đã sẵn sàng
 
-Cho den khi thay:
+Chờ đến khi thấy:
 
-- log Mongo co dong `Waiting for connections`
-- log backend co dong `[server] Listening on port 3000.`
+- log Mongo có dòng `Waiting for connections`
+- log backend có dòng `[server] Listening on port 3000.`
 
-Sau do kiem tra health endpoint:
+Sau đó kiểm tra health endpoint:
 
 ```bash
 curl http://localhost:3000/health
 ```
 
-Neu dung PowerShell:
+Nếu dùng PowerShell:
 
 ```powershell
 Invoke-WebRequest http://localhost:3000/health
 ```
 
-## 5. Dac diem cua moi truong dev
+## 5. Đặc điểm của môi trường dev
 
-- ma nguon backend duoc bind mount vao container
-- backend tu reload khi file thay doi
+- mã nguồn backend được bind mount vào container
+- backend tự reload khi file thay đổi
 - `MONGO_AUTO_INDEX=true`
-- du lieu Mongo duoc luu trong volume `mongo_data`
-- Mongo co healthcheck bang `mongosh`
+- dữ liệu Mongo được lưu trong volume `mongo_data`
+- Mongo có healthcheck bằng `mongosh`
 
 ## 6. Quy trinh dev hang ngay
 
