@@ -10,7 +10,11 @@
     "db:seed": "node scripts/database/seed-dev-data.js",
     "db:reset": "node scripts/database/reset-local-database.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --test",
+    "test": "node scripts/run-memory-tests.js",
+    "test:e2e": "node scripts/run-e2e-tests.js",
+    "test:watch": "node --test --watch tests/**/*.test.js",
+    "test:coverage": "c8 node --test tests/**/*.test.js",
+    "test:auth": "node --test tests/modules/auth/*.test.js",
     "test:conversations": "node --test tests/modules/conversations/*.test.js",
     "test:devices": "node --test tests/modules/devices/*.test.js",
     "test:users": "node --test tests/modules/users/*.test.js",
@@ -20,11 +24,14 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.5.2",
     "mongoose": "^8.12.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.6.0",
+    "c8": "^11.0.0",
+    "mongodb-memory-server": "^11.1.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
