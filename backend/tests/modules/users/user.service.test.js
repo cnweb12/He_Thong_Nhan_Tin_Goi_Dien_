@@ -70,6 +70,7 @@ test("searchUsers builds lookup filter and excludes current user", async () => {
   assert.equal(receivedFilter.$or[1].username, "alice");
   assert.equal(queryable.limitArg, 5);
   assert.equal(users[0].passwordHash, undefined);
+  assert.equal(users[0].phone, undefined);
 });
 
 test("updateProfile maps mongo duplicate errors to http errors", async () => {

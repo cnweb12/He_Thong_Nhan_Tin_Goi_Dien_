@@ -2,6 +2,50 @@
 
 Mongo infrastructure now lives in `backend/database/mongo`.
 
+## Backend nay giai quyet bai toan gi
+
+Backend hien duoc to chuc theo huong chat app:
+
+- `auth`
+  dang ky, dang nhap, refresh token, logout
+- `users`
+  profile, settings, search user
+- `conversations`
+  metadata conversation, membership, inbox projection
+- `messages`
+  gui tin nhan, cap nhat unread count, doc lich su tin nhan
+- `devices`
+  luu trang thai theo thiet bi
+- `calls`
+  luu call log va thao tac lien quan cuoc goi
+
+## API surface hien tai
+
+Dang duoc mount vao router tong:
+
+- `/health`
+- `/api/auth`
+- `/api/users`
+- `/api/conversations`
+- `/api/messages`
+- `/api/devices`
+- `/api/calls`
+
+## Quan he giua cac module
+
+- `auth` phu thuoc vao `users` va `devices`
+- `messages` phu thuoc vao `conversations` va `user_conversation_inbox`
+- `conversations` quan ly membership va inbox projection
+- `calls` dung `conversations` de xac nhan membership truoc khi thao tac
+
+Neu can hieu luong chat chinh, thu tu doc hop ly la:
+
+1. `auth`
+2. `users`
+3. `conversations`
+4. `messages`
+5. `calls`
+
 ## Scripts
 
 - `npm start`
@@ -9,8 +53,11 @@ Mongo infrastructure now lives in `backend/database/mongo`.
 - `npm run db:sync-indexes`
 - `npm run db:seed`
 - `npm run db:reset`
+- `npm run test:conversations`
+- `npm run test:devices`
 - `npm run test:users`
 - `npm run test:messages`
+- `npm run test:calls`
 - `npm run typecheck`
 
 ## Docker
@@ -40,9 +87,35 @@ Mongo infrastructure now lives in `backend/database/mongo`.
 - Keep empty placeholder folders when they represent a real future layer in the target architecture.
 - Do not duplicate the same responsibility in both `src/*` and root-level folders.
 
+## Trang thai module
+
+- `auth`
+  Hoan thien co route/controller/service/validator
+- `users`
+  Hoan thien co route/controller/service/validator va test
+- `messages`
+  Hoan thien co route/controller/service/validator va test
+- `conversations`
+  Hoan thien co route/controller/service/validator va test
+- `devices`
+  Hoan thien co route/controller/service/validator va test
+- `calls`
+  Hoan thien co route/controller/service/validator va test
+
 ## Environment Docs
 
 - [docs/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\README.md)
 - [docs/development.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\development.md)
 - [docs/testing.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\testing.md)
 - [docs/production.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\production.md)
+- [docs/security.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\security.md)
+
+## Module Docs
+
+- [src/modules/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\README.md)
+- [src/modules/auth/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\auth\README.md)
+- [src/modules/users/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\users\README.md)
+- [src/modules/messages/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\messages\README.md)
+- [src/modules/conversations/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\conversations\README.md)
+- [src/modules/devices/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\devices\README.md)
+- [src/modules/calls/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\calls\README.md)

@@ -39,15 +39,15 @@ Một request đi qua module `users` thường theo thứ tự:
 
 ## Các API chính
 
-- `GET /users/me`
+- `GET /api/users/me`
   Lấy thông tin của user hiện tại
-- `PATCH /users/me`
+- `PATCH /api/users/me`
   Cập nhật hồ sơ user hiện tại
-- `PATCH /users/me/settings`
+- `PATCH /api/users/me/settings`
   Cập nhật phần cài đặt
-- `GET /users/search?q=...`
+- `GET /api/users/search?q=...`
   Tìm kiếm user
-- `GET /users/:userId`
+- `GET /api/users/:userId`
   Lấy thông tin user theo `id`
 
 ## Kiểm thử

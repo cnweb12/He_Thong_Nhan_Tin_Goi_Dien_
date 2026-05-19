@@ -3,12 +3,14 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 const express = require("express");
 
-const { createMessageRouter } = require("../../../src/modules/messages/routes/message.routes");
+const {
+  createMessageRouter,
+} = require("../../../src/modules/messages/routes/message.routes");
 
 async function createTestServer(router) {
   const app = express();
   app.use(express.json());
-  app.use("/messages", router);
+  app.use("/api/messages", router);
   app.use((error, _req, res, _next) => {
     res.status(error.statusCode || 500).json({
       ok: false,
@@ -41,18 +43,18 @@ async function requestJson(server, { method, path, body }) {
           : {},
       },
       (res) => {
-        let raw = "";
-        res.setEncoding("utf8");
+        const chunks = [];
         res.on("data", (chunk) => {
-          raw += chunk;
+          chunks.push(chunk);
         });
         res.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
           resolve({
             statusCode: res.statusCode,
             body: raw ? JSON.parse(raw) : null,
           });
         });
-      }
+      },
     );
 
     req.on("error", reject);
@@ -86,12 +88,12 @@ test("message routes dispatch to expected handlers", async () => {
   try {
     const sendResponse = await requestJson(server, {
       method: "POST",
-      path: "/messages",
+      path: "/api/messages",
       body: { conversationId: "conv-1", text: "Hello" },
     });
     const listResponse = await requestJson(server, {
       method: "GET",
-      path: "/messages/conversations/conv-1",
+      path: "/api/messages/conversations/conv-1",
     });
 
     assert.equal(sendResponse.statusCode, 201);
@@ -101,7 +103,9 @@ test("message routes dispatch to expected handlers", async () => {
       ["getConversationMessages", "conv-1"],
     ]);
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });
 
@@ -118,12 +122,14 @@ test("message routes stop at auth middleware on error", async () => {
   try {
     const response = await requestJson(server, {
       method: "GET",
-      path: "/messages/conversations/conv-1",
+      path: "/api/messages/conversations/conv-1",
     });
 
     assert.equal(response.statusCode, 401);
     assert.equal(response.body.message, "Unauthorized");
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });

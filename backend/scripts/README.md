@@ -13,8 +13,14 @@ Thu muc `backend/scripts` chua cac script ho tro cho backend.
 
 - `test-users.bat`
   Chay toan bo test cua module `users` ben trong backend container
+- `test-conversations.bat`
+  Chay toan bo test cua module `conversations` ben trong backend container
+- `test-devices.bat`
+  Chay toan bo test cua module `devices` ben trong backend container
 - `test-messages.bat`
   Chay toan bo test cua module `messages` ben trong backend container
+- `test-calls.bat`
+  Chay toan bo test cua module `calls` ben trong backend container
 - `typecheck.bat`
   Chay `npm run typecheck` ben trong backend container
 
@@ -24,7 +30,10 @@ Tu root project, co the chay:
 
 ```bat
 backend\scripts\tests\test-users.bat
+backend\scripts\tests\test-conversations.bat
+backend\scripts\tests\test-devices.bat
 backend\scripts\tests\test-messages.bat
+backend\scripts\tests\test-calls.bat
 backend\scripts\tests\typecheck.bat
 ```
 

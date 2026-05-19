@@ -21,7 +21,7 @@ function createCallController(dependencies = {}) {
 
       const call = await service.createCallLog({
         ...req.body,
-        initiatedBy: req.user?.userId || req.body.initiatedBy,
+        initiatedBy: req.user.userId,
       });
 
       res.status(201).json({ ok: true, data: call });

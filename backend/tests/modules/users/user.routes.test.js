@@ -3,12 +3,14 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 
 const express = require("express");
-const { createUserRouter } = require("../../../src/modules/users/routes/user.routes");
+const {
+  createUserRouter,
+} = require("../../../src/modules/users/routes/user.routes");
 
 async function createTestServer(router) {
   const app = express();
   app.use(express.json());
-  app.use("/users", router);
+  app.use("/api/users", router);
   app.use((error, _req, res, _next) => {
     res.status(error.statusCode || 500).json({
       ok: false,
@@ -41,18 +43,18 @@ async function requestJson(server, { method, path, body }) {
           : {},
       },
       (res) => {
-        let raw = "";
-        res.setEncoding("utf8");
+        const chunks = [];
         res.on("data", (chunk) => {
-          raw += chunk;
+          chunks.push(chunk);
         });
         res.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
           resolve({
             statusCode: res.statusCode,
             body: raw ? JSON.parse(raw) : null,
           });
         });
-      }
+      },
     );
 
     req.on("error", reject);
@@ -98,19 +100,28 @@ test("user routes call the expected controller handlers", async () => {
   const server = await createTestServer(router);
 
   try {
-    const me = await requestJson(server, { method: "GET", path: "/users/me" });
+    const me = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/me",
+    });
     const update = await requestJson(server, {
       method: "PATCH",
-      path: "/users/me",
+      path: "/api/users/me",
       body: { displayName: "Alice" },
     });
     const settings = await requestJson(server, {
       method: "PATCH",
-      path: "/users/me/settings",
+      path: "/api/users/me/settings",
       body: { theme: "dark" },
     });
-    const search = await requestJson(server, { method: "GET", path: "/users/search?q=ali" });
-    const detail = await requestJson(server, { method: "GET", path: "/users/user-22" });
+    const search = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/search?q=ali",
+    });
+    const detail = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/user-22",
+    });
 
     assert.equal(me.statusCode, 200);
     assert.equal(update.statusCode, 200);
@@ -125,7 +136,9 @@ test("user routes call the expected controller handlers", async () => {
       ["getUserById", "user-22"],
     ]);
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });
 
@@ -145,10 +158,15 @@ test("user routes surface auth errors before controller execution", async () => 
   const server = await createTestServer(router);
 
   try {
-    const response = await requestJson(server, { method: "GET", path: "/users/me" });
+    const response = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/me",
+    });
     assert.equal(response.statusCode, 401);
     assert.equal(response.body.message, "Unauthorized");
   } finally {
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 });

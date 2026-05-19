@@ -1,0 +1,698 @@
+# Tài liệu Hướng dẫn sử dụng API (API Reference)
+
+Tài liệu này liệt kê chi tiết các endpoint API, phương thức xác thực, header và cấu trúc payload (body/query) phục vụ cho Frontend/Client.
+
+## 1. Cơ chế Xác thực (Authentication)
+
+- **Public API**: Không yêu cầu Header xác thực.
+- **Protected API**: Yêu cầu truyền Access Token ở Header.
+  ```http
+  Authorization: Bearer <accessToken>
+  ```
+- **Response**: `{ "ok": true, "message": "Cập nhật trạng thái thành công" }`
+
+## 2. Module Auth (`/api/auth`)
+
+### 2.1. Đăng ký tài khoản (Public)
+
+- **Endpoint**: `POST /api/auth/register`
+- **Body**:
+  ```json
+  {
+    "phone": "0901234567",
+    "displayName": "Ten Hien Thi",
+    "password": "matkhau123",
+    "passwordConfirm": "matkhau123"
+  }
+  ```
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8e",
+      "phone": "0901234567",
+      "displayName": "Ten Hien Thi"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ (ví dụ: thiếu trường, mật khẩu không khớp).
+  - `409 Conflict`: Số điện thoại đã tồn tại.
+
+### 2.2. Đăng nhập (Public)
+
+- **Endpoint**: `POST /api/auth/login`
+- **Body**:
+  ```json
+  {
+    "phone": "0901234567",
+    "password": "matkhau123",
+    "deviceId": "device-uuid-1234",
+    "platform": "web" // hoac 'ios', 'android'
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "aRandomRefreshTokenString",
+      "user": {
+        "userId": "60f7e9b3e9b3f0001f3e8b8e",
+        "phone": "0901234567",
+        "displayName": "Ten Hien Thi",
+        "avatarUrl": "https://example.com/avatar.jpg"
+      }
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+  - `401 Unauthorized`: Số điện thoại hoặc mật khẩu không đúng.
+
+### 2.3. Làm mới Access Token (Public)
+
+- **Endpoint**: `POST /api/auth/refresh`
+- **Body**:
+  ```json
+  {
+    "refreshToken": "refresh-token-string",
+    "deviceId": "device-uuid-1234"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+  - `401 Unauthorized`: Refresh token không hợp lệ hoặc đã hết hạn.
+  - `404 Not Found`: Không tìm thấy người dùng.
+
+### 2.4. Đăng xuất thiết bị hiện tại (Protected)
+
+- **Endpoint**: `POST /api/auth/logout`
+- **Body**:
+  ```json
+  {
+    "deviceId": "device-uuid-1234"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "message": "Logged out successfully"
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Thiếu `deviceId`.
+
+### 2.5. Đăng xuất tất cả thiết bị (Protected)
+
+- **Endpoint**: `POST /api/auth/logout-all`
+- **Body**: Không yêu cầu.
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "message": "Logged out from all devices"
+  }
+  ```
+
+### 2.6. Lấy thông tin cá nhân (Protected)
+
+- **Endpoint**: `GET /api/auth/me`
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8e",
+      "phone": "0901234567",
+      "username": "0901234567",
+      "displayName": "Ten Hien Thi",
+      "avatarUrl": "https://example.com/avatar.jpg",
+      "createdAt": "2026-05-10T10:00:00Z",
+      "updatedAt": "2026-05-10T10:00:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `404 Not Found`: Không tìm thấy người dùng.
+
+### 2.7. Cập nhật hồ sơ (Protected)
+
+- **Endpoint**: `PATCH /api/auth/profile`
+- **Body**:
+  ```json
+  {
+    "displayName": "Ten Moi",
+    "avatarUrl": "https://link-to-avatar.com/image.jpg"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8e",
+      "phone": "0901234567",
+      "username": "0901234567",
+      "displayName": "Ten Moi",
+      "avatarUrl": "https://link-to-avatar.com/image.jpg",
+      "createdAt": "2026-05-10T10:00:00Z",
+      "updatedAt": "2026-05-10T10:30:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+  - `404 Not Found`: Không tìm thấy người dùng.
+
+### 2.8. Đổi mật khẩu (Protected)
+
+- **Endpoint**: `POST /api/auth/change-password`
+- **Body**:
+  ```json
+  {
+    "currentPassword": "matkhaucu123",
+    "newPassword": "matkhaumoi123",
+    "confirmPassword": "matkhaumoi123"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "message": "Password changed successfully. Please login again."
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+  - `401 Unauthorized`: Mật khẩu hiện tại không đúng.
+  - `404 Not Found`: Không tìm thấy người dùng.
+
+---
+
+## 3. Module Users (`/api/users`)
+
+### 3.1. Lấy người dùng hiện tại (Protected)
+
+- **Endpoint**: `GET /api/users/me`
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8e",
+      "phone": "0901234567",
+      "username": "0901234567",
+      "displayName": "Ten Hien Thi",
+      "avatarUrl": "https://example.com/avatar.jpg",
+      "createdAt": "2026-05-10T10:00:00Z",
+      "updatedAt": "2026-05-10T10:00:00Z",
+      "settings": {
+        "theme": "light",
+        "language": "en",
+        "allowStrangerMessages": true
+      }
+    }
+  }
+  ```
+
+### 3.2. Cập nhật thông tin cơ bản (Protected)
+
+- **Endpoint**: `PATCH /api/users/me`
+- **Body** (Các trường tuỳ chọn):
+  ```json
+  {
+    "username": "tentaikhoan_moi",
+    "displayName": "Ten Hien Thi",
+    "avatarUrl": "https://..."
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8e",
+      "username": "tentaikhoan_moi",
+      "displayName": "Ten Hien Thi",
+      "avatarUrl": "https://..."
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 3.3. Cập nhật cài đặt ứng dụng (Protected)
+
+- **Endpoint**: `PATCH /api/users/me/settings`
+- **Body** (Các trường tuỳ chọn):
+  ```json
+  {
+    "theme": "dark",
+    "language": "vi",
+    "allowStrangerMessages": false
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "settings": {
+        "theme": "dark",
+        "language": "vi",
+        "allowStrangerMessages": false
+      }
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 3.4. Tìm kiếm người dùng (Protected)
+
+- **Endpoint**: `GET /api/users/search`
+- **Query Params**:
+  - `q`: Từ khóa tìm kiếm (theo tên hoặc username), tối thiểu 2 ký tự.
+  - `limit`: Số lượng kết quả tối đa (mặc định: 20, tối đa: 50).
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "userId": "60f7e9b3e9b3f0001f3e8b8f",
+        "username": "user2",
+        "displayName": "User Two",
+        "avatarUrl": "https://example.com/avatar2.jpg"
+      }
+    ]
+  }
+  ```
+- **Response**: Trả về Public Profile (không chứa `phone`, `settings`).
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 3.5. Lấy thông tin người dùng theo ID (Protected)
+
+- **Endpoint**: `GET /api/users/:userId`
+- **Params**:
+  - `userId`: ObjectID của user.
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "userId": "60f7e9b3e9b3f0001f3e8b8f",
+      "username": "user2",
+      "displayName": "User Two",
+      "avatarUrl": "https://example.com/avatar2.jpg"
+    }
+  }
+  ```
+- **Response**: Trả về Public Profile (không chứa `phone`, `settings`).
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+---
+
+## 4. Module Conversations (`/api/conversations`)
+
+### 4.1. Tạo/Lấy cuộc trò chuyện 1-1 (Protected)
+
+- **Endpoint**: `POST /api/conversations/direct`
+- **Body**:
+  ```json
+  {
+    "peerUserId": "6a004909a2b9..."
+  }
+  ```
+- **Logic**: Trả về thông tin hộp thoại. `directKey` được ẩn.
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "6c112233...",
+      "type": "direct",
+      "participants": ["userId1", "userId2"],
+      "createdAt": "2026-05-10T10:00:00Z",
+      "updatedAt": "2026-05-10T10:00:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 4.2. Lấy danh sách hộp thoại Inbox (Protected)
+
+- **Endpoint**: `GET /api/conversations/inbox`
+- **Query Params**:
+  - `limit`: Số lượng kết quả tối đa (mặc định: 20, tối đa: 100).
+  - `skip`: Số lượng kết quả bỏ qua để phân trang (mặc định: 0).
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "conversationId": "6c112233...",
+        "lastMessage": {
+          "content": "Noi dung tin nhan cuoi...",
+          "createdAt": "2026-05-10T11:00:00Z"
+        },
+        "unreadCount": 2,
+        "peer": {
+          "userId": "peerUserId",
+          "displayName": "Peer User",
+          "avatarUrl": "https://example.com/avatar.jpg"
+        }
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 4.3. Đánh dấu đã đọc (Protected)
+
+- **Endpoint**: `PATCH /api/conversations/:conversationId/read`
+- **Params**:
+  - `conversationId`: ID của cuộc trò chuyện.
+- **Body**:
+  ```json
+  {
+    "lastSeenSeq": 123
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "modifiedCount": 1
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+## 5. Module Messages (`/api/messages`)
+
+### 5.1. Gửi tin nhắn mới (Protected)
+
+- **Endpoint**: `POST /api/messages`
+- **Body**:
+  ```json
+  {
+    "conversationId": "6a004909a2b9...",
+    "type": "text",
+    "text": "Noi dung tin nhan",
+    "clientMessageId": "uuid-tu-client"
+  }
+  ```
+- **Logic**: Kiểm tra quyền xem user có trong conversation không. `clientMessageId` dùng để client quản lý gửi trùng lặp.
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "message_id_1",
+      "conversationId": "6a004909a2b9...",
+      "senderId": "user_id_1",
+      "type": "text",
+      "text": "Noi dung tin nhan",
+      "seq": 124,
+      "clientMessageId": "uuid-tu-client",
+      "createdAt": "2026-05-10T12:00:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 5.2. Lấy danh sách tin nhắn (Protected)
+
+- **Endpoint**: `GET /api/messages/conversations/:conversationId`
+- **Params**:
+  - `conversationId`: ID của cuộc trò chuyện.
+- **Query Params**:
+  - `limit`: Số lượng tin nhắn tối đa (mặc định: 20, tối đa: 100).
+  - `beforeSeq`: Lấy các tin nhắn có `seq` nhỏ hơn giá trị này.
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "_id": "message_id_1",
+        "conversationId": "6a004909a2b9...",
+        "senderId": "user_id_1",
+        "type": "text",
+        "text": "Tin nhan 1",
+        "seq": 123,
+        "createdAt": "2026-05-10T11:59:00Z"
+      },
+      {
+        "_id": "message_id_2",
+        "conversationId": "6a004909a2b9...",
+        "senderId": "user_id_2",
+        "type": "text",
+        "text": "Tin nhan 2",
+        "seq": 124,
+        "createdAt": "2026-05-10T12:00:00Z"
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+---
+
+## 6. Module Devices (`/api/devices`)
+
+### 6.1. Đăng ký/Cập nhật thiết bị hiện tại (Protected)
+
+- **Endpoint**: `PUT /api/devices/current`
+- **Body**:
+  ```json
+  {
+    "deviceId": "device-uuid",
+    "pushToken": "fcm-push-token-string",
+    "platform": "ios"
+  }
+  ```
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "device_db_id",
+      "userId": "user_id_1",
+      "deviceId": "device-uuid",
+      "platform": "ios",
+      "pushToken": "fcm-push-token-string",
+      "isOnline": true,
+      "lastActiveAt": "2026-05-10T10:00:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 6.2. Lấy danh sách các thiết bị của tôi (Protected)
+
+- **Endpoint**: `GET /api/devices/me`
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "deviceId": "device-uuid",
+        "platform": "ios",
+        "isOnline": true,
+        "lastActiveAt": "2026-05-10T10:00:00Z"
+      },
+      {
+        "deviceId": "web-uuid",
+        "platform": "web",
+        "isOnline": false,
+        "lastActiveAt": "2026-05-09T08:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### 6.3. Cập nhật trạng thái online/offline của thiết bị (Protected)
+
+- **Endpoint**: `PATCH /api/devices/current/presence`
+- **Body**:
+  ```json
+  {
+    "deviceId": "device-uuid",
+    "isOnline": true,
+    "lastActiveAt": "2026-05-10T10:00:00Z"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "deviceId": "device-uuid",
+      "isOnline": true,
+      "lastActiveAt": "2026-05-10T10:00:00Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+---
+
+## 7. Module Calls (`/api/calls`)
+
+### 7.1. Ghi lại một cuộc gọi (Protected)
+
+- **Endpoint**: `POST /api/calls`
+- **Body**:
+  ```json
+  {
+    "conversationId": "6a004909a2b9...",
+    "type": "audio",
+    "status": "completed",
+    "startedAt": "2026-05-10T10:00:00Z",
+    "endedAt": "2026-05-10T10:05:00Z",
+    "durationSec": 300
+  }
+  ```
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "call_id_123",
+      "conversationId": "6a004909a2b9...",
+      "initiatedBy": "user_id_1",
+      "type": "audio",
+      "status": "completed",
+      "startedAt": "2026-05-10T10:00:00Z",
+      "endedAt": "2026-05-10T10:05:00Z",
+      "durationSec": 300,
+      "participants": [
+        {
+          "userId": "user_id_1",
+          "joinedAt": "2026-05-10T10:00:00Z",
+          "leftAt": "2026-05-10T10:05:00Z"
+        }
+      ]
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 7.2. Lấy lịch sử cuộc gọi trong hộp thoại (Protected)
+
+- **Endpoint**: `GET /api/calls/conversations/:conversationId`
+- **Params**:
+  - `conversationId`: ID của cuộc trò chuyện.
+- **Query Params**:
+  - `limit`: Số lượng cuộc gọi tối đa để trả về (mặc định: 20, tối đa: 100).
+  - `beforeStartedAt`: Lấy các cuộc gọi đã bắt đầu trước ngày này (ISO 8601).
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "_id": "call_id_123",
+        "conversationId": "6a004909a2b9...",
+        "initiatedBy": "user_id_1",
+        "type": "audio",
+        "status": "completed",
+        "startedAt": "2026-05-10T10:00:00Z",
+        "endedAt": "2026-05-10T10:05:00Z",
+        "durationSec": 300
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 7.3. Cập nhật trạng thái cuộc gọi (Protected)
+
+- **Endpoint**: `PATCH /api/calls/:callId/status`
+- **Params**:
+  - `callId`: ID của cuộc gọi.
+- **Body**:
+  ```json
+  {
+    "status": "completed",
+    "endedAt": "2026-05-10T10:05:00Z",
+    "durationSec": 300
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "call_id_123",
+      "status": "completed",
+      "endedAt": "2026-05-10T10:05:00Z",
+      "durationSec": 300
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+### 7.4. Cập nhật người tham gia cuộc gọi (Protected)
+
+- **Endpoint**: `PATCH /api/calls/:callId/participants`
+- **Params**:
+  - `callId`: ID của cuộc gọi.
+- **Body**:
+  ```json
+  {
+    "participantUserId": "user_id_2",
+    "joinedAt": "2026-05-10T10:01:00Z"
+  }
+  ```
+- **Success Response (200)**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "_id": "call_id_123",
+      "participants": [
+        {
+          "userId": "user_id_1",
+          "joinedAt": "2026-05-10T10:00:00Z"
+        },
+        {
+          "userId": "user_id_2",
+          "joinedAt": "2026-05-10T10:01:00Z"
+        }
+      ]
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Dữ liệu không hợp lệ.

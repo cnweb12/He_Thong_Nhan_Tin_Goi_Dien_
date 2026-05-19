@@ -1,12 +1,36 @@
 # HTTP Routes
 
-Use this directory for Express routers and route composition.
+Thu muc nay dung de ghep cac router Express o cap ung dung.
 
-## Current contents
+## Vai tro
 
-- `index.js`: root router aggregator
-- `health.routes.js`: healthcheck endpoint
+Day la noi tra loi cau hoi:
 
-## Rule
+- backend hien expose route nao ra ngoai
+- module nao da duoc mount vao app
+- tien to URL cua tung router la gi
 
-Keep route handlers thin. Business logic should live in module services.
+## Noi dung hien tai
+
+- `index.js`
+  Router tong, mount cac module router
+- `health.routes.js`
+  Endpoint healthcheck
+
+## Trang thai hien tai
+
+Router tong hien dang mount:
+
+- `/health`
+- `/api/auth`
+- `/api/users`
+- `/api/conversations`
+- `/api/messages`
+- `/api/devices`
+- `/api/calls`
+
+## Quy uoc
+
+- route file chi nen lam nhiem vu dinh tuyen va gan middleware
+- business logic phai nam trong `services`
+- controller chi nen dieu phoi request/response, khong nhet logic nghiep vu nang vao day

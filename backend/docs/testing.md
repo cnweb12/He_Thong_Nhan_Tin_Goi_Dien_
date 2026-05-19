@@ -20,8 +20,11 @@ Trong `backend/package.json` hien co:
 
 ```bash
 npm test
+npm run test:conversations
+npm run test:devices
 npm run test:users
 npm run test:messages
+npm run test:calls
 npm run typecheck
 ```
 
@@ -31,8 +34,14 @@ npm run typecheck
   Chay toan bo test backend bang Node test runner
 - `npm run test:users`
   Chay toan bo test cua module `users`
+- `npm run test:conversations`
+  Chay toan bo test cua module `conversations`
+- `npm run test:devices`
+  Chay toan bo test cua module `devices`
 - `npm run test:messages`
   Chay toan bo test cua module `messages`
+- `npm run test:calls`
+  Chay toan bo test cua module `calls`
 - `npm run typecheck`
   Chay `tsc --noEmit` de kiem tra cau hinh va import/export
 
@@ -60,6 +69,18 @@ Vi du voi module `messages`:
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:messages
 ```
 
+Vi du voi module `conversations`:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:conversations
+```
+
+Vi du voi module `devices`:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:devices
+```
+
 ## 4. Cac lenh thuong dung
 
 ### Chay toan bo backend test
@@ -74,10 +95,28 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:users
 ```
 
+### Chay test cua module conversations
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:conversations
+```
+
+### Chay test cua module devices
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:devices
+```
+
 ### Chay test cua module messages
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:messages
+```
+
+### Chay test cua module calls
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run test:calls
 ```
 
 ### Chay typecheck
@@ -118,6 +157,18 @@ Neu dang sua module messages:
 
 ```bash
 npm run test:messages
+```
+
+Neu dang sua module conversations:
+
+```bash
+npm run test:conversations
+```
+
+Neu dang sua module devices:
+
+```bash
+npm run test:devices
 ```
 
 ### Truoc khi ket task

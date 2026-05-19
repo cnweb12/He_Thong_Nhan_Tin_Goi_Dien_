@@ -26,9 +26,9 @@ Module `messages` chịu trách nhiệm lưu trữ và xử lý nghiệp vụ li
 
 ## Các API chính
 
-- `POST /messages`
+- `POST /api/messages`
   Gửi một tin nhắn mới
-- `GET /messages/conversations/:conversationId`
+- `GET /api/messages/conversations/:conversationId`
   Lấy danh sách tin nhắn của conversation
 
 ## Luồng xử lý khi gửi tin nhắn
