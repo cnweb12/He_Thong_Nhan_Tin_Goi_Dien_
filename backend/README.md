@@ -60,10 +60,13 @@ Neu can hieu luong chat chinh, thu tu doc hop ly la:
 - `npm run test:calls`
 - `npm run typecheck`
 
+Luu y: `npm start` chi chay khi Mongo local da san sang o `127.0.0.1:27018` va file `.env` o root repo da duoc cau hinh dung. Neu lam viec local theo dung setup cua repo, uu tien dung Docker dev stack.
+
 ## Docker
 
 - Development:
-  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
+  `docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml up --build`
+- Neu backend bao retry Mongo, kiem tra xem Mongo container da len chua va `.env` root co ton tai khong.
 - Production:
   `docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d`
 - Backend health endpoint: `http://localhost:3000/health`

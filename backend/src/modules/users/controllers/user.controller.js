@@ -83,12 +83,62 @@ function createUserController(dependencies = {}) {
     }
   }
 
+  async function sendFriendRequest(req, res, next) {
+    try {
+      await service.sendFriendRequest(req.user.userId, req.params.userId);
+      res.json({ ok: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async function acceptFriendRequest(req, res, next) {
+    try {
+      await service.acceptFriendRequest(req.user.userId, req.params.userId);
+      res.json({ ok: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async function listFriends(req, res, next) {
+    try {
+      const friends = await service.listFriends(req.user.userId);
+      res.json({ ok: true, data: friends });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async function listPendingRequests(req, res, next) {
+    try {
+      const requests = await service.listPendingRequests(req.user.userId);
+      res.json({ ok: true, data: requests });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async function removeFriend(req, res, next) {
+    try {
+      await service.removeFriend(req.user.userId, req.params.userId);
+      res.json({ ok: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   return {
     getMe,
     getUserById,
     searchUsers,
     updateMe,
     updateMySettings,
+    sendFriendRequest,
+    acceptFriendRequest,
+    listFriends,
+    listPendingRequests,
+    removeFriend,
   };
 }
 

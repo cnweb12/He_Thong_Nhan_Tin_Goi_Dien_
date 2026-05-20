@@ -6,6 +6,8 @@ Module `users` chịu trách nhiệm quản lý dữ liệu hồ sơ người d�
 
 - `models/user.model.js`
   Định nghĩa schema `users` trong MongoDB.
+- `models/friend.model.js`
+  Lưu quan hệ bạn bè và trạng thái lời mời giữa các user.
 - `services/user.service.js`
   Xử lý nghiệp vụ liên quan tới người dùng.
 - `controllers/user.controller.js`
@@ -24,7 +26,38 @@ Module `users` chịu trách nhiệm quản lý dữ liệu hồ sơ người d�
   `username`, `displayName`, `avatarUrl`
 - Cập nhật cài đặt người dùng:
   `theme`, `language`, `allowStrangerMessages`
+- Gửi lời mời kết bạn
+- Chấp nhận lời mời kết bạn
+- Danh sách bạn bè hiện tại
+- Danh sách lời mời kết bạn đang chờ
+- Xóa quan hệ bạn bè
 
+## Chức năng liên quan đến bạn bè
+
+Module `users` hiện quản lý luôn luồng kết bạn cơ bản thông qua collection `user_friends`.
+
+### Trạng thái quan hệ
+
+- `pending`
+  User A đã gửi lời mời cho user B.
+- `accepted`
+  Hai user đã trở thành bạn bè.
+
+### Luồng nghiệp vụ
+
+- User gửi lời mời kết bạn tới một user khác bằng `POST /api/users/:userId/friends`
+- User nhận lời mời có thể chấp nhận bằng `POST /api/users/:userId/friends/accept`
+- User xem danh sách bạn bè của mình bằng `GET /api/users/me/friends`
+- User xem danh sách lời mời chờ xử lý bằng `GET /api/users/me/friend-requests`
+- User xóa quan hệ bạn bè bằng `DELETE /api/users/:userId/friends`
+
+### Quy tắc xử lý
+
+- Không cho gửi lời mời cho chính mình
+- Không cho gửi trùng lời mời đang ở trạng thái `pending`
+- Nếu hai user đã là bạn bè thì sẽ báo lỗi `Already friends`
+- Khi chấp nhận lời mời, hệ thống cập nhật cả hai chiều quan hệ nếu cần
+  
 ## Luồng xử lý của module
 
 Một request đi qua module `users` thường theo thứ tự:
@@ -49,6 +82,16 @@ Một request đi qua module `users` thường theo thứ tự:
   Tìm kiếm user
 - `GET /api/users/:userId`
   Lấy thông tin user theo `id`
+- `GET /api/users/me/friends`
+  Lấy danh sách bạn bè hiện tại
+- `GET /api/users/me/friend-requests`
+  Lấy danh sách lời mời kết bạn đang chờ
+- `POST /api/users/:userId/friends`
+  Gửi lời mời kết bạn tới user khác
+- `POST /api/users/:userId/friends/accept`
+  Chấp nhận lời mời kết bạn
+- `DELETE /api/users/:userId/friends`
+  Xóa quan hệ bạn bè giữa hai user
 
 ## Kiểm thử
 
