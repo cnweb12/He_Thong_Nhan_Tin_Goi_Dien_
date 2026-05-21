@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/run-memory-tests.js",
     "test:e2e": "node scripts/run-e2e-tests.js",
+    "test:integration": "node scripts/run-integration-tests.js",
     "test:watch": "node --test --watch tests/**/*.test.js",
     "test:coverage": "c8 node --test tests/**/*.test.js",
     "test:auth": "node --test tests/modules/auth/*.test.js",

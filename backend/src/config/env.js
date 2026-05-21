@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("node:path");
 const dotenv = require("dotenv");
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
@@ -14,7 +14,16 @@ const buildMongoUri = () => {
   }
 
   const username = process.env.MONGO_APP_USER || "chat_app_user";
-  const password = process.env.MONGO_APP_PASSWORD || "chat_app_password";
+  const password = process.env.MONGO_APP_PASSWORD;
+
+  if (!password) {
+    throw new Error(
+      "MONGO_APP_PASSWORD environment variable is not set. " +
+        "Please set this variable in your .env file or environment configuration. " +
+        "For security reasons, a default password is not provided.",
+    );
+  }
+
   const dbName = process.env.MONGO_APP_DB || "chat_app";
   const host = process.env.MONGO_HOST || "127.0.0.1";
   const port = process.env.MONGO_PORT || "27018";
@@ -31,6 +40,10 @@ module.exports = {
   mongoConnectRetries: toNumber(process.env.MONGO_CONNECT_RETRIES, 3),
   mongoRetryDelayMs: toNumber(process.env.MONGO_RETRY_DELAY_MS, 1000),
   mongoAutoIndex: process.env.MONGO_AUTO_INDEX !== "false",
-  mongoServerSelectionTimeoutMs: toNumber(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 5000),
-  jwtSecret: process.env.JWT_SECRET || "your-default-secret-key-change-in-production",
+  mongoServerSelectionTimeoutMs: toNumber(
+    process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS,
+    5000,
+  ),
+  jwtSecret:
+    process.env.JWT_SECRET || "your-default-secret-key-change-in-production",
 };
