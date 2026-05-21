@@ -23,6 +23,33 @@ const buildMongoUri = () => {
   return `mongodb://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${dbName}?authSource=${encodeURIComponent(authSource)}`;
 };
 
+const parseCsv = (value) => {
+  if (!value || typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const defaultCorsOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+];
+
+const corsOrigins = (() => {
+  const envOrigins = parseCsv(process.env.CORS_ORIGIN || process.env.FRONTEND_ORIGIN);
+  if (envOrigins.length > 0) {
+    return envOrigins;
+  }
+
+  return defaultCorsOrigins;
+})();
+
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: toNumber(process.env.PORT, 3000),
@@ -33,4 +60,5 @@ module.exports = {
   mongoAutoIndex: process.env.MONGO_AUTO_INDEX !== "false",
   mongoServerSelectionTimeoutMs: toNumber(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS, 5000),
   jwtSecret: process.env.JWT_SECRET || "your-default-secret-key-change-in-production",
+  corsOrigins,
 };

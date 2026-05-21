@@ -113,6 +113,16 @@ Luu y: `npm start` chi chay khi Mongo local da san sang o `127.0.0.1:27018` va f
 - [docs/production.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\production.md)
 - [docs/security.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\security.md)
 
+## CORS cho frontend
+
+- Mặc định backend cho phép các origin local phổ biến của frontend:
+  - `http://localhost:5173`
+  - `http://127.0.0.1:5173`
+  - `http://localhost:4173`
+  - `http://127.0.0.1:4173`
+- Có thể override bằng biến môi trường `CORS_ORIGIN` hoặc `FRONTEND_ORIGIN` dạng danh sách phân tách bằng dấu phẩy.
+- Nếu deploy frontend ở domain khác, chỉ cần set `CORS_ORIGIN` cho đúng domain đó.
+
 ## Module Docs
 
 - [src/modules/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\README.md)
