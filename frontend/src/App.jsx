@@ -1,25 +1,44 @@
-import React from 'react';
-import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './features/auth/hooks/useAuth';
 import LoginPage from './features/auth/pages/LoginPage';
 import Home from './pages/Home';
 
-export default function App() {
-  return (
-    <div>
-      <header style={{ padding: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <nav style={{ display: 'flex', gap: 12 }}>
-          <Link to="/">Home</Link>
-          <Link to="/login">Login</Link>
-        </nav>
-      </header>
+function App() {
+  const { isAuthenticated, loading } = useAuth();
+  // const isAuthenticated = true;
+  // const loading = false;
 
-      <main>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Home />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
+  // Hiển thị loading khi đang kiểm tra trạng thái đăng nhập
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl text-gray-600">Đang tải...</div>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      {/* ====================== LOGIN ====================== */}
+      <Route
+        path="/login"
+        element={
+          !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
+        }
+      />
+
+      {/* ====================== HOME (Chỉ cho phép khi đã login) ====================== */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? <Home /> : <Navigate to="/login" replace />
+        }
+      />
+
+      {/* ====================== Các route khác (tương lai) ====================== */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
+
+export default App;
