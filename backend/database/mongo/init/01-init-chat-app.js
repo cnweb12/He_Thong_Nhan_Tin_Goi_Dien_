@@ -40,7 +40,7 @@ function createJsonSchemaCollections() {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["phone", "displayName", "passwordHash", "createdAt", "updatedAt"],
+        required: ["phone", "displayName", "passwordHash", "role", "createdAt", "updatedAt"],
         properties: {
           _id: { bsonType: "objectId" },
           phone: { bsonType: "string", minLength: 8, maxLength: 20 },
@@ -53,9 +53,11 @@ function createJsonSchemaCollections() {
             properties: {
               theme: { enum: ["light", "dark"] },
               language: { bsonType: ["string", "null"] },
-              allowStrangerMessages: { bsonType: ["bool", "null"] },
+              allowStrangerMessage: { bsonType: ["bool", "null"] },
+              readReceiptEnabled: { bsonType: ["bool", "null"] },
             },
           },
+          role: { enum: ["user", "admin", "super_admin"] },
           lastSeenAt: { bsonType: ["date", "null"] },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" },
@@ -277,6 +279,45 @@ function createJsonSchemaCollections() {
     validationLevel: "strict",
     validationAction: "error",
   });
+
+  createCollectionIfMissing("system_settings", {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["key", "value", "type", "createdAt", "updatedAt"],
+        properties: {
+          _id: { bsonType: "objectId" },
+          key: { bsonType: "string" },
+          value: { bsonType: ["string", "number", "bool", "object", "array", "null"] },
+          type: { enum: ["string", "number", "boolean", "object", "array"] },
+          description: { bsonType: ["string", "null"] },
+          createdAt: { bsonType: "date" },
+          updatedAt: { bsonType: "date" },
+        },
+      },
+    },
+    validationLevel: "strict",
+    validationAction: "error",
+  });
+
+  createCollectionIfMissing("banned_keywords", {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["keyword", "addedBy", "isActive", "createdAt", "updatedAt"],
+        properties: {
+          _id: { bsonType: "objectId" },
+          keyword: { bsonType: "string" },
+          addedBy: { bsonType: "objectId" },
+          isActive: { bsonType: "bool" },
+          createdAt: { bsonType: "date" },
+          updatedAt: { bsonType: "date" },
+        },
+      },
+    },
+    validationLevel: "strict",
+    validationAction: "error",
+  });
 }
 
 function createIndexes() {
@@ -316,6 +357,12 @@ function createIndexes() {
 
   createIndexSafely("calls", { conversationId: 1, startedAt: -1 }, { name: "idx_calls_conversation_started_desc" });
   createIndexSafely("calls", { initiatedBy: 1, createdAt: -1 }, { name: "idx_calls_initiator_created_desc" });
+
+  createIndexSafely("system_settings", { key: 1 }, { unique: true, name: "uq_system_settings_key" });
+
+  createIndexSafely("banned_keywords", { keyword: 1 }, { unique: true, name: "uq_banned_keywords_keyword" });
+  createIndexSafely("banned_keywords", { isActive: 1 }, { name: "idx_banned_keywords_is_active" });
+  createIndexSafely("banned_keywords", { addedBy: 1 }, { name: "idx_banned_keywords_added_by" });
 }
 
 createAppUser();

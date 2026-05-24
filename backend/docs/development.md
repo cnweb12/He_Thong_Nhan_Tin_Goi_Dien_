@@ -148,6 +148,24 @@ Dung khi can du lieu mau:
 docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend npm run db:seed
 ```
 
+### Seed super admin account
+
+Dung khi can tao super admin account cho RBAC:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend node scripts/database/seed-super-admin.js
+```
+
+Truoc khi chay, can dat environment variables trong file `.env`:
+
+```env
+SUPER_ADMIN_PHONE=+84900000000
+SUPER_ADMIN_PASSWORD=your_secure_password
+SUPER_ADMIN_DISPLAY_NAME=Super Admin
+```
+
+**IMPORTANT:** Khong commit super admin credentials vao version control.
+
 ### Reset local database
 
 Dung khi local data bi loi hoac can lam sach:

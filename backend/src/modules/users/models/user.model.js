@@ -27,6 +27,12 @@ const UserSchema = new Schema(
       allowStrangerMessage: { type: Boolean, default: true },
       readReceiptEnabled: { type: Boolean, default: true },
     },
+    role: {
+      type: String,
+      enum: ["user", "admin", "super_admin"],
+      default: "user",
+      required: true,
+    },
     lastSeenAt: { type: Date },
   },
   { timestamps: true, versionKey: false },

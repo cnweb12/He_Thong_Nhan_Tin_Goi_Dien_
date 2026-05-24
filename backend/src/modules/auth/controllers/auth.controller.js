@@ -110,7 +110,7 @@ async function login(req, res, next) {
 
     // Generate tokens
     const accessToken = authMiddleware.generateJWTToken(
-      { userId: user._id.toString(), phone },
+      { userId: user._id.toString(), phone, role: user.role || "user" },
       config.jwtSecret,
       3600 // 1 hour
     );
@@ -186,7 +186,7 @@ async function refreshAccessToken(req, res, next) {
 
     // Generate new access token
     const accessToken = authMiddleware.generateJWTToken(
-      { userId: user._id.toString(), phone: user.phone },
+      { userId: user._id.toString(), phone: user.phone, role: user.role || "user" },
       config.jwtSecret,
       3600 // 1 hour
     );

@@ -46,4 +46,7 @@ module.exports = {
   ),
   jwtSecret:
     process.env.JWT_SECRET || "your-default-secret-key-change-in-production",
+  superAdminPhone: process.env.SUPER_ADMIN_PHONE,
+  superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
+  superAdminDisplayName: process.env.SUPER_ADMIN_DISPLAY_NAME || "Super Admin",
 };
