@@ -9,7 +9,7 @@ export default function ChatSidebar({ user, conversations, selectedId, onSelect 
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg"></div>
                     <div>
-                        <div className="font-semibold text-gray-900 text-sm">{user?.name || 'Khách'}</div>
+                        <div className="font-semibold text-gray-900 text-sm">{user?.displayName || user?.name || 'Khách'}</div>
                         <div className="text-xs text-gray-500">{user?.phone || ''}</div>
                     </div>
                 </div>

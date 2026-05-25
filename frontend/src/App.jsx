@@ -3,6 +3,7 @@ import { useAuth } from './features/auth/hooks/useAuth';
 import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
 import { SocketProvider } from './features/realtime/context/SocketProvider';
+import { ConversationProvider } from './features/conversations/context/ConversationProvider';
 import Home from './pages/Home';
 
 function App() {
@@ -21,33 +22,35 @@ function App() {
 
   return (
     <SocketProvider>
-      <Routes>
-        {/* ====================== LOGIN ====================== */}
-        <Route
-          path="/login"
-          element={
-            !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
-          }
-        />
+      <ConversationProvider>
+        <Routes>
+          {/* ====================== LOGIN ====================== */}
+          <Route
+            path="/login"
+            element={
+              !isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />
+            }
+          />
 
-        <Route
-          path="/register"
-          element={
-            !isAuthenticated ? <RegisterPage /> : <Navigate to="/" replace />
-          }
-        />
+          <Route
+            path="/register"
+            element={
+              !isAuthenticated ? <RegisterPage /> : <Navigate to="/" replace />
+            }
+          />
 
-        {/* ====================== HOME (Chỉ cho phép khi đã login) ====================== */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? <Home /> : <Navigate to="/login" replace />
-          }
-        />
+          {/* ====================== HOME (Chỉ cho phép khi đã login) ====================== */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? <Home /> : <Navigate to="/login" replace />
+            }
+          />
 
-        {/* ====================== Các route khác (tương lai) ====================== */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* ====================== Các route khác (tương lai) ====================== */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ConversationProvider>
     </SocketProvider>
   );
 }

@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginApi, refreshApi, logoutApi } from '../services/authApi';
+import { loginApi, refreshApi, logoutApi, getMeApi } from '../services/authApi';
 
 export const AuthContext = createContext(null);
 
@@ -87,8 +87,32 @@ export function AuthProvider({ children }) {
         })();
     };
 
+    const fetchCurrentUser = useCallback(async () => {
+        if (!accessToken) {
+            return null;
+        }
+
+        const profile = await getMeApi(accessToken);
+        if (profile) {
+            setUser(profile);
+            localStorage.setItem('user', JSON.stringify(profile));
+        }
+        return profile;
+    }, [accessToken]);
+
+    const contextValue = useMemo(() => ({
+        user,
+        isAuthenticated,
+        accessToken,
+        loading: loading || bootstrapping,
+        error,
+        login,
+        logout,
+        fetchCurrentUser,
+    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, fetchCurrentUser]);
+
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, accessToken, loading: loading || bootstrapping, error, login, logout }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

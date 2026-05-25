@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
@@ -6,49 +6,73 @@ import ChatArea from '../features/chats/components/ChatArea';
 import ConversationInfo from '../features/chats/components/ConversationInfo';
 import LogoutButton from '../features/auth/components/LogoutButton';
 import { useAppSocket } from '../features/realtime/hooks/useAppSocket';
-
-const sampleConversations = [
-  {
-    id: 1,
-    name: 'My Documents',
-    lastMessage: 'Đã gửi tài liệu báo cáo.pdf',
-    time: '14:17',
-    unread: 2,
-    messages: [
-      { from: 2, text: 'Chào bạn, gửi file nhé', time: '14:10' },
-      { from: 1, text: 'Cảm ơn, nhận được rồi', time: '14:17' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'HUST/IT DEV',
-    lastMessage: 'Link form: https://...',
-    time: '09:12',
-    unread: 0,
-    messages: [
-      { from: 2, text: 'Reminder: deadline hôm nay', time: '09:00' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Ba vì 23/5',
-    lastMessage: 'Ok nhé',
-    time: '07:29',
-    unread: 0,
-    messages: [{ from: 2, text: 'Gặp nhau lúc 7', time: '07:29' }],
-  },
-];
+import { useConversations } from '../features/conversations/hooks/useConversations';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, accessToken, fetchCurrentUser } = useAuth();
   const { isConnected, isConnecting, error: socketError } = useAppSocket();
+  const { conversations, setConversations, fetchInbox, loading: inboxLoading, error: inboxError } = useConversations();
   const [sidebarView, setSidebarView] = useState('chat');
-  const [conversations, setConversations] = useState(sampleConversations);
-  const [selectedId, setSelectedId] = useState(conversations[0]?.id || null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const [initialError, setInitialError] = useState(null);
 
   const currentUserId = 1;
 
-  const selected = conversations.find((c) => c.id === selectedId) || null;
+  useEffect(() => {
+    if (!accessToken) {
+      setIsBootstrapped(false);
+      setInitialLoading(true);
+      return;
+    }
+
+    if (isBootstrapped) {
+      return;
+    }
+
+    // Wait only while socket is still trying and has not failed yet.
+    // If realtime is unavailable, continue bootstrapping protected REST data.
+    if (!isConnected && isConnecting && !socketError) {
+      return;
+    }
+
+    let active = true;
+    setInitialLoading(true);
+    setInitialError(null);
+
+    (async () => {
+      try {
+        await Promise.all([
+          fetchCurrentUser(),
+          fetchInbox(accessToken),
+        ]);
+      } catch (err) {
+        if (!active) return;
+        setInitialError(err?.message || 'Không tải được dữ liệu ban đầu');
+      } finally {
+        if (active) {
+          setIsBootstrapped(true);
+          setInitialLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [isConnected, isConnecting, socketError, accessToken, isBootstrapped, fetchCurrentUser, fetchInbox]);
+
+  useEffect(() => {
+    if (!selectedId && conversations.length > 0) {
+      setSelectedId(conversations[0].id);
+    }
+  }, [selectedId, conversations]);
+
+  const selected = useMemo(
+    () => conversations.find((c) => c.id === selectedId) || null,
+    [conversations, selectedId],
+  );
 
   const handleSend = (text) => {
     if (!selected) return;
@@ -64,17 +88,35 @@ export default function Home() {
         ? 'Cloud'
         : 'Công việc';
 
-  // Only show Home UI after realtime channel is connected.
-  if (isConnecting || !isConnected) {
+  if (inboxError || initialError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white border border-gray-200 rounded-xl px-6 py-5 text-center shadow-sm max-w-md">
+          <p className="text-red-600 font-medium mb-2">Không thể tải dữ liệu khởi tạo</p>
+          <p className="text-sm text-gray-600 mb-4">{inboxError || initialError}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setInitialError(null);
+              setIsBootstrapped(false);
+              setInitialLoading(true);
+            }}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Only block UI for protected data bootstrap. Realtime can recover in background.
+  if (!isBootstrapped || initialLoading || inboxLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white border border-gray-200 rounded-xl px-6 py-5 text-center shadow-sm">
-          <p className="text-gray-700 font-medium mb-2">Đang kết nối realtime...</p>
-          {socketError ? (
-            <p className="text-sm text-red-600">{socketError}</p>
-          ) : (
-            <p className="text-sm text-gray-500">Vui lòng chờ để vào trang chủ.</p>
-          )}
+          <p className="text-gray-700 font-medium mb-2">Đang tải dữ liệu...</p>
+          <p className="text-sm text-gray-500">Đồng bộ hồ sơ cá nhân và inbox.</p>
         </div>
       </div>
     );
@@ -85,6 +127,13 @@ export default function Home() {
       <div className="absolute top-4 right-4 z-50">
         <LogoutButton />
       </div>
+
+      {socketError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
+          Realtime tạm thời gián đoạn. Ứng dụng vẫn chạy với dữ liệu REST.
+        </div>
+      )}
+
       <SidebarLeft active={sidebarView} onSelect={setSidebarView} />
 
       {sidebarView === 'chat' ? (

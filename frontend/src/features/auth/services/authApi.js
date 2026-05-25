@@ -1,4 +1,10 @@
-import { post } from '../../../services/apiClient';
+import { get, post } from '../../../services/apiClient';
+
+const withAuth = (accessToken) => ({
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+  },
+});
 
 export const loginApi = async (phone, password) => {
   const body = {
@@ -30,5 +36,11 @@ export const logoutApi = async (deviceId = 'device-uuid-1234') => {
 export const refreshApi = async (refreshToken, deviceId = 'device-uuid-1234') => {
   const res = await post('/api/auth/refresh', { refreshToken, deviceId });
   if (!res.ok) throw new Error(res.error || 'Refresh failed');
+  return res.data && res.data.data ? res.data.data : res.data;
+};
+
+export const getMeApi = async (accessToken) => {
+  const res = await get('/api/auth/me', withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Fetch profile failed');
   return res.data && res.data.data ? res.data.data : res.data;
 };
