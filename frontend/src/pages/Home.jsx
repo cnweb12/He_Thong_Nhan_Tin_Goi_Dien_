@@ -4,6 +4,8 @@ import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
 import ChatArea from '../features/chats/components/ChatArea';
 import ConversationInfo from '../features/chats/components/ConversationInfo';
+import LogoutButton from '../features/auth/components/LogoutButton';
+import { useAppSocket } from '../features/realtime/hooks/useAppSocket';
 
 const sampleConversations = [
   {
@@ -38,7 +40,8 @@ const sampleConversations = [
 ];
 
 export default function Home() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user } = useAuth();
+  const { isConnected, isConnecting, error: socketError } = useAppSocket();
   const [sidebarView, setSidebarView] = useState('chat');
   const [conversations, setConversations] = useState(sampleConversations);
   const [selectedId, setSelectedId] = useState(conversations[0]?.id || null);
@@ -61,8 +64,27 @@ export default function Home() {
         ? 'Cloud'
         : 'Công việc';
 
+  // Only show Home UI after realtime channel is connected.
+  if (isConnecting || !isConnected) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white border border-gray-200 rounded-xl px-6 py-5 text-center shadow-sm">
+          <p className="text-gray-700 font-medium mb-2">Đang kết nối realtime...</p>
+          {socketError ? (
+            <p className="text-sm text-red-600">{socketError}</p>
+          ) : (
+            <p className="text-sm text-gray-500">Vui lòng chờ để vào trang chủ.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex overflow-hidden">
+      <div className="absolute top-4 right-4 z-50">
+        <LogoutButton />
+      </div>
       <SidebarLeft active={sidebarView} onSelect={setSidebarView} />
 
       {sidebarView === 'chat' ? (

@@ -63,6 +63,9 @@ export default function LoginPage() {
             {loading ? 'Đang xử lý...' : 'Đăng nhập'}
           </button>
         </form>
+        <div className="mt-4 text-center text-sm">
+          <a href="/register" className="text-blue-600 hover:underline">Tạo tài khoản mới</a>
+        </div>
       </div>
     </div>
   );
