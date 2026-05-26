@@ -47,3 +47,63 @@ Nhằm tránh treo UI do nhiều hộp thoại xin quyền hiện lên cùng lú
 3. **Cơ chế Fallback Tự động về Tuần tự (Automatic Fallback to Sequential Mode):**
    - Nếu trong quá trình chạy song song phát hiện có một tác vụ cần quyền chưa được cấp "Always", hoặc một thao tác bên ngoài gặp lỗi/timeout, hệ thống phải lập tức **quay về chế độ chạy tuần tự** cho tất cả các tác vụ còn lại.
    - Cần ghi nhận và thông báo rõ ràng về vấn đề đã gặp phải cũng như sự thay đổi trong chiến lược thực thi.
+
+## 8. Kiến thức chuyên sâu về Integration Testing (Integration Testing Expertise)
+
+### Hiểu biết về JWT và Token Management
+- **JWT Access Tokens**: Stateless, không thể vô hiệu hóa trước khi hết hạn. Chỉ refresh tokens mới có thể bị thu hồi.
+- **Refresh Tokens**: Lưu trong MongoDB với các trường userId, deviceId, tokenHash, revokedAt, expiresAt.
+- **Logout Behavior**: Logout chỉ thu hồi refresh tokens, access tokens vẫn hợp lệ đến khi hết hạn.
+- **Token Validation**: Middleware kiểm tra JWT signature và expiration, nhưng không kiểm tra trạng thái thu hồi (vì stateless).
+
+### Kỹ năng Debug Integration Tests
+- **Phân tích lỗi 400**: Thường do validation failure (thiếu required fields, sai format dữ liệu)
+- **Phân tích lỗi 401**: Do authentication failure (credentials sai, token hết hạn/đã thu hồi)
+- **Phân tích lỗi 409**: Do duplicate resource (số điện thoại đã tồn tại)
+- **Debug workflow**: Thêm console.log → kiểm tra validator → verify test data format → fix → remove debug logs
+
+### Quản lý Test State
+- **Global Hooks Issue**: `beforeEach` trong `global-hooks.js` clear database giữa các test, phá vỡ state của integration tests
+- **Giải pháp**: Tạm thời disable global-hooks.js khi chạy integration tests
+- **Test State Object**: Duy trì state (credentials, tokens, device IDs) qua các test tuần tự
+- **Defensive Checks**: Kiểm tra state trước các operation quan trọng
+
+### Chiến lược Test Isolation
+- **Monolithic Tests**: File test duy nhất với nhiều scenarios (dễ bị state corruption)
+- **Isolated Tests**: File riêng cho mỗi feature area (quản lý state tốt hơn)
+- **Mỗi file test cần**: Database setup/teardown riêng, test state object độc lập, không phụ thuộc file khác
+
+### Cấu trúc File Test Khuyến nghị
+- `full-user-flow.test.js` - Core authentication flow (registration, login, protected endpoints)
+- `conversation-flow.test.js` - Conversation creation và message exchange
+- `device-management.test.js` - Device registration và management
+- `session-management.test.js` - Token refresh, logout, password change
+
+### Xử lý Unimplemented Endpoints
+- **Skip Tests**: Sử dụng `it.skip()` cho endpoints chưa implement
+- **Document Reasons**: Ghi rõ lý do skip (endpoint chưa implement, JWT stateless nature, etc.)
+- **Flexible Assertions**: Chấp nhận multiple valid error codes khi cần
+
+### Environment Configuration
+- **Required Variables**: MONGO_URI, NODE_ENV=test, JWT_SECRET
+- **In-Memory MongoDB**: Sử dụng MongoDBMemoryServer cho integration tests
+- **Cleanup**: Stop server, restore global-hooks, restore modules directory
+
+### Quy tắc khi làm việc với Integration Tests
+1. **Luôn disable global hooks** khi chạy integration tests
+2. **Sử dụng in-memory MongoDB** thay vì database thật
+3. **Tách unit tests và integration tests** (rename modules directory tạm thời)
+4. **Hardcode test data** thay vì dùng generators cho consistency
+5. **Add debug logs** khi debugging, remove sau khi fix
+6. **Skip unimplemented tests** với documentation rõ ràng
+7. **Mỗi test file có setup/teardown riêng**
+8. **Sử dụng defensive checks** cho test state
+9. **Run tests tuần tự** (concurrency: 1) để tránh race conditions
+10. **Clean up resources** trong finally block
+
+### Phong cách làm việc với Tests
+- **Minimal fixes**: Chỉ sửa test, không sửa backend feature trừ khi cần thiết
+- **Skip over implement**: Skip tests cho features chưa implement thay vì cố gắng fix
+- **Document everything**: Ghi chú lý do skip, lý do test fail
+- **Verify fixes**: Chạy test sau mỗi fix để verify
+- **Isolate problems**: Tách test ra file riêng khi có state corruption
