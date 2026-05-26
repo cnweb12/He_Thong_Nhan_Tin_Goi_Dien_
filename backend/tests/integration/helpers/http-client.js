@@ -1,4 +1,8 @@
 const http = require('http');
+const { connectTestDB, closeTestDB } = require('../../config/database/memory-db.setup');
+const { registerModels } = require('../../../database/mongo');
+const { UserModel } = require('../../../src/modules/users/models/user.model');
+const authMiddleware = require('../../../src/modules/auth/middleware/auth.middleware');
 
 /**
  * Make HTTP request to the test server
@@ -104,9 +108,51 @@ const authenticatedHttpMethods = {
   delete: (path, token, options = {}) => makeAuthenticatedRequest({ method: 'DELETE', path, token, ...options }),
 };
 
+/**
+ * Create a super admin user directly in database
+ * @param {string} phone - Phone number
+ * @param {string} password - Password
+ * @param {string} displayName - Display name
+ * @returns {Promise<Object>} Created user object
+ */
+async function createSuperAdminInDB(phone, password, displayName = 'Super Admin') {
+  registerModels();
+  const passwordHash = authMiddleware.hashToken(password);
+  const now = new Date();
+  
+  const superAdmin = await UserModel.create({
+    phone,
+    username: phone,
+    displayName,
+    passwordHash,
+    role: 'super_admin',
+    createdAt: now,
+    updatedAt: now,
+  });
+  
+  return superAdmin;
+}
+
+/**
+ * Verify role in JWT token payload
+ * @param {string} token - JWT access token
+ * @param {string} secret - JWT secret
+ * @returns {Object|null} Decoded token payload or null if invalid
+ */
+function verifyRoleInToken(token, secret) {
+  try {
+    const payload = authMiddleware.verifyJWTToken(token, secret);
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
 module.exports = {
   makeRequest,
   makeAuthenticatedRequest,
   ...httpMethods,
   authenticated: authenticatedHttpMethods,
+  createSuperAdminInDB,
+  verifyRoleInToken,
 };

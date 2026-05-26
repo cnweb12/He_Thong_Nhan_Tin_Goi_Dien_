@@ -93,7 +93,8 @@ function createLoginData(phone, password, deviceId) {
 function createMessageData(conversationId, content) {
   return {
     conversationId,
-    content: content || 'Hello, this is a test message!',
+    type: 'text',
+    text: content || 'Hello, this is a test message!',
   };
 }
 
@@ -104,7 +105,7 @@ function createMessageData(conversationId, content) {
  */
 function createDirectConversationData(participantId) {
   return {
-    participantId,
+    peerUserId: participantId,
   };
 }
 
@@ -146,7 +147,6 @@ function createDeviceData(deviceId, deviceType = 'mobile', deviceName = 'Test De
 function createSettingsData(settings = {}) {
   return {
     theme: 'light',
-    notifications: true,
     language: 'vi',
     ...settings,
   };
@@ -180,6 +180,49 @@ function createPasswordChangeData(currentPassword, newPassword) {
   };
 }
 
+/**
+ * Create an admin role change payload
+ * @param {string} role - New role (user, admin, super_admin)
+ * @returns {Object} Role change data
+ */
+function createAdminRoleChangeData(role) {
+  return {
+    role,
+  };
+}
+
+/**
+ * Create a system settings payload
+ * @param {string} key - Setting key
+ * @param {any} value - Setting value
+ * @returns {Object} System settings data
+ */
+function createSystemSettingsData(key, value) {
+  return {
+    key,
+    value,
+  };
+}
+
+/**
+ * Create a banned keyword payload
+ * @param {string} keyword - Banned keyword
+ * @returns {Object} Banned keyword data
+ */
+function createBannedKeywordData(keyword) {
+  return {
+    keyword,
+  };
+}
+
+/**
+ * Create a friend request payload
+ * @returns {Object} Friend request data
+ */
+function createFriendRequestData() {
+  return {};
+}
+
 module.exports = {
   generatePhone,
   generateDisplayName,
@@ -195,4 +238,8 @@ module.exports = {
   createSettingsData,
   createProfileUpdateData,
   createPasswordChangeData,
+  createAdminRoleChangeData,
+  createSystemSettingsData,
+  createBannedKeywordData,
+  createFriendRequestData,
 };
