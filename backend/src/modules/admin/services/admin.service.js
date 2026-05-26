@@ -78,24 +78,32 @@ async function unlockUser(userId) {
 async function changeUserRole(userId, newRole, requesterRole) {
   // Only super admin can change roles
   if (requesterRole !== "super_admin") {
-    throw new Error("Only super admin can change user roles");
+    const error = new Error("Only super admin can change user roles");
+    error.statusCode = 403;
+    throw error;
   }
 
   // Prevent changing super admin role
   const user = await UserModel.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   if (user.role === "super_admin") {
-    throw new Error("Cannot change super admin role");
+    const error = new Error("Cannot change super admin role");
+    error.statusCode = 400;
+    throw error;
   }
 
   // Prevent creating multiple super admins
   if (newRole === "super_admin") {
     const existingSuperAdmin = await UserModel.findOne({ role: "super_admin" });
     if (existingSuperAdmin && existingSuperAdmin._id.toString() !== userId) {
-      throw new Error("Cannot create multiple super admins");
+      const error = new Error("Cannot create multiple super admins");
+      error.statusCode = 400;
+      throw error;
     }
   }
 

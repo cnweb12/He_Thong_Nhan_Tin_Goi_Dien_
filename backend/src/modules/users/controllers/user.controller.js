@@ -29,7 +29,11 @@ function createUserController(dependencies = {}) {
       }
 
       const user = await service.getUserById(req.params.userId);
-      res.json({ ok: true, data: user });
+      
+      // Filter sensitive data for public profile (not current user)
+      const { phone, settings, ...publicUser } = user;
+      
+      res.json({ ok: true, data: publicUser });
     } catch (error) {
       next(error);
     }

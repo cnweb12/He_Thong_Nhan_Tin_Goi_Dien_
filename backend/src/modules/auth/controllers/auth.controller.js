@@ -112,7 +112,7 @@ async function login(req, res, next) {
     const accessToken = authMiddleware.generateJWTToken(
       { userId: user._id.toString(), phone, role: user.role || "user" },
       config.jwtSecret,
-      3600 // 1 hour
+      process.env.NODE_ENV === 'test' ? 3600 : 900 // 1 hour for tests, 15 minutes for production
     );
 
     const refreshToken = authMiddleware.generateToken(32);
@@ -188,7 +188,7 @@ async function refreshAccessToken(req, res, next) {
     const accessToken = authMiddleware.generateJWTToken(
       { userId: user._id.toString(), phone: user.phone, role: user.role || "user" },
       config.jwtSecret,
-      3600 // 1 hour
+      process.env.NODE_ENV === 'test' ? 3600 : 900 // 1 hour for tests, 15 minutes for production
     );
 
     res.json({
