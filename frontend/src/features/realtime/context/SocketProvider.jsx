@@ -1,6 +1,6 @@
 import React, { createContext, useMemo } from 'react';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { useSocket } from '../../../hooks/useSocket';
+import { useSocket } from '../hooks/useSocket';
 
 export const SocketContext = createContext(null);
 
