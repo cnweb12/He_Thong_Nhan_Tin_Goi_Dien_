@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:5000';
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL ?? '').trim();
 
 export const useSocket = (token) => {
   const [socket, setSocket] = useState(null);
@@ -10,7 +10,7 @@ export const useSocket = (token) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !SOCKET_URL) {
       setSocket(null);
       setIsConnected(false);
       setIsConnecting(false);

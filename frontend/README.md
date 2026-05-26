@@ -29,3 +29,11 @@ Neu backend chay khac `http://localhost:3000`, set:
 ```bash
 VITE_API_BASE_URL=http://localhost:3000
 ```
+
+## Cau hinh Realtime
+
+Realtime socket la tuy chon. Neu backend chua co socket server, de trong bien sau de frontend bo qua ket noi realtime:
+
+```bash
+VITE_SOCKET_URL=
+```

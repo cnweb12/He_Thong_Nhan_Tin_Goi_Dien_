@@ -32,6 +32,7 @@ async function request(method, path, body, opts = {}) {
 export const get = (path, opts) => request('GET', path, null, opts);
 export const post = (path, body, opts) => request('POST', path, body, opts);
 export const put = (path, body, opts) => request('PUT', path, body, opts);
+export const patch = (path, body, opts) => request('PATCH', path, body, opts);
 export const del = (path, opts) => request('DELETE', path, null, opts);
 
-export default { get, post, put, del, buildApiUrl };
+export default { get, post, put, patch, del, buildApiUrl };
