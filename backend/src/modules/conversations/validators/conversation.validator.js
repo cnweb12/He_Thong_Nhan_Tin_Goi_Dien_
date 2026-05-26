@@ -34,7 +34,7 @@ function validateMarkConversationAsReadRequest(req) {
 
 function validateGetInboxRequest(req) {
   const errors = [];
-  const { limit, skip } = req.query || {};
+  const { limit, skip, q } = req.query || {};
 
   if (limit !== undefined) {
     const normalizedLimit = Number(limit);
@@ -47,6 +47,17 @@ function validateGetInboxRequest(req) {
     const normalizedSkip = Number(skip);
     if (!Number.isInteger(normalizedSkip) || normalizedSkip < 0) {
       errors.push({ field: "skip", message: "Skip must be a non-negative integer" });
+    }
+  }
+
+  if (q !== undefined) {
+    if (typeof q !== "string") {
+      errors.push({ field: "q", message: "Query parameter must be a string" });
+    } else {
+      const trimmedQ = q.trim();
+      if (trimmedQ.length > 100) {
+        errors.push({ field: "q", message: "Query parameter must be at most 100 characters" });
+      }
     }
   }
 
