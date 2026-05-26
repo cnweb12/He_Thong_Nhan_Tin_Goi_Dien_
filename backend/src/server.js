@@ -1,4 +1,4 @@
-const http = require("http");
+const http = require("node:http");
 const app = require("./app");
 const { connectMongo, disconnectMongo, registerModels, mongoose } = require("../database/mongo");
 const config = require("./config/env");

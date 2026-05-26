@@ -132,7 +132,12 @@ function authenticateJWT(secret) {
       return next(error);
     }
 
-    req.user = payload;
+    // Attach user info to request, including role
+    req.user = {
+      userId: payload.userId,
+      phone: payload.phone,
+      role: payload.role || "user", // Default to 'user' if not present
+    };
     next();
   };
 }

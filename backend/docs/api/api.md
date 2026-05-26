@@ -11,6 +11,128 @@ Tài liệu này liệt kê chi tiết các endpoint API, phương thức xác t
   ```
 - **Response**: `{ "ok": true, "message": "Cập nhật trạng thái thành công" }`
 
+### 1.1. Ví dụ sử dụng Authorization Header
+
+#### Format chuẩn
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTBlNjE1ZTE5MjAwODZjMTY0ODIyOGYiLCJwaG9uZSI6Ijg0OTAxMjM0NTY3IiwiaWF0IjoxNzE2MzAyMDAwLCJleHAiOjE3MTYzMDg2MDB9.abc123xyz...
+```
+
+#### Ví dụ với curl
+
+```bash
+# Đăng ký (Public API - không cần token)
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"84901234567","password":"UserPassword123!","displayName":"Test User","passwordConfirm":"UserPassword123!"}'
+
+# Đăng nhập (Public API - không cần token)
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"84901234567","password":"UserPassword123!","deviceId":"device-001"}'
+
+# Lấy profile (Protected API - cần token)
+curl -X GET http://localhost:3001/api/auth/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTBlNjE1ZTE5MjAwODZjMTY0ODIyOGYiLCJwaG9uZSI6Ijg0OTAxMjM0NTY3IiwiaWF0IjoxNzE2MzAyMDAwLCJleHAiOjE3MTYzMDg2MDB9.abc123xyz..."
+```
+
+#### Ví dụ với JavaScript (fetch)
+
+```javascript
+// Đăng ký
+fetch("http://localhost:3001/api/auth/register", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    phone: "84901234567",
+    password: "UserPassword123!",
+    displayName: "Test User",
+    passwordConfirm: "UserPassword123!",
+  }),
+})
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+
+// Đăng nhập và lưu token
+fetch("http://localhost:3001/api/auth/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    phone: "84901234567",
+    password: "UserPassword123!",
+    deviceId: "device-001",
+  }),
+})
+  .then((response) => response.json())
+  .then((data) => {
+    const accessToken = data.data.accessToken;
+    localStorage.setItem("accessToken", accessToken);
+
+    // Sử dụng token cho các request tiếp theo
+    return fetch("http://localhost:3001/api/auth/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  })
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+```
+
+#### Ví dụ với JavaScript (axios)
+
+```javascript
+// Đăng ký
+axios
+  .post("http://localhost:3001/api/auth/register", {
+    phone: "84901234567",
+    password: "UserPassword123!",
+    displayName: "Test User",
+    passwordConfirm: "UserPassword123!",
+  })
+  .then((response) => console.log(response.data));
+
+// Đăng nhập và lưu token
+axios
+  .post("http://localhost:3001/api/auth/login", {
+    phone: "84901234567",
+    password: "UserPassword123!",
+    deviceId: "device-001",
+  })
+  .then((response) => {
+    const accessToken = response.data.data.accessToken;
+    localStorage.setItem("accessToken", accessToken);
+
+    // Sử dụng token cho các request tiếp theo
+    return axios.get("http://localhost:3001/api/auth/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  })
+  .then((response) => console.log(response.data));
+```
+
+#### Ví dụ với Thunder Client
+
+```
+Request: GET http://localhost:3001/api/auth/me
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTBlNjE1ZTE5MjAwODZjMTY0ODIyOGYiLCJwaG9uZSI6Ijg0OTAxMjM0NTY3IiwiaWF0IjoxNzE2MzAyMDAwLCJleHAiOjE3MTYzMDg2MDB9.abc123xyz...
+```
+
+### 1.2. Lưu ý quan trọng
+
+- Access token được nhận từ response của endpoint `/api/auth/login`
+- Token có thời hạn hết hạn (thường 15-30 phút), cần refresh token khi hết hạn
+- Refresh token được dùng để lấy access token mới mà không cần đăng nhập lại
+- Luôn truyền token trong header `Authorization` với format `Bearer <token>` cho protected APIs
+
 ## 2. Module Auth (`/api/auth`)
 
 ### 2.1. Đăng ký tài khoản (Public)

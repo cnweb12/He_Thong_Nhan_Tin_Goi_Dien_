@@ -54,11 +54,35 @@ Tai thoi diem hien tai, router tong dang expose:
 
 ## Nen doc tu dau neu moi vao project
 
-1. [backend/README.md](/d:/BT/He_Thong_Nhan_Tin_Goi_Dien/backend/README.md)
-2. [backend/docs/README.md](/d:/BT/He_Thong_Nhan_Tin_Goi_Dien/backend/docs/README.md)
-3. [backend/docs/development.md](/d:/BT/He_Thong_Nhan_Tin_Goi_Dien/backend/docs/development.md)
-4. [backend/src/modules/README.md](/d:/BT/He_Thong_Nhan_Tin_Goi_Dien/backend/src/modules/README.md)
-5. README cua tung module ma ban dang thao tac
+### Cho deployment va chay project
+
+1. [backend/README.md](backend/README.md)
+   Tong quan backend, cac module, va trang thai hien tai
+2. [backend/docs/README.md](backend/docs/README.md)
+   Danh sach tai lieu backend va thu tu doc khuyen nghi
+3. [backend/docs/development.md](backend/docs/development.md)
+   Huong dan khoi dong stack dev voi Docker, seed database, seed super admin
+4. [scripts/README.md](scripts/README.md)
+   Script ho tro workflow dev o cap do root project
+5. [backend/docs/production.md](backend/docs/production.md)
+   Huong dan deploy production (neu can)
+
+### Cho hieu backend architecture va RBAC
+
+6. [backend/docs/api/admin-api.md](backend/docs/api/admin-api.md)
+   Tai lieu API cho Admin Module (RBAC system)
+7. [backend/docs/migrations/rbac-migration.md](backend/docs/migrations/rbac-migration.md)
+   Hướng dẫn migration sang hệ thống RBAC (neu can)
+8. [backend/src/modules/admin/README.md](backend/src/modules/admin/README.md)
+   Chi tiet Admin Module va role hierarchy
+9. [backend/src/modules/README.md](backend/src/modules/README.md)
+   Tong quan cac module backend
+10. README cua tung module ma ban dang thao_tac (auth, users, messages, v.v.)
+
+### Cho frontend (neu co)
+
+11. [frontend/README.md](frontend/README.md)
+   Huong dan khoi dong va su dung frontend (neu co)
 
 ## Workflow nhanh
 

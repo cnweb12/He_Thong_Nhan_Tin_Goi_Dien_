@@ -17,12 +17,14 @@ async function seed() {
       username: "alice",
       displayName: "Alice",
       passwordHash: "dev-hash-alice",
+      role: "user",
     },
     {
       phone: "+84900000002",
       username: "bob",
       displayName: "Bob",
       passwordHash: "dev-hash-bob",
+      role: "user",
     },
   ]);
 

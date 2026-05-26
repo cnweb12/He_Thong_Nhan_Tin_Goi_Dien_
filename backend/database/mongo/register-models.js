@@ -13,6 +13,8 @@ function registerModels() {
   require("../../src/modules/conversations/models/user-conversation-inbox.model");
   require("../../src/modules/messages/models/message.model");
   require("../../src/modules/calls/models/call.model");
+  require("../../src/modules/admin/models/system-settings.model");
+  require("../../src/modules/admin/models/banned-keyword.model");
 
   isRegistered = true;
 }

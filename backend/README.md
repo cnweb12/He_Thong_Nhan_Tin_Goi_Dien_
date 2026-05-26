@@ -9,7 +9,7 @@ Backend hien duoc to chuc theo huong chat app:
 - `auth`
   dang ky, dang nhap, refresh token, logout
 - `users`
-  profile, settings, search user
+  profile, settings, search user, quan ly ban be
 - `conversations`
   metadata conversation, membership, inbox projection
 - `messages`
@@ -18,6 +18,8 @@ Backend hien duoc to chuc theo huong chat app:
   luu trang thai theo thiet bi
 - `calls`
   luu call log va thao tac lien quan cuoc goi
+- `admin`
+  quan ly user, tin nhan, cai dat he thong, kiem soat noi dung (RBAC)
 
 ## API surface hien tai
 
@@ -30,6 +32,7 @@ Dang duoc mount vao router tong:
 - `/api/messages`
 - `/api/devices`
 - `/api/calls`
+- `/api/admin` (Admin endpoints - yeu cau role admin hoac super_admin)
 
 ## Quan he giua cac module
 
@@ -104,6 +107,8 @@ Luu y: `npm start` chi chay khi Mongo local da san sang o `127.0.0.1:27018` va f
   Hoan thien co route/controller/service/validator va test
 - `calls`
   Hoan thien co route/controller/service/validator va test
+- `admin`
+  Hoan thien co route/controller/service/validator/model (RBAC system)
 
 ## Environment Docs
 
@@ -132,3 +137,16 @@ Luu y: `npm start` chi chay khi Mongo local da san sang o `127.0.0.1:27018` va f
 - [src/modules/conversations/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\conversations\README.md)
 - [src/modules/devices/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\devices\README.md)
 - [src/modules/calls/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\calls\README.md)
+- [src/modules/admin/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\admin\README.md) (Admin Module & RBAC)
+
+## Admin & RBAC
+
+Hệ thống phân quyền Role-Based Access Control với 3 cấp độ:
+- **user**: Người dùng bình thường
+- **admin**: Quản trị viên - quản lý user, tin nhắn, cài đặt hệ thống
+- **super_admin**: Siêu quản trị viên - có tất cả quyền + thay đổi role user
+
+Xem chi tiết tại:
+- [src/modules/admin/README.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\src\modules\admin\README.md)
+- [docs/api/admin-api.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\api\admin-api.md)
+- [docs/migrations/rbac-migration.md](d:\BT\He_Thong_Nhan_Tin_Goi_Dien\backend\docs\migrations\rbac-migration.md)

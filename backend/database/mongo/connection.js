@@ -21,6 +21,12 @@ async function connectMongo(uri = config.mongoUri, options = {}) {
     serverSelectionTimeoutMS: options.serverSelectionTimeoutMS ?? config.mongoServerSelectionTimeoutMs,
   };
 
+  // Add replica set options for transaction support (required for tests)
+  if (process.env.NODE_ENV === 'test') {
+    connectionOptions.readPreference = 'primary';
+    connectionOptions.retryWrites = true;
+  }
+
   connectPromise = (async () => {
     let attempt = 0;
 
