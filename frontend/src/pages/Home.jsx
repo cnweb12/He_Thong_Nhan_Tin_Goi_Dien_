@@ -46,6 +46,7 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState(null);
   const [messagesByConversation, setMessagesByConversation] = useState({});
   const [messagesLoadingId, setMessagesLoadingId] = useState(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [initialError, setInitialError] = useState(null);
@@ -188,6 +189,8 @@ export default function Home() {
       ? crypto.randomUUID()
       : `client-${Date.now()}`;
 
+    setSendingMessage(true);
+
     try {
       const sentMessage = await sendMessageApi(accessToken, {
         conversationId,
@@ -221,8 +224,13 @@ export default function Home() {
       if (normalizedMessage.seq !== undefined && normalizedMessage.seq !== null) {
         await markConversationReadApi(accessToken, conversationId, normalizedMessage.seq);
       }
+
+      return sentMessage;
     } catch (err) {
       setThreadError(err?.message || 'Không gửi được tin nhắn');
+      throw err;
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -308,6 +316,7 @@ export default function Home() {
           loading={messagesLoadingId === selectedId}
           error={threadError}
           onSend={handleSend}
+          sending={sendingMessage}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-600 text-base">

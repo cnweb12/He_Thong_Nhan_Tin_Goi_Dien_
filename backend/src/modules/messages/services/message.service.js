@@ -34,6 +34,8 @@ function createMessageService(dependencies = {}) {
   const conversationMemberModel = dependencies.ConversationMemberModel || ConversationMemberModel;
   const inboxModel = dependencies.UserConversationInboxModel || UserConversationInboxModel;
   const messageModel = dependencies.MessageModel || MessageModel;
+  const transactionMode = String(dependencies.transactionMode || process.env.TRANSACTION_MODE || "transaction").toLowerCase();
+  const useTransactions = dependencies.useTransactions ?? transactionMode !== "local";
 
   async function ensureActiveMembership(conversationId, userId, session) {
     const query = conversationMemberModel.findOne({
@@ -51,7 +53,91 @@ function createMessageService(dependencies = {}) {
     return membership;
   }
 
+  async function sendMessageWithoutTransaction({ conversationId, senderId, type = "text", text, clientMessageId, attachments = [] }) {
+    await ensureActiveMembership(conversationId, senderId);
+
+    const conversation = await conversationModel.findOneAndUpdate(
+      { _id: conversationId },
+      { $inc: { lastMessageSeq: 1 } },
+      { new: true }
+    );
+
+    if (!conversation) {
+      throw createHttpError(404, "Conversation not found");
+    }
+
+    const createdMessage = await messageModel.create({
+      conversationId,
+      senderId,
+      seq: conversation.lastMessageSeq,
+      clientMessageId,
+      type,
+      text,
+      attachments,
+    });
+
+    const lastActivityAt = createdMessage.createdAt || new Date();
+
+    await conversationModel.updateOne(
+      { _id: conversationId },
+      {
+        $set: {
+          lastMessage: {
+            seq: createdMessage.seq,
+            senderId,
+            type,
+            text,
+            createdAt: lastActivityAt,
+          },
+          lastActivityAt,
+        },
+      }
+    );
+
+    await conversationMemberModel.updateMany(
+      { conversationId, userId: { $ne: senderId }, isActive: true },
+      { $inc: { unreadCount: 1 } }
+    );
+
+    await inboxModel.updateMany(
+      { conversationId },
+      {
+        $set: {
+          lastMessage: text || type,
+          lastMessageSeq: createdMessage.seq,
+          lastActivityAt,
+        },
+        $inc: { unreadCount: 1 },
+      }
+    );
+
+    await inboxModel.updateOne(
+      { conversationId, userId: senderId },
+      {
+        $set: {
+          lastMessage: text || type,
+          lastMessageSeq: createdMessage.seq,
+          unreadCount: 0,
+          lastActivityAt,
+        },
+      }
+    );
+
+    return sanitizeMessage(createdMessage);
+  }
+
   async function sendMessage({ conversationId, senderId, type = "text", text, clientMessageId, attachments = [] }) {
+    if (!useTransactions) {
+      return sendMessageWithoutTransaction({
+        conversationId,
+        senderId,
+        type,
+        text,
+        clientMessageId,
+        attachments,
+      });
+    }
+
     const session = await mongooseLib.startSession();
 
     try {

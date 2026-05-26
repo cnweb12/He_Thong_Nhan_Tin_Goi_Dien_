@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Paperclip, Send, Smile } from 'lucide-react';
 
-export default function MessageInput({ onSend }) {
+export default function MessageInput({ onSend, disabled = false, sending = false }) {
     const [text, setText] = useState('');
 
-    const send = () => {
-        if (!text.trim()) return;
-        onSend(text.trim());
-        setText('');
+    const send = async () => {
+        const message = text.trim();
+        if (!message || disabled || sending) return;
+
+        try {
+            await onSend(message);
+            setText('');
+        } catch {
+            // Keep the draft so the user can retry after a backend error.
+        }
     };
 
     const handleKeyDown = (event) => {
@@ -33,6 +39,7 @@ export default function MessageInput({ onSend }) {
             />
             <button
                 onClick={send}
+                disabled={disabled || sending}
                 className="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white shadow-md hover:shadow-lg transition"
             >
                 <Send size={18} />

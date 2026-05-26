@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginApi, refreshApi, logoutApi, getMeApi } from '../services/authApi';
+import { loginApi, logoutApi, getMeApi } from '../services/authApi';
 
 export const AuthContext = createContext(null);
 
@@ -16,31 +16,17 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        const storedRefresh = localStorage.getItem('refreshToken');
 
-        // If we have a refresh token, try to refresh access token (backend should set httpOnly cookie in production)
-        if (storedRefresh) {
-            (async () => {
-                try {
-                    const data = await refreshApi(storedRefresh);
-                    if (data?.accessToken) {
-                        setAccessToken(data.accessToken);
-                        if (storedUser) setUser(JSON.parse(storedUser));
-                        setIsAuthenticated(true);
-                    }
-                } catch (e) {
-                    // ignore - user stays logged out
-                } finally {
-                    setBootstrapping(false);
-                }
-            })();
-        } else if (storedUser) {
+        // Frontend hiện không phụ thuộc refresh token để bootstrap.
+        // Điều này tránh gọi /api/auth/refresh với token cũ hoặc backend chưa hỗ trợ refresh ổn định.
+        localStorage.removeItem('refreshToken');
+
+        if (storedUser) {
             // fallback: if only user is stored, set user but not authenticated
             setUser(JSON.parse(storedUser));
-            setBootstrapping(false);
-        } else {
-            setBootstrapping(false);
         }
+
+        setBootstrapping(false);
     }, []);
 
     const login = async (phone, password) => {
@@ -53,7 +39,6 @@ export function AuthProvider({ children }) {
             if (!data?.accessToken) throw new Error('Đăng nhập thất bại');
             // keep access token in memory; persist only refresh token
             setAccessToken(data.accessToken);
-            if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
             if (data.user) {
                 localStorage.setItem('user', JSON.stringify(data.user));
                 setUser(data.user);

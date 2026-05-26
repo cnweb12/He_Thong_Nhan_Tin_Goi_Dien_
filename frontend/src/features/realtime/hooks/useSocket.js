@@ -24,6 +24,8 @@ export const useSocket = (token) => {
     const socketImpl = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket'],
+      reconnection: false,
+      timeout: 3000,
     });
 
     const handleConnect = () => {
@@ -39,7 +41,8 @@ export const useSocket = (token) => {
     const handleConnectError = (err) => {
       setIsConnected(false);
       setIsConnecting(false);
-      setError(err?.message || 'Cannot connect to realtime server');
+      setError(null);
+      socketImpl.disconnect();
     };
 
     socketImpl.on('connect', handleConnect);

@@ -50,6 +50,8 @@ function createConversationService(dependencies = {}) {
   const conversationMemberModel = dependencies.ConversationMemberModel || ConversationMemberModel;
   const inboxModel = dependencies.UserConversationInboxModel || UserConversationInboxModel;
   const userModel = dependencies.UserModel || UserModel;
+  const transactionMode = String(dependencies.transactionMode || process.env.TRANSACTION_MODE || "transaction").toLowerCase();
+  const useTransactions = dependencies.useTransactions ?? transactionMode !== "local";
 
   async function ensureUserExists(userId) {
     const user = await userModel.findById(userId);
@@ -75,14 +77,103 @@ function createConversationService(dependencies = {}) {
     return membership;
   }
 
+  async function createDirectConversationWithoutTransaction({ userId, peerUserId, createdBy = userId, currentUser, peerUser, directKey }) {
+    const existingConversation = await conversationModel.findOne({ type: "direct", directKey });
+    if (existingConversation) {
+      return sanitizeConversation(existingConversation);
+    }
+
+    const createdConversation = await conversationModel.create([
+      {
+        type: "direct",
+        directKey,
+        createdBy,
+        memberCount: 2,
+      },
+    ]);
+
+    const conversation = createdConversation[0];
+
+    await conversationMemberModel.insertMany(
+      [
+        { conversationId: conversation._id, userId, role: "owner" },
+        { conversationId: conversation._id, userId: peerUserId, role: "member" },
+      ]
+    );
+
+    await inboxModel.insertMany(
+      [
+        {
+          userId,
+          conversationId: conversation._id,
+          displayName: peerUser.displayName || "Direct chat",
+          displayAvatarUrl: peerUser.avatarUrl,
+          unreadCount: 0,
+        },
+        {
+          userId: peerUserId,
+          conversationId: conversation._id,
+          displayName: currentUser.displayName || "Direct chat",
+          displayAvatarUrl: currentUser.avatarUrl,
+          unreadCount: 0,
+        },
+      ]
+    );
+
+    return sanitizeConversation(conversation);
+  }
+
+  async function markAsReadWithoutTransaction({ conversationId, userId, lastSeenSeq }) {
+    await ensureActiveMembership(conversationId, userId);
+
+    await conversationMemberModel.updateOne(
+      { conversationId, userId },
+      {
+        $set: {
+          lastReadSeq: lastSeenSeq,
+          unreadCount: 0,
+        },
+      }
+    );
+
+    await inboxModel.updateOne(
+      { conversationId, userId },
+      {
+        $set: {
+          unreadCount: 0,
+          lastMessageSeq: lastSeenSeq,
+        },
+      }
+    );
+
+    return {
+      conversationId,
+      userId,
+      lastReadSeq: lastSeenSeq,
+      unreadCount: 0,
+    };
+  }
+
   async function createDirectConversation({ userId, peerUserId, createdBy = userId }) {
     if (String(userId) === String(peerUserId)) {
       throw createHttpError(400, "Cannot create a direct conversation with the same user");
     }
 
     const [currentUser, peerUser] = await Promise.all([ensureUserExists(userId), ensureUserExists(peerUserId)]);
-    const session = await mongooseLib.startSession();
     const directKey = normalizeDirectKey(userId, peerUserId);
+
+    if (!useTransactions) {
+      return createDirectConversationWithoutTransaction({
+        userId,
+        peerUserId,
+        createdBy,
+        currentUser,
+        peerUser,
+        directKey,
+      });
+    }
+
+    const session = await mongooseLib.startSession();
 
     try {
       let conversation;
@@ -155,6 +246,14 @@ function createConversationService(dependencies = {}) {
   }
 
   async function markAsRead({ conversationId, userId, lastSeenSeq }) {
+    if (!useTransactions) {
+      return markAsReadWithoutTransaction({
+        conversationId,
+        userId,
+        lastSeenSeq,
+      });
+    }
+
     const session = await mongooseLib.startSession();
 
     try {
