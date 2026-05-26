@@ -98,13 +98,11 @@ describe('Device Management Integration Tests', () => {
   
   describe('Device Management', () => {
     
-    it.skip('should register/update current device (endpoint may not be implemented)', async () => {
+    it('should register/update current device', async () => {
       const deviceData = {
         deviceId: testState.deviceId,
-        deviceType: 'mobile',
-        deviceName: 'iPhone 14',
-        osVersion: 'iOS 16.0',
-        appVersion: '1.0.0',
+        pushToken: 'test-push-token',
+        platform: 'web',
       };
       
       const response = await makeRequest({
@@ -115,24 +113,24 @@ describe('Device Management Integration Tests', () => {
         body: deviceData,
       });
       
-      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.statusCode, 201);
       assert.strictEqual(response.data.ok, true);
     });
     
-    it.skip('should update device presence (endpoint may not be implemented)', async () => {
+    it('should update device presence', async () => {
       const response = await makeRequest({
         method: 'PATCH',
         path: '/api/devices/current/presence',
         port: testPort,
         headers: { Authorization: `Bearer ${testState.userToken}` },
-        body: { presence: 'online' },
+        body: { deviceId: testState.deviceId, isOnline: true },
       });
       
       assert.strictEqual(response.statusCode, 200);
       assert.strictEqual(response.data.ok, true);
     });
     
-    it.skip('should get user devices (endpoint may not be implemented)', async () => {
+    it('should get user devices', async () => {
       const response = await makeRequest({
         method: 'GET',
         path: '/api/devices/me',

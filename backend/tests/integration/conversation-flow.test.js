@@ -154,7 +154,7 @@ describe('Conversation Flow Integration Tests', () => {
   
   describe('Conversation Creation', () => {
     
-    it.skip('should create direct conversation with user2 (endpoint may not be implemented)', async () => {
+    it.skip('should create direct conversation with user2 (requires MongoDB transactions)', async () => {
       const conversationData = createDirectConversationData(testState.user2.userId);
       
       const response = await makeRequest({
@@ -167,12 +167,12 @@ describe('Conversation Flow Integration Tests', () => {
       
       assert.strictEqual(response.statusCode, 201);
       assert.strictEqual(response.data.ok, true);
-      assert.ok(response.data.data.conversationId);
+      assert.ok(response.data.data._id);
       
-      testState.conversationId = response.data.data.conversationId;
+      testState.conversationId = response.data.data._id;
     });
     
-    it.skip('should get user inbox (endpoint may not be implemented)', async () => {
+    it.skip('should get user inbox (requires MongoDB transactions)', async () => {
       const response = await makeRequest({
         method: 'GET',
         path: '/api/conversations/inbox',
@@ -185,13 +185,13 @@ describe('Conversation Flow Integration Tests', () => {
       assert.ok(Array.isArray(response.data.data));
     });
     
-    it.skip('should mark conversation as read (endpoint may not be implemented)', async () => {
+    it.skip('should mark conversation as read (requires MongoDB transactions)', async () => {
       const response = await makeRequest({
         method: 'PATCH',
         path: `/api/conversations/${testState.conversationId}/read`,
         port: testPort,
         headers: { Authorization: `Bearer ${testState.user1Token}` },
-        body: {},
+        body: { lastSeenSeq: 0 },
       });
       
       assert.strictEqual(response.statusCode, 200);
@@ -201,12 +201,12 @@ describe('Conversation Flow Integration Tests', () => {
   
   describe('Message Exchange', () => {
     
-    it.skip('should send message to conversation (endpoint may not be implemented)', async () => {
+    it.skip('should send message to conversation (requires MongoDB transactions)', async () => {
       const messageData = createMessageData(testState.conversationId, 'Hello from user1!');
       
       const response = await makeRequest({
         method: 'POST',
-        path: '/api/messages/',
+        path: '/api/messages',
         port: testPort,
         headers: { Authorization: `Bearer ${testState.user1Token}` },
         body: messageData,
@@ -214,12 +214,12 @@ describe('Conversation Flow Integration Tests', () => {
       
       assert.strictEqual(response.statusCode, 201);
       assert.strictEqual(response.data.ok, true);
-      assert.ok(response.data.data.messageId);
+      assert.ok(response.data.data._id);
       
-      testState.messageId = response.data.data.messageId;
+      testState.messageId = response.data.data._id;
     });
     
-    it.skip('should get messages from conversation (endpoint may not be implemented)', async () => {
+    it.skip('should get messages from conversation (requires MongoDB transactions)', async () => {
       const response = await makeRequest({
         method: 'GET',
         path: `/api/messages/conversations/${testState.conversationId}`,
@@ -232,12 +232,12 @@ describe('Conversation Flow Integration Tests', () => {
       assert.ok(Array.isArray(response.data.data));
     });
     
-    it.skip('should fail to send message to non-existent conversation (endpoint may not be implemented)', async () => {
-      const messageData = createMessageData('non-existent-conversation-id', 'Test message');
+    it.skip('should fail to send message to non-existent conversation (requires MongoDB transactions)', async () => {
+      const messageData = createMessageData('507f1f77bcf86cd799439011', 'Test message'); // Valid ObjectId format
       
       const response = await makeRequest({
         method: 'POST',
-        path: '/api/messages/',
+        path: '/api/messages',
         port: testPort,
         headers: { Authorization: `Bearer ${testState.user1Token}` },
         body: messageData,

@@ -15,6 +15,7 @@ const {
   createSettingsData,
   createProfileUpdateData,
   createPasswordChangeData,
+  createFriendRequestData,
 } = require('./helpers/test-data');
 
 // Integration tests should NOT use global hooks that clear database between tests
@@ -246,6 +247,170 @@ describe('Full User Flow Integration Tests', () => {
       
       // API might return 400 (validation) or 401 (auth) depending on implementation
       assert.ok(response.statusCode === 400 || response.statusCode === 401);
+    });
+  });
+  
+  describe('Scenario 2: Profile Management', () => {
+    
+    it('should get current profile', async () => {
+      const response = await makeRequest({
+        method: 'GET',
+        path: '/api/users/me',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.strictEqual(response.data.data.phone, testState.user1.phone);
+    });
+    
+    it('should update display name', async () => {
+      const profileData = createProfileUpdateData({ displayName: 'Updated Display Name' });
+      
+      const response = await makeRequest({
+        method: 'PATCH',
+        path: '/api/users/me',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+        body: profileData,
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.strictEqual(response.data.data.displayName, 'Updated Display Name');
+    });
+    
+    it('should update settings', async () => {
+      const settingsData = createSettingsData({ theme: 'dark', language: 'en' });
+      
+      const response = await makeRequest({
+        method: 'PATCH',
+        path: '/api/users/me/settings',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+        body: settingsData,
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+    });
+  });
+  
+  describe('Scenario 3: User Search', () => {
+    
+    it('should search users by name', async () => {
+      const response = await makeRequest({
+        method: 'GET',
+        path: '/api/users/search?q=User&limit=10',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.ok(Array.isArray(response.data.data));
+    });
+    
+    it('should return public profile without sensitive data', async () => {
+      const response = await makeRequest({
+        method: 'GET',
+        path: `/api/users/${testState.user2.userId}`,
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.ok(!response.data.data.phone); // Phone should not be in public profile
+      assert.ok(!response.data.data.settings); // Settings should not be in public profile
+    });
+  });
+  
+  describe('Scenario 4: Friend Management', () => {
+    
+    it('should login user2 for friend management tests', async () => {
+      const user2DeviceId = 'device-test-002';
+      const loginData = createLoginData(testState.user2.phone, testState.user2.password, user2DeviceId);
+      
+      const response = await makeRequest({
+        method: 'POST',
+        path: '/api/auth/login',
+        port: testPort,
+        body: loginData,
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.ok(response.data.data.accessToken);
+      
+      testState.user2Token = response.data.data.accessToken;
+    });
+    
+    it('should send friend request', async () => {
+      const friendRequestData = createFriendRequestData();
+      
+      const response = await makeRequest({
+        method: 'POST',
+        path: `/api/users/${testState.user2.userId}/friends`,
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+        body: friendRequestData,
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+    });
+    
+    it('should get friend requests', async () => {
+      const response = await makeRequest({
+        method: 'GET',
+        path: '/api/users/me/friend-requests',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user2Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.ok(Array.isArray(response.data.data));
+    });
+    
+    it('should accept friend request', async () => {
+      const response = await makeRequest({
+        method: 'POST',
+        path: `/api/users/${testState.user1.userId}/friends/accept`,
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user2Token}` },
+        body: {},
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+    });
+    
+    it('should get friends list', async () => {
+      const response = await makeRequest({
+        method: 'GET',
+        path: '/api/users/me/friends',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
+      assert.ok(Array.isArray(response.data.data));
+    });
+    
+    it('should remove friend', async () => {
+      const response = await makeRequest({
+        method: 'DELETE',
+        path: `/api/users/${testState.user2.userId}/friends`,
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+      
+      assert.strictEqual(response.statusCode, 200);
+      assert.strictEqual(response.data.ok, true);
     });
   });
 });
