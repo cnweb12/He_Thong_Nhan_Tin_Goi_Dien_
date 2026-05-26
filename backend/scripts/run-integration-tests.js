@@ -5,7 +5,10 @@ const { run } = require("node:test");
 
 async function runIntegrationTests() {
   console.log("🔄 Đang khởi động In-Memory MongoDB cho integration tests...");
-  const mongoServer = await MongoMemoryServer.create();
+  const mongoServer = await MongoMemoryServer.create({
+    instance: { dbName: 'test_db' },
+    replicaSet: { count: 1 }, // Enable replica set for transaction support
+  });
   const uri = mongoServer.getUri();
   console.log(`✅ In-Memory DB chạy tại: ${uri}`);
 
@@ -41,6 +44,7 @@ async function runIntegrationTests() {
       path.join(integrationDir, "conversation-flow.test.js"),
       path.join(integrationDir, "device-management.test.js"),
       path.join(integrationDir, "session-management.test.js"),
+      path.join(integrationDir, "admin-rbac.test.js"),
     ];
 
     const stream = run({
