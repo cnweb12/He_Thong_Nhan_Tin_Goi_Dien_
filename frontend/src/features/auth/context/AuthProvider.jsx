@@ -120,7 +120,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         (async () => {
             try {
-                await logoutApi();
+                await logoutApi(accessToken);
             } catch (e) {
                 // ignore logout API errors
             }

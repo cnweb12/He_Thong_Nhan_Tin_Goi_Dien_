@@ -27,8 +27,8 @@ export const registerApi = async (phone, displayName, password, passwordConfirm)
   return res.data && res.data.data ? res.data.data : res.data;
 };
 
-export const logoutApi = async (deviceId = 'device-uuid-1234') => {
-  const res = await post('/api/auth/logout', { deviceId });
+export const logoutApi = async (accessToken, deviceId = 'device-uuid-1234') => {
+  const res = await post('/api/auth/logout', { deviceId }, withAuth(accessToken));
   if (!res.ok) throw new Error(res.error || 'Logout failed');
   return res.data && res.data.data ? res.data.data : res.data;
 };
