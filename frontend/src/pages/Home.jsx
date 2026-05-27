@@ -244,10 +244,10 @@ export default function Home() {
 
   if (inboxError || initialError) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eff6ff,_#dbeafe_35%,_#f8fafc_100%)]">
-        <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 text-center shadow-sm max-w-md">
-          <p className="text-red-600 font-medium mb-2">Không thể tải dữ liệu khởi tạo</p>
-          <p className="text-sm text-gray-600 mb-4">{inboxError || initialError}</p>
+      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#f7fafc,_#eef2f7_42%,_#f4f7fb_100%)]">
+        <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-[1.5rem] px-6 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-w-md">
+          <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu khởi tạo</p>
+          <p className="text-sm text-slate-600 mb-4">{inboxError || initialError}</p>
           <button
             type="button"
             onClick={() => {
@@ -255,7 +255,7 @@ export default function Home() {
               setIsBootstrapped(false);
               setInitialLoading(true);
             }}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            className="px-4 py-2.5 rounded-xl bg-[#0068ff] text-white hover:bg-[#005bd6] transition shadow-md"
           >
             Thử lại
           </button>
@@ -267,17 +267,20 @@ export default function Home() {
   // Only block UI for protected data bootstrap. Realtime can recover in background.
   if (!isBootstrapped || initialLoading || inboxLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eff6ff,_#dbeafe_35%,_#f8fafc_100%)]">
-        <div className="bg-white border border-gray-200 rounded-2xl px-6 py-5 text-center shadow-sm">
-          <p className="text-gray-700 font-medium mb-2">Đang tải dữ liệu...</p>
-          <p className="text-sm text-gray-500">Đồng bộ hồ sơ cá nhân và inbox.</p>
+      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#f7fafc,_#eef2f7_42%,_#f4f7fb_100%)]">
+        <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-[1.5rem] px-6 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+          <p className="text-slate-800 font-semibold mb-2">Đang tải dữ liệu...</p>
+          <p className="text-sm text-slate-500">Đồng bộ hồ sơ cá nhân và inbox.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[radial-gradient(circle_at_top,_#eff6ff,_#dbeafe_35%,_#f8fafc_100%)] text-slate-900">
+    <div className="relative h-screen flex overflow-hidden text-slate-900 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_35%,_#f4f7fb_100%)]">
+      <div className="pointer-events-none absolute -top-24 left-1/3 h-72 w-72 rounded-full bg-slate-300/30 blur-3xl" />
+      <div className="pointer-events-none absolute right-8 top-10 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
+
       <div className="absolute top-4 right-4 z-50">
         <LogoutButton />
       </div>
@@ -300,9 +303,9 @@ export default function Home() {
           onStartConversation={handleStartConversation}
         />
       ) : (
-        <div style={{ width: 360 }} className="flex-shrink-0 bg-white/80 backdrop-blur border-r border-white/60 p-4">
-          <div className="text-sm text-gray-500 mb-3">{viewTitle}</div>
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        <div style={{ width: 360 }} className="flex-shrink-0 bg-white/80 backdrop-blur border-r border-slate-200 p-4 shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
+          <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
+          <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
             Nội dung {viewTitle} đang hiển thị ở đây.
           </div>
         </div>
@@ -319,7 +322,7 @@ export default function Home() {
           sending={sendingMessage}
         />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-600 text-base">
+        <div className="flex-1 flex items-center justify-center text-slate-600 text-base">
           Chuyển sang {viewTitle}
         </div>
       )}

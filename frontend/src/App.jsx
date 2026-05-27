@@ -8,14 +8,13 @@ import Home from './pages/Home';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
-  // const isAuthenticated = true;
-  // const loading = false;
 
-  // Hiển thị loading khi đang kiểm tra trạng thái đăng nhập
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl text-gray-600">Đang tải...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eaf2ff,_#cfe0ff_35%,_#f8fbff_100%)]">
+        <div className="rounded-3xl bg-white/85 backdrop-blur px-6 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.12)] border border-white/70 text-slate-700 font-medium">
+          Đang tải...
+        </div>
       </div>
     );
   }

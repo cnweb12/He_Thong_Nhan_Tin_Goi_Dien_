@@ -52,15 +52,15 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
     const filteredConversations = useMemo(() => conversations || [], [conversations]);
 
     return (
-        <div style={{ width: 380 }} className="flex-shrink-0 bg-white/80 backdrop-blur border-r border-white/60 flex flex-col shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
-            <div className="p-4 border-b border-slate-200/70 bg-white/70">
+        <div style={{ width: 392 }} className="flex-shrink-0 bg-white/85 backdrop-blur border-r border-slate-200 flex flex-col shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
+            <div className="px-4 pt-4 pb-3 border-b border-slate-200 bg-white/75">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white flex items-center justify-center text-lg font-semibold shadow-sm">
+                    <div className="w-12 h-12 rounded-[1.2rem] bg-slate-900 text-white flex items-center justify-center text-lg font-semibold shadow-sm">
                         {(user?.displayName || user?.name || 'K').slice(0, 1).toUpperCase()}
                     </div>
                     <div>
-                        <div className="font-semibold text-gray-900 text-sm">{user?.displayName || user?.name || 'Khách'}</div>
-                        <div className="text-xs text-gray-500">{user?.phone || ''}</div>
+                        <div className="font-semibold text-slate-900 text-sm">{user?.displayName || user?.name || 'Khách'}</div>
+                        <div className="text-xs text-slate-500">{user?.phone || ''}</div>
                     </div>
                 </div>
             </div>
@@ -108,13 +108,13 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
 
             <div className="px-4">
                 <div className="flex gap-2 mt-2 text-sm">
-                    <button className="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-full text-sm font-medium">Ưu tiên</button>
+                    <button className="px-3 py-1.5 bg-slate-900 text-white rounded-full text-sm font-semibold">Ưu tiên</button>
                     <button className="px-3 py-1.5 text-slate-500 text-sm">Khác</button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto mt-2">
-                <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Hộp thư</div>
+            <div className="flex-1 overflow-y-auto mt-2 pb-3">
+                <div className="px-4 pb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Hộp thư</div>
                 {filteredConversations.map((conversation) => (
                     <ChatItem
                         key={resolveConversationId(conversation)}
