@@ -1,12 +1,19 @@
 export default function ThreadView({ chat }) {
+  const title = chat?.displayName || chat?.name || 'Cuộc trò chuyện';
+  const avatarUrl = chat?.avatarUrl || chat?.displayAvatarUrl || chat?.avatar || '';
+
   return (
     <div className="flex flex-col h-full">
       {/* Header chat */}
       <div className="border-b p-4 flex items-center justify-between bg-white">
         <div className="flex items-center gap-3">
-          <img src={chat.avatar} className="w-11 h-11 rounded-full" alt="" />
+          {avatarUrl ? (
+            <img src={avatarUrl} className="w-11 h-11 rounded-full object-cover" alt={title} />
+          ) : (
+            <div className="w-11 h-11 rounded-full bg-gray-200" />
+          )}
           <div>
-            <div className="font-semibold">{chat.name}</div>
+            <div className="font-semibold">{title}</div>
             <div className="text-sm text-gray-500">
               {chat.members} thành viên
             </div>

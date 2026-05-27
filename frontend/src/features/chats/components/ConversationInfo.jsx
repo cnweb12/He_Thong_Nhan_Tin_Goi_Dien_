@@ -1,8 +1,13 @@
 import React from 'react';
 
+const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+
 export default function ConversationInfo({ chat, messages, currentUserId }) {
     const peer = chat?.peer || {};
-    const title = peer.displayName || chat?.name || 'Chưa chọn hội thoại';
+    const title = chat?.displayName || peer.displayName || chat?.name || 'Chưa chọn hội thoại';
+    const subtitle = chat?.phone || (isPhoneLike(chat?.username) ? chat.username : '')
+        || peer.phone || (isPhoneLike(peer.username) ? peer.username : '');
+    const avatarUrl = chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
     const unread = chat?.unread || 0;
     const totalMessages = messages?.length || 0;
     const myMessages = Array.isArray(messages) ? messages.filter((message) => message.from === currentUserId).length : 0;
@@ -12,10 +17,16 @@ export default function ConversationInfo({ chat, messages, currentUserId }) {
             {chat ? (
                 <div>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-lg font-semibold text-slate-700"></div>
+                        {avatarUrl ? (
+                            <img src={avatarUrl} className="w-16 h-16 rounded-3xl object-cover bg-slate-200" alt={title} />
+                        ) : (
+                            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-lg font-semibold text-slate-700">
+                                {(title || 'C').slice(0, 1).toUpperCase()}
+                            </div>
+                        )}
                         <div>
                             <div className="font-semibold text-gray-900">{title}</div>
-                            <div className="text-sm text-gray-500">{peer.userId ? `@${peer.username || peer.userId}` : 'Mô tả nhóm hoặc thông tin'}</div>
+                            <div className="text-sm text-gray-500">{subtitle || 'Mô tả nhóm hoặc thông tin'}</div>
                         </div>
                     </div>
 

@@ -10,14 +10,46 @@ const formatConversationTime = (isoDate) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+
+const resolveConversationTitle = (item) => item?.displayName
+  || item?.peer?.displayName
+  || item?.peer?.name
+  || item?.name
+  || 'Unknown';
+
+const resolveConversationAvatar = (item) => item?.displayAvatarUrl
+  || item?.avatarUrl
+  || item?.peer?.avatarUrl
+  || item?.peer?.displayAvatarUrl
+  || '';
+
+const resolveConversationPhone = (item) => item?.phone
+  || item?.username
+  || item?.peer?.phone
+  || item?.peer?.username
+  || (isPhoneLike(item?.peer?.username) ? item.peer.username : '')
+  || '';
+
 const mapInboxItemToConversation = (item) => ({
   id: item.conversationId,
   conversationId: item.conversationId,
-  name: item?.peer?.displayName || 'Unknown',
+  name: resolveConversationTitle(item),
+  displayName: resolveConversationTitle(item),
+  phone: resolveConversationPhone(item),
+  username: item?.username || item?.peer?.username || '',
+  avatarUrl: resolveConversationAvatar(item),
   lastMessage: item?.lastMessage?.content || '',
   time: formatConversationTime(item?.lastMessage?.createdAt),
   unread: item?.unreadCount || 0,
-  peer: item?.peer || null,
+  peer: {
+    ...(item?.peer || {}),
+    userId: item?.peer?.userId || item?.peerUserId || item?.userId || null,
+    displayName: resolveConversationTitle(item),
+    phone: resolveConversationPhone(item),
+    username: item?.peer?.username || item?.username || '',
+    avatarUrl: resolveConversationAvatar(item),
+  },
   messages: [],
 });
 

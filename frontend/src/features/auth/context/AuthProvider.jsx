@@ -1,8 +1,12 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginApi, logoutApi, getMeApi } from '../services/authApi';
+import { loginApi, logoutApi, getMeApi, refreshApi } from '../services/authApi';
 
 export const AuthContext = createContext(null);
+
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_KEY = 'user';
+const DEVICE_ID = 'device-uuid-1234';
 
 export function AuthProvider({ children }) {
     const navigate = useNavigate();
@@ -14,20 +18,74 @@ export function AuthProvider({ children }) {
     const [bootstrapping, setBootstrapping] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
+    const clearSession = useCallback(() => {
+        sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
+        setUser(null);
+        setAccessToken(null);
+        setIsAuthenticated(false);
+    }, []);
 
-        // Frontend hiện không phụ thuộc refresh token để bootstrap.
-        // Điều này tránh gọi /api/auth/refresh với token cũ hoặc backend chưa hỗ trợ refresh ổn định.
-        localStorage.removeItem('refreshToken');
-
-        if (storedUser) {
-            // fallback: if only user is stored, set user but not authenticated
-            setUser(JSON.parse(storedUser));
+    const restoreSession = useCallback(async () => {
+        const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+        if (!refreshToken) {
+            clearSession();
+            return null;
         }
 
-        setBootstrapping(false);
-    }, []);
+        const refreshed = await refreshApi(refreshToken, DEVICE_ID);
+        if (!refreshed?.accessToken) {
+            throw new Error('Không thể khôi phục phiên đăng nhập');
+        }
+
+        setAccessToken(refreshed.accessToken);
+        return refreshed.accessToken;
+    }, [clearSession]);
+
+    useEffect(() => {
+        let active = true;
+
+        const bootstrap = async () => {
+            setBootstrapping(true);
+            setError(null);
+
+            try {
+                const accessTokenValue = await restoreSession();
+                if (!active || !accessTokenValue) {
+                    return;
+                }
+
+                const profile = await getMeApi(accessTokenValue);
+                if (!active) {
+                    return;
+                }
+
+                if (profile) {
+                    setUser(profile);
+                    sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
+                }
+
+                setIsAuthenticated(true);
+            } catch (err) {
+                if (!active) {
+                    return;
+                }
+
+                clearSession();
+                setError(null);
+            } finally {
+                if (active) {
+                    setBootstrapping(false);
+                }
+            }
+        };
+
+        bootstrap();
+
+        return () => {
+            active = false;
+        };
+    }, [clearSession, restoreSession]);
 
     const login = async (phone, password) => {
         setLoading(true);
@@ -37,10 +95,13 @@ export function AuthProvider({ children }) {
             const data = await loginApi(phone, password);
 
             if (!data?.accessToken) throw new Error('Đăng nhập thất bại');
-            // keep access token in memory; persist only refresh token
+
             setAccessToken(data.accessToken);
+            if (data.refreshToken) {
+                sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+            }
             if (data.user) {
-                localStorage.setItem('user', JSON.stringify(data.user));
+                sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
                 setUser(data.user);
             }
 
@@ -63,27 +124,29 @@ export function AuthProvider({ children }) {
             } catch (e) {
                 // ignore logout API errors
             }
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            setUser(null);
-            setAccessToken(null);
-            setIsAuthenticated(false);
+            clearSession();
             navigate('/login');
         })();
     };
 
     const fetchCurrentUser = useCallback(async () => {
-        if (!accessToken) {
+        let tokenToUse = accessToken;
+
+        if (!tokenToUse) {
+            tokenToUse = await restoreSession();
+        }
+
+        if (!tokenToUse) {
             return null;
         }
 
-        const profile = await getMeApi(accessToken);
+        const profile = await getMeApi(tokenToUse);
         if (profile) {
             setUser(profile);
-            localStorage.setItem('user', JSON.stringify(profile));
+            sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
         }
         return profile;
-    }, [accessToken]);
+    }, [accessToken, restoreSession]);
 
     const contextValue = useMemo(() => ({
         user,
@@ -94,7 +157,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         fetchCurrentUser,
-    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, fetchCurrentUser]);
+        restoreSession,
+    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, fetchCurrentUser, restoreSession]);
 
     return (
         <AuthContext.Provider value={contextValue}>

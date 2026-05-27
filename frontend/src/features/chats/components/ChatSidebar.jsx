@@ -4,6 +4,7 @@ import ChatItem from './ChatItem';
 import { searchUsersApi } from '../../users/services/userApi';
 
 const resolveConversationId = (conversation) => conversation?.conversationId || conversation?.id || conversation?._id || null;
+const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 
 export default function ChatSidebar({ user, accessToken, conversations, selectedId, onSelect, onStartConversation }) {
     const [query, setQuery] = useState('');
@@ -95,7 +96,7 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-medium text-slate-900 text-sm truncate">{item.displayName || item.username}</div>
-                                        <div className="text-xs text-slate-500 truncate">@{item.username || item.userId || item._id}</div>
+                                        <div className="text-xs text-slate-500 truncate">{item.phone || (isPhoneLike(item.username) ? item.username : '')}</div>
                                     </div>
                                     <div className="text-xs text-sky-600 font-medium">Nhắn tin</div>
                                 </button>
