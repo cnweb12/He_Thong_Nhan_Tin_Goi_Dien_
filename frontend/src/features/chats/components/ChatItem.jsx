@@ -11,7 +11,7 @@ export default function ChatItem({ chat, active, onClick }) {
     const initials = (title || 'C').slice(0, 1).toUpperCase();
     const readLabel = chat?.unread > 0
         ? `${chat.unread} chưa đọc`
-        : (chat?.lastMessage || chat?.lastMessageSeq ? 'Đã xem' : '');
+        : '';
 
     return (
         <button

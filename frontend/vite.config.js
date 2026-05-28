@@ -8,9 +8,18 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_URL || 'http://localhost:3000',
         changeOrigin: true,
       },
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    define: {
+      'import.meta.env.VITE_SOCKET_URL': JSON.stringify('http://localhost:3000'),
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify('http://localhost:5000'),
     },
   },
 });

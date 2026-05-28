@@ -40,7 +40,7 @@ const resolvePeerUser = (chat) => chat?.peer || {
 
 export default function Home() {
   const { user, accessToken, fetchCurrentUser } = useAuth();
-  const { isConnected, isConnecting, error: socketError } = useAppSocket();
+  const { socket, isConnected, isConnecting, error: socketError } = useAppSocket();
   const { conversations, setConversations, fetchInbox, loading: inboxLoading, error: inboxError } = useConversations();
   const [sidebarView, setSidebarView] = useState('chat');
   const [selectedId, setSelectedId] = useState(null);
@@ -53,6 +53,8 @@ export default function Home() {
   const [threadError, setThreadError] = useState(null);
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
+
+  const joinedRoomsRef = React.useRef(new Set());
 
   useEffect(() => {
     if (!accessToken) {
@@ -146,6 +148,108 @@ export default function Home() {
     };
   }, [selectedId, accessToken]);
 
+  // Join ALL socket rooms to receive background updates for Inbox
+  useEffect(() => {
+    if (!socket || !isConnected || !conversations) return;
+
+    conversations.forEach((c) => {
+      const id = resolveConversationId(c);
+      if (id && !joinedRoomsRef.current.has(id)) {
+        console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại:`, id);
+        socket.emit('join_room', { conversationId: id });
+        joinedRoomsRef.current.add(id);
+      }
+    });
+  }, [socket, isConnected, conversations]);
+
+  // Listen for new messages
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleNewMessage = (message) => {
+      console.log('🔴 [DEBUG CLIENT] Đã nhận event new_message từ server:', message);
+      const normalizedMessage = normalizeMessage(message);
+      const conversationId = message.conversationId || message.conversationId?._id || message.conversationId?.id;
+
+      if (!conversationId) {
+        console.warn('🔴 [DEBUG CLIENT] Không tìm thấy conversationId trong tin nhắn!');
+        return;
+      }
+
+      // Update messages list
+      setMessagesByConversation((prev) => {
+        const currentMessages = prev[conversationId] || [];
+
+        // Check if this message matches a pending message (by clientMessageId)
+        const pendingMessageIndex = currentMessages.findIndex(m =>
+          m.clientMessageId && m.clientMessageId === normalizedMessage.clientMessageId
+        );
+
+        if (pendingMessageIndex !== -1) {
+          // Replace pending message with real message and update status
+          console.log('🔴 [DEBUG CLIENT] Cập nhật tin nhắn đang gửi với dữ liệu thật.');
+          const updatedMessages = [...currentMessages];
+          updatedMessages[pendingMessageIndex] = { ...normalizedMessage, status: 'sent' };
+          return {
+            ...prev,
+            [conversationId]: updatedMessages,
+          };
+        }
+
+        // Prevent duplicate messages - check by id or content + senderId
+        const isDuplicate = currentMessages.some(m =>
+          m.id === normalizedMessage.id ||
+          (m.text === normalizedMessage.text && m.from === normalizedMessage.from)
+        );
+        if (isDuplicate) {
+          console.log('🔴 [DEBUG CLIENT] Bỏ qua tin nhắn vì bị trùng lặp (duplicate).');
+          return prev;
+        }
+
+        console.log('🔴 [DEBUG CLIENT] Đã thêm tin nhắn mới vào state messagesByConversation.');
+        return {
+          ...prev,
+          [conversationId]: [...currentMessages, normalizedMessage],
+        };
+      });
+
+      // Update conversations list in sidebar
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => resolveConversationId(c) === conversationId);
+        if (index === -1) {
+          refreshInbox(); // Fetch updated inbox if it's a new conversation
+          return prev;
+        }
+
+        const updatedConversations = [...prev];
+        const updatedConv = { ...updatedConversations[index] };
+        updatedConv.lastMessage = normalizedMessage.text;
+        updatedConv.time = normalizedMessage.time;
+        if (selectedId !== conversationId) {
+          updatedConv.unread = (updatedConv.unread || 0) + 1;
+        }
+
+        // Move to top
+        updatedConversations.splice(index, 1);
+        updatedConversations.unshift(updatedConv);
+        return updatedConversations;
+      });
+
+      // Mark as read if we are looking at it (but not if we just sent it ourselves)
+      // The sender marks it as read in handleSend, so we only need to mark for incoming messages
+      const isOwnMessage = normalizedMessage.from === currentUserId;
+      if (selectedId === conversationId && !isOwnMessage && normalizedMessage.seq !== undefined && normalizedMessage.seq !== null) {
+        markConversationReadApi(accessToken, conversationId, normalizedMessage.seq).catch(console.error);
+      }
+    };
+
+    socket.on('new_message', handleNewMessage);
+    
+    return () => {
+      socket.off('new_message', handleNewMessage);
+    };
+  }, [socket, isConnected, selectedId, accessToken, setConversations]);
+
   const selected = useMemo(
     () => conversations.find((c) => resolveConversationId(c) === selectedId) || null,
     [conversations, selectedId],
@@ -191,6 +295,41 @@ export default function Home() {
 
     setSendingMessage(true);
 
+    // Optimistic UI - add message immediately with status 'sending'
+    const optimisticMessage = normalizeMessage({
+      _id: `temp-${clientMessageId}`,
+      clientMessageId,
+      content: text,
+      text,
+      senderId: currentUserId,
+      from: currentUserId,
+      conversationId,
+      createdAt: new Date().toISOString(),
+      type: 'text',
+    });
+    optimisticMessage.status = 'sending';
+
+    setMessagesByConversation((prev) => {
+      const currentMessages = prev[conversationId] || [];
+      return {
+        ...prev,
+        [conversationId]: [...currentMessages, optimisticMessage],
+      };
+    });
+
+    setConversations((prev) => prev.map((conversation) => {
+      const id = resolveConversationId(conversation);
+      if (id !== conversationId) return conversation;
+
+      return {
+        ...conversation,
+        lastMessage: text,
+        time: formatTime(new Date()),
+        unread: 0,
+      };
+    }));
+
+    // Send API in background
     try {
       const sentMessage = await sendMessageApi(accessToken, {
         conversationId,
@@ -200,26 +339,18 @@ export default function Home() {
       });
 
       const normalizedMessage = normalizeMessage(sentMessage);
+      normalizedMessage.status = 'sent';
 
+      // Replace optimistic message with real message
       setMessagesByConversation((prev) => {
         const currentMessages = prev[conversationId] || [];
         return {
           ...prev,
-          [conversationId]: [...currentMessages, normalizedMessage],
+          [conversationId]: currentMessages.map((msg) =>
+            msg.clientMessageId === clientMessageId ? normalizedMessage : msg
+          ),
         };
       });
-
-      setConversations((prev) => prev.map((conversation) => {
-        const id = resolveConversationId(conversation);
-        if (id !== conversationId) return conversation;
-
-        return {
-          ...conversation,
-          lastMessage: text,
-          time: formatTime(sentMessage?.createdAt || new Date()),
-          unread: 0,
-        };
-      }));
 
       if (normalizedMessage.seq !== undefined && normalizedMessage.seq !== null) {
         await markConversationReadApi(accessToken, conversationId, normalizedMessage.seq);
@@ -227,6 +358,16 @@ export default function Home() {
 
       return sentMessage;
     } catch (err) {
+      // Update message status to error
+      setMessagesByConversation((prev) => {
+        const currentMessages = prev[conversationId] || [];
+        return {
+          ...prev,
+          [conversationId]: currentMessages.map((msg) =>
+            msg.clientMessageId === clientMessageId ? { ...msg, status: 'error' } : msg
+          ),
+        };
+      });
       setThreadError(err?.message || 'Không gửi được tin nhắn');
       throw err;
     } finally {

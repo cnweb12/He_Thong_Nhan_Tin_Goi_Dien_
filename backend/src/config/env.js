@@ -32,6 +32,20 @@ const buildMongoUri = () => {
   return `mongodb://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${dbName}?authSource=${encodeURIComponent(authSource)}`;
 };
 
+const buildCorsOrigins = () => {
+  const corsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_ORIGIN;
+  if (corsOrigin) {
+    return corsOrigin.split(",").map((origin) => origin.trim());
+  }
+  // Default local origins
+  return [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+  ];
+};
+
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: toNumber(process.env.PORT, 3000),
@@ -49,4 +63,5 @@ module.exports = {
   superAdminPhone: process.env.SUPER_ADMIN_PHONE,
   superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
   superAdminDisplayName: process.env.SUPER_ADMIN_DISPLAY_NAME || "Super Admin",
+  corsOrigins: buildCorsOrigins(),
 };

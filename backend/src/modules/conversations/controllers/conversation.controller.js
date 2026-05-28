@@ -1,5 +1,6 @@
 const validators = require("../validators/conversation.validator");
 const { conversationService } = require("../services/conversation.service");
+const { getIO } = require("../../../socket/socket");
 
 function createValidationError(details) {
   const error = new Error("Validation failed");
@@ -45,6 +46,18 @@ function createConversationController(dependencies = {}) {
         userId: req.user.userId,
         lastSeenSeq: Number(req.body.lastSeenSeq),
       });
+
+      // Emit message_read event to the conversation room
+      try {
+        const io = getIO();
+        io.to(req.params.conversationId).emit("message_read", {
+          conversationId: req.params.conversationId,
+          userId: req.user.userId,
+          lastSeenSeq: Number(req.body.lastSeenSeq),
+        });
+      } catch (socketError) {
+        console.error("[conversation] Failed to emit message_read event:", socketError);
+      }
 
       res.json({
         ok: true,

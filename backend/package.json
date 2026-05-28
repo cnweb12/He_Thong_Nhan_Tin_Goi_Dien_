@@ -26,13 +26,15 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "express-rate-limit": "^8.5.2",
-    "mongoose": "^8.12.1"
+    "mongoose": "^8.12.1",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.6.0",
     "c8": "^11.0.0",
     "mongodb-memory-server": "^11.1.0",
+    "socket.io-client": "^4.8.3",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }

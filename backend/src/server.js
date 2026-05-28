@@ -2,6 +2,7 @@ const http = require("node:http");
 const app = require("./app");
 const { connectMongo, disconnectMongo, registerModels, mongoose } = require("../database/mongo");
 const config = require("./config/env");
+const { initializeSocket, resetAllDevicesToOffline } = require("./socket/socket");
 
 let server;
 let shuttingDown = false;
@@ -43,7 +44,14 @@ async function startServer() {
 
   await connectMongo(config.mongoUri);
 
+  // Reset all devices to offline on startup (handles crash/restart scenarios)
+  await resetAllDevicesToOffline();
+
   server = http.createServer(app);
+  
+  // Initialize Socket.IO
+  initializeSocket(server);
+  
   server.listen(config.port, () => {
     console.log(`[server] Listening on port ${config.port}.`);
   });

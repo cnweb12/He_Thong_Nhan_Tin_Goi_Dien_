@@ -56,5 +56,18 @@ services:
       retries: 10
       start_period: 20s
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: chat-app-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
 volumes:
   mongo_data:

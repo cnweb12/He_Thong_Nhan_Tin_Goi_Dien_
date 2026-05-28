@@ -818,3 +818,65 @@ Headers:
   ```
 - **Error Responses**:
   - `400 Bad Request`: Dữ liệu không hợp lệ.
+
+---
+
+## 8. WebSocket (Socket.IO) Real-time API
+
+Hệ thống cung cấp kết nối Real-time thông qua thư viện `socket.io-client` để nhận tin nhắn, thông báo đang gõ, và cập nhật trạng thái đã đọc mà không cần polling (tải lại liên tục) bằng HTTP API.
+
+### 8.1. Cấu hình Kết nối
+
+- **URL kết nối**: Cùng URL với HTTP API (ví dụ: `http://localhost:3001` hoặc `https://your-api.com`).
+- **Xác thực**: Yêu cầu truyền `accessToken` vào thuộc tính `auth.token`.
+
+**Ví dụ (Client Javascript):**
+```javascript
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3001", {
+  auth: {
+    token: "Bearer <accessToken_cua_ban>"
+  }
+});
+
+socket.on("connect", () => {
+  console.log("Da ket noi toi Socket Server!");
+});
+
+socket.on("connect_error", (err) => {
+  console.error("Loi ket noi (VD: sai token):", err.message);
+});
+```
+
+### 8.2. Danh sách Sự kiện Client Emit (Gửi lên Server)
+
+Client sử dụng phương thức `socket.emit("ten_su_kien", payload)` để gửi thông tin lên server.
+
+| Tên Sự kiện | Payload | Mô tả |
+| :--- | :--- | :--- |
+| `join_room` | `{ conversationId: "id_cuoc_tro_chuyen" }` | Tham gia vào một phòng chat để bắt đầu nhận tin nhắn real-time từ phòng đó. Cần gọi khi người dùng mở giao diện chat của 1 hội thoại. |
+| `leave_room` | `{ conversationId: "id_cuoc_tro_chuyen" }` | Rời phòng chat khi người dùng thoát khỏi màn hình nhắn tin đó. |
+| `typing_start` | `{ conversationId: "id_cuoc_tro_chuyen" }` | Thông báo cho người khác trong phòng là bạn đang gõ phím. |
+| `typing_stop` | `{ conversationId: "id_cuoc_tro_chuyen" }` | Thông báo bạn đã dừng gõ phím. |
+
+### 8.3. Danh sách Sự kiện Client Listen (Lắng nghe từ Server)
+
+Client sử dụng phương thức `socket.on("ten_su_kien", callback)` để nhận dữ liệu từ server.
+
+| Tên Sự kiện | Payload nhận được | Mô tả |
+| :--- | :--- | :--- |
+| `new_message` | `Message Object` (Giống kết quả trả về của GET /messages) | Server gửi sự kiện này cho mọi người trong `conversationId` **khi có một ai đó vừa gọi API HTTP `POST /api/messages` thành công**. |
+| `message_read` | `{ conversationId, userId, lastSeenSeq }` | Ai đó vừa gọi API HTTP `PATCH /read` để đánh dấu đã đọc. Server thông báo để các client khác cập nhật UI ("Đã xem"). |
+| `typing_start` | `{ conversationId, userId, displayName }` | Một người trong phòng vừa emit `typing_start`. Dùng để hiển thị "... đang gõ". |
+| `typing_stop` | `{ conversationId, userId }` | Một người trong phòng vừa emit `typing_stop`. Dùng để ẩn "... đang gõ". |
+
+### 8.4. Quy trình Tích hợp Điển hình (Gửi tin nhắn)
+
+Để đảm bảo dữ liệu luôn được lưu vào CSDL một cách an toàn, tính năng gửi tin nhắn/đọc tin nhắn sử dụng mô hình kết hợp HTTP + Socket:
+
+1. Client A tham gia phòng: `socket.emit('join_room', { conversationId: 'abc' })`.
+2. Client A gửi tin nhắn qua REST API: `POST /api/messages` kèm dữ liệu tin nhắn.
+3. Server lưu tin nhắn vào MongoDB.
+4. Server dùng Socket.IO báo tin cho Client B (người cũng đang join room `abc`): `io.to('abc').emit('new_message', savedMessage)`.
+5. Client B lắng nghe `socket.on('new_message')` và append tin nhắn mới vào màn hình ngay lập tức.

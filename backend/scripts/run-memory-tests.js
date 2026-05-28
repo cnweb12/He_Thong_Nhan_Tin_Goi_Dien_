@@ -25,19 +25,25 @@ async function runTests() {
     const testFiles = [];
     const testsDir = path.join(backendDir, "tests");
 
-    function findTestFiles(dir) {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          findTestFiles(fullPath);
-        } else if (entry.name.endsWith(".test.js")) {
-          testFiles.push(fullPath);
+    const args = process.argv.slice(2);
+    if (args.length > 0) {
+      for (const arg of args) {
+        testFiles.push(path.resolve(process.cwd(), arg));
+      }
+    } else {
+      function findTestFiles(dir) {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            findTestFiles(fullPath);
+          } else if (entry.name.endsWith(".test.js")) {
+            testFiles.push(fullPath);
+          }
         }
       }
+      findTestFiles(testsDir);
     }
-
-    findTestFiles(testsDir);
     console.log(`📝 Tìm thấy ${testFiles.length} test files`);
 
     // Run tests using Node's test runner with concurrency=1
