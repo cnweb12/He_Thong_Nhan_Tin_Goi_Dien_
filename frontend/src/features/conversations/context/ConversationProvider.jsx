@@ -44,7 +44,7 @@ const mapInboxItemToConversation = (item) => ({
   unread: item?.unreadCount || 0,
   peer: {
     ...(item?.peer || {}),
-    userId: item?.peer?.userId || item?.peerUserId || item?.userId || null,
+    userId: item?.peer?.userId || item?.peer?._id || item?.peerUserId || null,
     displayName: resolveConversationTitle(item),
     phone: resolveConversationPhone(item),
     username: item?.peer?.username || item?.username || '',
