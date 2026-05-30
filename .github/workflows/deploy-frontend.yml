@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'frontend/**' # Chỉ chạy khi có thay đổi ở frontend
+      - "frontend/**" # Chỉ chạy khi có thay đổi ở frontend
   workflow_dispatch: # Cho phép kích hoạt thủ công từ giao diện GitHub
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Dependencies
         working-directory: ./frontend
@@ -33,8 +33,8 @@ jobs:
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_TOKEN }}'
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CHAT_APP_IT4409_168509_NEW }}"
           projectId: chat-app-it4409-168509-new
           channelId: live
           entryPoint: ./frontend
