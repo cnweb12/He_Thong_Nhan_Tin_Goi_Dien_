@@ -37,3 +37,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_TOKEN }}'
           projectId: chat-app-it4409-168509-new
           channelId: live
+          entryPoint: ./frontend
