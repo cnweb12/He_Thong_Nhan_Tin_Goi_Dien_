@@ -1,10 +1,11 @@
 const { mongoose } = require("../../../../database/mongo");
 const { mapMongoError } = require("../../../../database/mongo/mongo-error.mapper");
-const { normalizeDirectKey } = require("../../../../database/mongo/normalize");
+const { normalizeDirectKey, normalizePhone } = require("../../../../database/mongo/normalize");
 const { ConversationModel } = require("../models/conversation.model");
 const { ConversationMemberModel } = require("../models/conversation-member.model");
 const { UserConversationInboxModel } = require("../models/user-conversation-inbox.model");
 const { UserModel } = require("../../users/models/user.model");
+const { FriendModel } = require("../../users/models/friend.model");
 
 function createHttpError(statusCode, message, details) {
   const error = new Error(message);
@@ -43,6 +44,10 @@ function sanitizeInboxEntry(entry) {
   return toPlainObject(entry);
 }
 
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function createConversationService(dependencies = {}) {
   const mongooseLib = dependencies.mongoose || mongoose;
   const mongoErrorMapper = dependencies.mapMongoError || mapMongoError;
@@ -50,6 +55,7 @@ function createConversationService(dependencies = {}) {
   const conversationMemberModel = dependencies.ConversationMemberModel || ConversationMemberModel;
   const inboxModel = dependencies.UserConversationInboxModel || UserConversationInboxModel;
   const userModel = dependencies.UserModel || UserModel;
+  const friendModel = dependencies.FriendModel || FriendModel;
   const transactionMode = String(dependencies.transactionMode || process.env.TRANSACTION_MODE || "transaction").toLowerCase();
   const useTransactions = dependencies.useTransactions ?? transactionMode !== "local";
 
@@ -303,13 +309,131 @@ function createConversationService(dependencies = {}) {
     }
   }
 
-  async function getInbox({ userId, limit = 20, skip = 0 }) {
-    const inbox = await inboxModel
-      .find({ userId })
-      .sort({ isPinned: -1, lastActivityAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+  async function getInbox({ userId, limit = 20, skip = 0, q }) {
+    let matchPeerId = null;
+
+    // Step 1: Pre-query for phone number validation
+    if (q) {
+      // Check if q is a valid phone number (10 digits or starts with 84 + 9 digits)
+      const phoneRegex = /^(0\d{9}|84\d{9})$/;
+      if (phoneRegex.test(q)) {
+        // Normalize the phone number
+        const normalizedPhone = normalizePhone(q);
+        
+        // Find user by phone
+        const peerUser = await userModel.findOne({ phone: normalizedPhone });
+        
+        if (peerUser) {
+          // Check if they are friends
+          const friendship = await friendModel.findOne({
+            $or: [
+              { userId, friendId: peerUser._id },
+              { userId: peerUser._id, friendId: userId }
+            ],
+            status: 'accepted'
+          });
+          
+          if (friendship) {
+            matchPeerId = peerUser._id.toString();
+          }
+        }
+      }
+    }
+
+    // Step 2: Build aggregation pipeline
+    const pipeline = [
+      // Initial match: user's inbox entries
+      {
+        $match: { userId: new mongooseLib.Types.ObjectId(userId) }
+      },
+      // Lookup conversation details
+      {
+        $lookup: {
+          from: 'conversations',
+          localField: 'conversationId',
+          foreignField: '_id',
+          as: 'conversation'
+        }
+      },
+      {
+        $unwind: '$conversation'
+      },
+      // Chi join bang conversation_members neu tim thay friend qua SDT (giup tiet kiem tai nguyen)
+      ...(matchPeerId ? [{
+        $lookup: {
+          from: 'conversation_members',
+          localField: 'conversationId',
+          foreignField: 'conversationId',
+          as: 'members'
+        }
+      }] : []),
+      // Filter results based on search query
+      ...(q ? [{
+        $match: {
+          $or: [
+            // Search by conversation title (for group chats)
+            {
+              'conversation.title': {
+                $regex: escapeRegex(q),
+                $options: 'i'
+              }
+            },
+            // Search by displayName (for direct chats)
+            {
+              displayName: {
+                $regex: escapeRegex(q),
+                $options: 'i'
+              }
+            },
+            // Exact match by peer userId (if phone number search found a friend)
+            ...(matchPeerId ? [{
+              'members.userId': new mongooseLib.Types.ObjectId(matchPeerId)
+            }] : [])
+          ]
+        }
+      }] : []),
+      // Sort by pinned status and last activity
+      {
+        $sort: { isPinned: -1, lastActivityAt: -1 }
+      },
+      // Pagination
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      // Project output
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          conversationId: 1,
+          displayName: 1,
+          displayAvatarUrl: 1,
+          lastMessage: 1,
+          lastMessageSeq: 1,
+          unreadCount: 1,
+          isPinned: 1,
+          isMuted: 1,
+          lastActivityAt: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          conversation: {
+            _id: 1,
+            type: 1,
+            title: 1,
+            avatarUrl: 1,
+            memberCount: 1,
+            lastMessage: 1,
+            lastMessageSeq: 1,
+            lastActivityAt: 1
+          }
+        }
+      }
+    ];
+
+    const inbox = await inboxModel.aggregate(pipeline);
 
     return inbox.map(sanitizeInboxEntry);
   }

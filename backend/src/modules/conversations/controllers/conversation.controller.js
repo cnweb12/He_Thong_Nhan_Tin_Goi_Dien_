@@ -79,6 +79,7 @@ function createConversationController(dependencies = {}) {
         userId: req.user.userId,
         limit: req.query.limit === undefined ? 20 : Number(req.query.limit),
         skip: req.query.skip === undefined ? 0 : Number(req.query.skip),
+        q: req.query.q ? req.query.q.trim() : undefined,
       });
 
       res.json({

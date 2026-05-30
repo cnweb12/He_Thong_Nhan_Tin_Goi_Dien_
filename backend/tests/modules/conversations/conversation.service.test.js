@@ -165,18 +165,65 @@ test("markAsRead rejects users outside the conversation", async () => {
 });
 
 test("getInbox sorts and returns lean inbox entries", async () => {
-  const query = createInboxQuery([{ conversationId: "conv-1", displayName: "Bob" }]);
   const service = createConversationService({
     UserConversationInboxModel: {
-      find: (filter) => {
-        assert.deepEqual(filter, { userId: "user-1" });
-        return query;
+      aggregate: async (pipeline) => {
+        assert.equal(pipeline[0].$match.userId.toString(), "507f1f77bcf86cd799439011");
+        assert.equal(pipeline[4].$skip, 5);
+        assert.equal(pipeline[5].$limit, 10);
+        return [{ conversationId: "conv-1", displayName: "Bob" }];
       },
+    },
+    FriendModel: {
+      findOne: async () => null,
+    },
+    UserModel: {
+      findOne: async () => null,
     },
   });
 
-  const inbox = await service.getInbox({ userId: "user-1", limit: 10, skip: 5 });
-  assert.equal(query.skipArg, 5);
-  assert.equal(query.limitArg, 10);
+  const inbox = await service.getInbox({ userId: "507f1f77bcf86cd799439011", limit: 10, skip: 5 });
+  assert.equal(inbox[0].displayName, "Bob");
+});
+
+test("getInbox with search query q uses aggregation pipeline", async () => {
+  const service = createConversationService({
+    UserConversationInboxModel: {
+      aggregate: async (pipeline) => {
+        assert.equal(pipeline[0].$match.userId.toString(), "507f1f77bcf86cd799439011");
+        assert.equal(pipeline[5].$skip, 0);
+        assert.equal(pipeline[6].$limit, 20);
+        return [{ conversationId: "conv-1", displayName: "Alice" }];
+      },
+    },
+    FriendModel: {
+      findOne: async () => null,
+    },
+    UserModel: {
+      findOne: async () => null,
+    },
+  });
+
+  const inbox = await service.getInbox({ userId: "507f1f77bcf86cd799439011", q: "Alice" });
+  assert.equal(inbox[0].displayName, "Alice");
+});
+
+test("getInbox with phone number searches friend only", async () => {
+  const service = createConversationService({
+    UserConversationInboxModel: {
+      aggregate: async (pipeline) => {
+        assert.equal(pipeline[0].$match.userId.toString(), "507f1f77bcf86cd799439011");
+        return [{ conversationId: "conv-1", displayName: "Bob" }];
+      },
+    },
+    FriendModel: {
+      findOne: async () => ({ status: "accepted" }),
+    },
+    UserModel: {
+      findOne: async () => ({ _id: "507f1f77bcf86cd799439022", phone: "84901234567" }),
+    },
+  });
+
+  const inbox = await service.getInbox({ userId: "507f1f77bcf86cd799439011", q: "0901234567" });
   assert.equal(inbox[0].displayName, "Bob");
 });

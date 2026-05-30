@@ -484,6 +484,7 @@ Headers:
 - **Query Params**:
   - `limit`: Số lượng kết quả tối đa (mặc định: 20, tối đa: 100).
   - `skip`: Số lượng kết quả bỏ qua để phân trang (mặc định: 0).
+  - `q`: Từ khóa tìm kiếm (tùy chọn). Tìm theo tên nhóm (title) hoặc displayName của người dùng. Nếu là số điện thoại hợp lệ (10 chữ số), chỉ tìm kiếm bạn bè đã kết bạn (status: 'accepted'). Tối đa 100 ký tự.
 - **Success Response (200)**:
   ```json
   {
