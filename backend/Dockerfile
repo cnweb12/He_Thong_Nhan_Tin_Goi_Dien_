@@ -21,4 +21,4 @@ RUN npm install --omit=dev
 COPY . .
 ENV PORT=3000
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD sh -c "npm run db:sync-indexes && node scripts/database/seed-super-admin.js && npm start"
