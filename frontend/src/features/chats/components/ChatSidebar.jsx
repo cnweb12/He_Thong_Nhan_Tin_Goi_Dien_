@@ -52,7 +52,7 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
     const filteredConversations = useMemo(() => conversations || [], [conversations]);
 
     return (
-        <div style={{ width: 392 }} className="flex-shrink-0 bg-white/85 backdrop-blur border-r border-slate-200 flex flex-col shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
+        <div className="w-full h-full flex flex-col bg-white/85 backdrop-blur shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
             <div className="px-4 pt-4 pb-3 border-b border-slate-200 bg-white/75">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-[1.2rem] bg-slate-900 text-white flex items-center justify-center text-lg font-semibold shadow-sm">
@@ -89,7 +89,7 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
                                     key={item.userId || item._id || item.id}
                                     type="button"
                                     onClick={() => onStartConversation?.(item)}
-                                    className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-sky-50 transition"
+                                    className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-sky-50 transition cursor-pointer"
                                 >
                                     <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-700">
                                         {(item.displayName || item.username || '?').slice(0, 1).toUpperCase()}
