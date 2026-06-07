@@ -31,6 +31,8 @@ Tài liệu này vạch ra các bước cần thiết để triển khai hệ th
 2. **Cấu hình Service:**
    - **Root Directory:** `backend`
    - **Environment:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm run db:sync-indexes && node scripts/database/seed-super-admin.js && npm start`
      *(Giải thích: Start Command này đảm bảo mỗi khi backend khởi động lại, nó sẽ tự động đồng bộ Index và tạo tài khoản Super Admin nếu chưa có. Cả 2 thao tác này đều an toàn khi gọi nhiều lần "idempotent" nên không lo lỗi dữ liệu).*
 3. **Cấu hình Environment Variables (Trên Render Dashboard):**
    - `MONGO_URI`: (Chuỗi kết nối Atlas)
