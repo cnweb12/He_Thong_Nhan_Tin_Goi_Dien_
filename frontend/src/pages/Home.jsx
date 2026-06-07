@@ -10,6 +10,7 @@ import { useAppSocket } from '../features/realtime/hooks/useAppSocket';
 import { useConversations } from '../features/conversations/hooks/useConversations';
 import { getDirectConversationApi } from '../features/conversations/services/conversationApi';
 import { getConversationMessagesApi, markConversationReadApi, sendMessageApi } from '../features/messages/services/messageApi';
+import { uploadFilesApi } from '../services/upload.service';
 
 const formatTime = (value) => {
   if (!value) return '';
@@ -31,6 +32,7 @@ const normalizeMessage = (message) => ({
   type: message?.type || 'text',
   seq: message?.seq,
   clientMessageId: message?.clientMessageId,
+  attachments: message?.attachments || [],
 });
 
 const resolvePeerUser = (chat) => chat?.peer || {
@@ -336,13 +338,26 @@ export default function Home() {
 
     // Send API in background
     try {
+      let finalAttachments = [...attachments];
+      
+      const filesToUpload = attachments.filter(a => a.file).map(a => a.file);
+      if (filesToUpload.length > 0) {
+        const uploadedFiles = await uploadFilesApi(filesToUpload, accessToken);
+        finalAttachments = uploadedFiles.map(file => ({
+            fileName: file.originalname,
+            url: file.url,
+            mimeType: file.mimetype,
+            size: file.size
+        }));
+      }
+
       const payload = {
         conversationId,
         type,
         clientMessageId,
       };
       if (text) payload.text = text;
-      if (attachments.length > 0) payload.attachments = attachments;
+      if (finalAttachments.length > 0) payload.attachments = finalAttachments;
 
       const sentMessage = await sendMessageApi(accessToken, payload);
 
@@ -514,4 +529,3 @@ export default function Home() {
     </div>
   );
 }
-

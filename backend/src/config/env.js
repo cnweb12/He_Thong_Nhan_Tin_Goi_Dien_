@@ -64,4 +64,11 @@ module.exports = {
   superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
   superAdminDisplayName: process.env.SUPER_ADMIN_DISPLAY_NAME || "Super Admin",
   corsOrigins: buildCorsOrigins(),
+  // Cloudinary configuration
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+    folder: process.env.CLOUDINARY_FOLDER || "chat_uploads",
+  },
 };

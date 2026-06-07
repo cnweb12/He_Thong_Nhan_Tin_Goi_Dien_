@@ -43,6 +43,9 @@ services:
       MONGO_APP_USER: ${MONGO_APP_USER:-chat_app_user}
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-chat_app_password}
       MONGO_AUTH_SOURCE: ${MONGO_APP_DB:-chat_app}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     healthcheck:
       test:
         [
@@ -61,12 +64,20 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
+      args:
+        VITE_API_BASE_URL: http://localhost:3000
+        VITE_API_URL: http://localhost:3000
+        VITE_SOCKET_URL: http://localhost:3000
     container_name: chat-app-frontend
     depends_on:
       backend:
         condition: service_healthy
     ports:
       - "80:80"
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_API_URL: http://localhost:3000
+      VITE_SOCKET_URL: http://localhost:3000
     restart: unless-stopped
 
 volumes:

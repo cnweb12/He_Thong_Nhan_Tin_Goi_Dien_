@@ -40,7 +40,8 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                         fileName: selectedFile.fileName,
                         url: selectedFile.url,
                         mimeType: selectedFile.mimeType,
-                        size: selectedFile.size
+                        size: selectedFile.size,
+                        file: selectedFile.file
                     }]
                 });
                 setSelectedFile(null);
@@ -61,30 +62,37 @@ export default function MessageInput({ onSend, disabled = false, sending = false
     };
 
     return (
-        <div className="flex flex-col bg-white/90 backdrop-blur border-t border-slate-200">
+        <div className="flex flex-col bg-white/90 backdrop-blur border-t border-slate-200 shrink-0">
             {selectedFile && (
-                <div className="px-4 pt-3 pb-1 flex items-center gap-3">
-                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-sm max-w-sm relative group">
+                <div className="px-4 pt-3 pb-1">
+                    <div className="relative inline-block group">
                         <button 
                             type="button"
                             onClick={() => setSelectedFile(null)}
-                            className="absolute -top-2 -right-2 bg-white text-slate-500 hover:text-red-500 border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-2 -right-2 bg-slate-800 text-white hover:bg-slate-900 border border-white rounded-full p-1 shadow-sm z-10 transition-colors cursor-pointer"
+                            title="Xóa tệp đính kèm"
                         >
                             <X size={14} />
                         </button>
+                        
                         {selectedFile.mimeType.startsWith('image/') ? (
-                            <div className="w-10 h-10 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
-                                <img src={selectedFile.url} alt="preview" className="w-full h-full object-cover" />
+                            <div 
+                                className="rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-slate-100 flex-shrink-0"
+                                style={{ width: '160px', height: '160px' }}
+                            >
+                                <img src={selectedFile.url} alt="preview" className="w-full h-full object-cover block" />
                             </div>
                         ) : (
-                            <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                                <FileText size={20} />
+                            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-sm max-w-xs pr-6">
+                                <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                    <FileText size={20} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-700 truncate">{selectedFile.fileName}</p>
+                                    <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                                </div>
                             </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-700 truncate">{selectedFile.fileName}</p>
-                            <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
-                        </div>
                     </div>
                 </div>
             )}

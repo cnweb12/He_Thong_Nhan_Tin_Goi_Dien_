@@ -23,14 +23,18 @@
     "test:calls": "node --test tests/modules/calls/*.test.js"
   },
   "dependencies": {
+    "cloudinary": "^2.10.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "express-rate-limit": "^8.5.2",
+    "firebase-admin": "^13.10.0",
     "mongoose": "^8.12.1",
+    "multer": "^2.1.1",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/multer": "^2.1.0",
     "@types/node": "^24.6.0",
     "c8": "^11.0.0",
     "mongodb-memory-server": "^11.1.0",

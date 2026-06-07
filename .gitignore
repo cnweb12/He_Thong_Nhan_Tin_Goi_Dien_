@@ -2,6 +2,7 @@
 .env
 node_modules/
 coverage/
+backend/uploads/
 
 */agents.md
 */skill.md
