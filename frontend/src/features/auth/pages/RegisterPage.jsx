@@ -16,7 +16,7 @@ export default function RegisterPage() {
 
   const validate = () => {
     const errors = {};
-    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+    const phoneRegex = /(84|0[\d])+([0-9]{8})\b/;
     
     if (!formData.phone) {
       errors.phone = 'Vui lòng nhập số điện thoại';
