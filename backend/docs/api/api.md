@@ -821,6 +821,217 @@ Headers:
   - `400 Bad Request`: Dữ liệu không hợp lệ.
 
 ---
+## 7. Module Upload (`/api/upload`)
+
+### 7.1. Upload Files (Protected)
+
+Module này sử dụng Cloudinary Storage để lưu trữ files (hình ảnh, documents, etc.). Files được upload lên Cloudinary và trả về public URL.
+
+- **Endpoint**: `POST /api/upload`
+- **Headers**: 
+  - `Authorization: Bearer <accessToken>` (Bắt buộc)
+  - `Content-Type: multipart/form-data` (Bắt buộc)
+- **Body**: 
+  - `files`: Array of files (multipart/form-data)
+  - Tối đa 10 files mỗi request
+  - Mỗi file tối đa 10MB
+- **Success Response (201)**:
+  ```json
+  {
+    "ok": true,
+    "data": [
+      {
+        "url": "https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/chat_uploads/1717777777777-original.jpg",
+        "filename": "chat_uploads/1717777777777-original.jpg",
+        "size": 123456,
+        "mimetype": "image/jpeg",
+        "originalname": "original.jpg",
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Không có file nào được upload hoặc dữ liệu không hợp lệ
+  - `401 Unauthorized`: Token không hợp lệ hoặc hết hạn
+  - `500 Internal Server Error`: Lỗi khi upload lên Cloudinary
+
+### 7.2. Cấu hình Environment Variables
+
+Trước khi sử dụng upload module, cần cấu hình các biến môi trường trong file `.env`:
+
+```env
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_FOLDER=chat_uploads  # Optional, mặc định là "chat_uploads"
+```
+
+**Cách lấy thông tin Cloudinary:**
+1. Truy cập [Cloudinary Console](https://cloudinary.com/console)
+2. Đăng ký hoặc đăng nhập
+3. Cloud Name, API Key, API Secret đều có trong Dashboard
+4. API Secret cần click để reveal
+
+### 7.3. Ví dụ sử dụng
+
+#### Với JavaScript (fetch)
+```javascript
+const formData = new FormData();
+const fileInput = document.getElementById('fileInput');
+
+// Thêm files vào FormData
+for (let i = 0; i < fileInput.files.length; i++) {
+  formData.append('files', fileInput.files[i]);
+}
+
+fetch('http://localhost:3001/api/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${accessToken}`
+  },
+  body: formData
+})
+  .then(response => response.json())
+  .then(data => {
+    if (data.ok) {
+      console.log('Upload thành công:', data.data);
+      // data.data là array chứa thông tin các files đã upload
+      data.data.forEach(fileInfo => {
+        console.log('File URL:', fileInfo.url);
+      });
+    }
+  })
+  .catch(error => console.error('Upload failed:', error));
+```
+
+#### Với JavaScript (axios)
+```javascript
+const formData = new FormData();
+const fileInput = document.getElementById('fileInput');
+
+// Thêm files vào FormData
+for (let i = 0; i < fileInput.files.length; i++) {
+  formData.append('files', fileInput.files[i]);
+}
+
+axios.post('http://localhost:3001/api/upload', formData, {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'multipart/form-data'
+  }
+})
+  .then(response => {
+    console.log('Upload thành công:', response.data.data);
+    response.data.data.forEach(fileInfo => {
+      console.log('File URL:', fileInfo.url);
+    });
+  })
+  .catch(error => console.error('Upload failed:', error));
+```
+
+#### Với React Component
+```javascript
+import React, { useState } from 'react';
+
+function FileUploadComponent() {
+  const [files, setFiles] = useState([]);
+  const [uploadedUrls, setUploadedUrls] = useState([]);
+
+  const handleFileChange = (e) => {
+    setFiles(Array.from(e.target.files));
+  };
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch('http://localhost:3001/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.ok) {
+        const urls = data.data.map(file => file.url);
+        setUploadedUrls(urls);
+        console.log('Upload thành công:', urls);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  return (
+    <div>
+      <input 
+        type="file" 
+        multiple 
+        onChange={handleFileChange}
+      />
+      <button onClick={handleUpload}>Upload Files</button>
+      
+      {uploadedUrls.length > 0 && (
+        <div>
+          <h3>Uploaded Files:</h3>
+          {uploadedUrls.map((url, index) => (
+            <img key={index} src={url} alt="uploaded" />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+#### Với cURL
+```bash
+# Upload single file
+curl -X POST http://localhost:3001/api/upload \
+  -H "Authorization: Bearer your_access_token" \
+  -F "files=@/path/to/your/file.jpg"
+
+# Upload multiple files
+curl -X POST http://localhost:3001/api/upload \
+  -H "Authorization: Bearer your_access_token" \
+  -F "files=@/path/to/file1.jpg" \
+  -F "files=@/path/to/file2.png"
+```
+
+### 7.4. Response Data Structure
+
+Mỗi file trong response array có cấu trúc:
+
+```javascript
+{
+  url: "https://res.cloudinary.com/...",  // Public URL của file
+  filename: "chat_uploads/...",            // Internal filename trên Cloudinary
+  size: 123456,                           // Kích thước file (bytes)
+  mimetype: "image/jpeg",                 // MIME type
+  originalname: "original.jpg",           // Tên file gốc
+  width: 1920,                             // Chiều rộng (chỉ với image)
+  height: 1080,                           // Chiều cao (chỉ với image)
+  format: "jpg"                            // Format (chỉ với image)
+}
+```
+
+### 7.5. Lưu ý quan trọng
+
+- **Authentication**: Upload endpoint yêu cầu valid access token
+- **File size**: Mỗi file tối đa 10MB
+- **File count**: Tối đa 10 files mỗi request
+- **Supported formats**: Cloudinary hỗ trợ nhiều formats (images, videos, documents)
+- **Storage**: Files được lưu trữ trên Cloudinary, không local storage
+- **Error handling**: Kiểm tra `data.ok` trước khi sử dụng URLs
+- **Environment**: Đảm bảo Cloudinary credentials được cấu hình đúng
 
 ## 8. WebSocket (Socket.IO) Real-time API
 
