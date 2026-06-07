@@ -77,9 +77,10 @@ Ta sẽ tạo một file workflow: `.github/workflows/deploy-frontend.yml`.
 
 **Chuẩn bị Secrets trên GitHub:**
 1. Vào mục Settings > Secrets and variables > Actions của repo.
-2. Thêm Secret: `FIREBASE_TOKEN` (Lấy bằng lệnh `firebase login:ci` ở local).
+2. Thêm Secret: chạy lệnh `firebase init hosting:github` để lấy token. (sẽ tự động add vào repo biến secret `FIREBASE_SERVICE_ACCOUNT`)
 3. Thêm Variable: `VITE_API_BASE_URL` (Giá trị là URL của Render, VD: `https://chat-backend.onrender.com`).
 4. Thêm Variable: `VITE_SOCKET_URL` (Cùng URL Render).
+*Lưu ý: Các biến này workflow gọi là từ repo variable, do đó nếu thêm vào variable khác thì phải cập nhật workflow.*
 
 **Nội dung workflow đề xuất:**
 ```yaml
@@ -122,7 +123,7 @@ jobs:
           projectId: your-firebase-project-id
           channelId: live
 ```
-*(Ghi chú: Bạn có thể dùng `FIREBASE_TOKEN` thay cho Service Account tùy theo cách bạn chọn khi init Firebase)*.
+
 
 ---
 

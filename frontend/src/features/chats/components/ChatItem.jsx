@@ -1,6 +1,7 @@
 import React from 'react';
 
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+const resolveId = (c) => c?.conversationId || c?.id || c?._id || null;
 
 export default function ChatItem({ chat, active, onClick }) {
     const peer = chat?.peer || {};
@@ -12,12 +13,13 @@ export default function ChatItem({ chat, active, onClick }) {
     const readLabel = chat?.unread > 0
         ? `${chat.unread} chưa đọc`
         : '';
+    const conversationId = resolveId(chat);
 
     return (
         <button
             type="button"
-            onClick={() => onClick(chat.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition border-l-4 ${active ? 'bg-slate-50 border-l-slate-900' : 'border-l-transparent hover:bg-slate-50'}`}
+            onClick={() => onClick(conversationId)}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition border-l-4 cursor-pointer ${active ? 'bg-slate-50 border-l-slate-900' : 'border-l-transparent hover:bg-slate-50'}`}
         >
             {avatarUrl ? (
                 <img src={avatarUrl} className="w-12 h-12 rounded-[1.2rem] object-cover bg-slate-200 shadow-sm" alt={title} />

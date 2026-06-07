@@ -2,6 +2,9 @@ import React from 'react';
 import MessageBubble from './MessageBubble';
 
 export default function MessageList({ messages, currentUserId, loading, error }) {
+    // Đặt console.log ở đây để kiểm tra chính xác cấu trúc của các tin nhắn
+    console.log("Danh sách tin nhắn (kiểm tra cấu trúc m):", messages);
+
     return (
         <div className="flex-1 overflow-y-auto px-6 py-6 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.85),_rgba(244,247,251,0.96))]">
             <div className="max-w-3xl mx-auto space-y-3 pb-8">

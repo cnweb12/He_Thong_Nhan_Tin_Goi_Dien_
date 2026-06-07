@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
@@ -9,6 +10,7 @@ import { useAppSocket } from '../features/realtime/hooks/useAppSocket';
 import { useConversations } from '../features/conversations/hooks/useConversations';
 import { getDirectConversationApi } from '../features/conversations/services/conversationApi';
 import { getConversationMessagesApi, markConversationReadApi, sendMessageApi } from '../features/messages/services/messageApi';
+import { uploadFilesApi } from '../services/upload.service';
 
 const formatTime = (value) => {
   if (!value) return '';
@@ -30,6 +32,7 @@ const normalizeMessage = (message) => ({
   type: message?.type || 'text',
   seq: message?.seq,
   clientMessageId: message?.clientMessageId,
+  attachments: message?.attachments || [],
 });
 
 const resolvePeerUser = (chat) => chat?.peer || {
@@ -51,6 +54,8 @@ export default function Home() {
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [initialError, setInitialError] = useState(null);
   const [threadError, setThreadError] = useState(null);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isChatListOpen, setIsChatListOpen] = useState(true);
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
 
@@ -98,12 +103,6 @@ export default function Home() {
       active = false;
     };
   }, [isConnected, isConnecting, socketError, accessToken, isBootstrapped, fetchCurrentUser, fetchInbox]);
-
-  useEffect(() => {
-    if (!selectedId && conversations.length > 0) {
-      setSelectedId(resolveConversationId(conversations[0]));
-    }
-  }, [selectedId, conversations]);
 
   useEffect(() => {
     if (!selectedId || !accessToken) {
@@ -263,6 +262,7 @@ export default function Home() {
   };
 
   const handleSelectConversation = (conversationId) => {
+    if (selectedId === conversationId) return; // Tránh chọn lại gây lỗi đơ
     setSelectedId(conversationId);
     setSidebarView('chat');
   };
@@ -283,7 +283,7 @@ export default function Home() {
     }
   };
 
-  const handleSend = async (text) => {
+  const handleSend = async (messageData) => {
     if (!selected || !accessToken) return;
 
     const conversationId = resolveConversationId(selected);
@@ -294,6 +294,12 @@ export default function Home() {
       : `client-${Date.now()}`;
 
     setSendingMessage(true);
+    
+    // messageData can be a string (text) or an object {text, type, attachments}
+    const isObject = typeof messageData === 'object' && messageData !== null;
+    const text = isObject ? (messageData.text || '') : messageData;
+    const type = isObject && messageData.type ? messageData.type : 'text';
+    const attachments = isObject && messageData.attachments ? messageData.attachments : [];
 
     // Optimistic UI - add message immediately with status 'sending'
     const optimisticMessage = normalizeMessage({
@@ -305,7 +311,8 @@ export default function Home() {
       from: currentUserId,
       conversationId,
       createdAt: new Date().toISOString(),
-      type: 'text',
+      type,
+      attachments,
     });
     optimisticMessage.status = 'sending';
 
@@ -323,7 +330,7 @@ export default function Home() {
 
       return {
         ...conversation,
-        lastMessage: text,
+        lastMessage: text || (type === 'image' ? '[Hình ảnh]' : type === 'file' ? '[Tệp đính kèm]' : ''),
         time: formatTime(new Date()),
         unread: 0,
       };
@@ -331,12 +338,28 @@ export default function Home() {
 
     // Send API in background
     try {
-      const sentMessage = await sendMessageApi(accessToken, {
+      let finalAttachments = [...attachments];
+      
+      const filesToUpload = attachments.filter(a => a.file).map(a => a.file);
+      if (filesToUpload.length > 0) {
+        const uploadedFiles = await uploadFilesApi(filesToUpload, accessToken);
+        finalAttachments = uploadedFiles.map(file => ({
+            fileName: file.originalname,
+            url: file.url,
+            mimeType: file.mimetype,
+            size: file.size
+        }));
+      }
+
+      const payload = {
         conversationId,
-        type: 'text',
-        text,
+        type,
         clientMessageId,
-      });
+      };
+      if (text) payload.text = text;
+      if (finalAttachments.length > 0) payload.attachments = finalAttachments;
+
+      const sentMessage = await sendMessageApi(accessToken, payload);
 
       const normalizedMessage = normalizeMessage(sentMessage);
       normalizedMessage.status = 'sent';
@@ -418,13 +441,9 @@ export default function Home() {
   }
 
   return (
-    <div className="relative h-screen flex overflow-hidden text-slate-900 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_35%,_#f4f7fb_100%)]">
+    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_35%,_#f4f7fb_100%)]">
       <div className="pointer-events-none absolute -top-24 left-1/3 h-72 w-72 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute right-8 top-10 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
-
-      <div className="absolute top-4 right-4 z-50">
-        <LogoutButton />
-      </div>
 
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
@@ -432,44 +451,81 @@ export default function Home() {
         </div>
       )}
 
-      <SidebarLeft active={sidebarView} onSelect={setSidebarView} />
+      <div className="z-20 h-full flex-shrink-0 relative">
+        <SidebarLeft 
+            active={sidebarView} 
+            onSelect={setSidebarView} 
+            isChatListOpen={isChatListOpen}
+            setIsChatListOpen={setIsChatListOpen}
+        />
+      </div>
 
       {sidebarView === 'chat' ? (
-        <ChatSidebar
-          user={user}
-          accessToken={accessToken}
-          conversations={conversations}
-          selectedId={selectedId}
-          onSelect={handleSelectConversation}
-          onStartConversation={handleStartConversation}
-        />
+        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden shadow-[8px_0_30px_rgba(15,23,42,0.04)] ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'}`}>
+          <div className="w-full h-full">
+            <ChatSidebar
+              user={user}
+              accessToken={accessToken}
+              conversations={conversations}
+              selectedId={selectedId}
+              onSelect={handleSelectConversation}
+              onStartConversation={handleStartConversation}
+            />
+          </div>
+        </div>
       ) : (
-        <div style={{ width: 360 }} className="flex-shrink-0 bg-white/80 backdrop-blur border-r border-slate-200 p-4 shadow-[8px_0_30px_rgba(15,23,42,0.04)]">
-          <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
-          <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-            Nội dung {viewTitle} đang hiển thị ở đây.
+        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden shadow-[8px_0_30px_rgba(15,23,42,0.04)] ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100 p-4'}`}>
+          <div className="w-full h-full">
+            <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
+              Nội dung {viewTitle} đang hiển thị ở đây.
+            </div>
           </div>
         </div>
       )}
 
-      {sidebarView === 'chat' ? (
-        <ChatArea
-          chat={selected}
-          messages={selectedMessages}
-          currentUserId={currentUserId}
-          loading={messagesLoadingId === selectedId}
-          error={threadError}
-          onSend={handleSend}
-          sending={sendingMessage}
-        />
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-slate-600 text-base">
-          Chuyển sang {viewTitle}
-        </div>
-      )}
+      <div className="flex-1 min-w-0 h-full flex flex-col relative bg-[#f7fbff]">
+        {sidebarView === 'chat' && selectedId ? (
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            <ChatArea
+              chat={selected}
+              messages={selectedMessages}
+              currentUserId={currentUserId}
+              loading={messagesLoadingId === selectedId}
+              error={threadError}
+              onSend={handleSend}
+              sending={sendingMessage}
+              onToggleInfo={() => setIsInfoOpen(!isInfoOpen)}
+              onBack={() => {
+                setSelectedId(null);
+                setIsInfoOpen(false);
+              }}
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+               <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center shadow-sm">
+                   <span className="text-blue-300 text-3xl font-semibold">C</span>
+               </div>
+               <p className="text-lg font-medium text-slate-700">Chưa chọn nội dung nào</p>
+               <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái để bắt đầu.</p>
+          </div>
+        )}
+      </div>
 
-      <ConversationInfo chat={selected} messages={selectedMessages} currentUserId={currentUserId} />
+      {/* Cột thông tin bên phải */}
+      <div className={`z-30 h-full flex flex-col transition-all duration-300 ease-in-out bg-white border-l border-slate-200 overflow-hidden shadow-[-8px_0_30px_rgba(15,23,42,0.04)] flex-shrink-0 ${isInfoOpen && selectedId ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+        <div className="w-full h-full">
+           {isInfoOpen && selectedId && (
+             <ConversationInfo 
+               chat={selected} 
+               messages={selectedMessages} 
+               currentUserId={currentUserId} 
+               onClose={() => setIsInfoOpen(false)} 
+             />
+           )}
+        </div>
+      </div>
     </div>
   );
 }
-

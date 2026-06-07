@@ -3,6 +3,7 @@ const routes = require("./routes");
 const { errorHandler } = require("./middleware/error.middleware");
 const { createCorsMiddleware } = require("./middleware/cors.middleware");
 const config = require("./config/env");
+const path = require("path");
 
 const app = express();
 
