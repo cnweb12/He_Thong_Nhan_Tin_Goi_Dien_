@@ -18,3 +18,7 @@ Phạm vi (Scope) của một task **được xác định dựa trên yêu cầ
 Agent sẽ luôn tham chiếu và cập nhật 2 file sau để bảo đảm tính liên tục (Context) giữa các phiên làm việc:
 - **[Session Summary](./agent/docs/session_summary.md):** Bắt buộc tự động cập nhật nội dung (tóm tắt những gì đã làm và bước tiếp theo) ngay sau khi hoàn thành bất kỳ task nào được giao.
 - **[Session Progress](./agent/docs/session_progress.md):** Bắt buộc tự động cập nhật (Backlog, Milestones, trạng thái hệ thống) nếu task vừa thực hiện làm thay đổi tiến độ tổng quan của dự án.
+- **[Session Observations](./agent/docs/session_observations.md)**: Bắt buộc tự động cập nhật các quan sát, bug, suggestion, improvement, etc không thuộc phạm vi của task lần này.
+- **[Feature Request](./agent/docs/feature_request.json)**: Bắt buộc tự động cập nhật các feature request cần được implement mà task yêu cầu.
+
+- Task sẽ có 2 loại là task khám khá (tức khám phá codebase, lên kế hoạch) và task thực thi (chỉnh sửa chi tiết, lập kế hoạch chỉnh sửa). Hoàn thành task tức là task thuộc một trong 2 loại trên hoàn thành.

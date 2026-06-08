@@ -41,6 +41,30 @@ const resolvePeerUser = (chat) => chat?.peer || {
   avatarUrl: chat?.avatarUrl || chat?.peer?.avatarUrl || '',
 };
 
+const normalizeConversationFromSocket = (conversation, currentUserId) => {
+  if (!conversation) return null;
+
+  const { members = [], type, _id, title, avatarUrl: groupAvatarUrl } = conversation;
+  const newConversation = {
+    ...conversation,
+    conversationId: _id,
+    id: _id,
+  };
+
+  if (type === 'direct') {
+    const peerMember = members.find(m => m.userId !== currentUserId);
+    if (peerMember && peerMember.user) {
+      newConversation.displayName = peerMember.user.displayName;
+      newConversation.displayAvatarUrl = peerMember.user.avatarUrl;
+      newConversation.peer = peerMember.user;
+    }
+  } else {
+    newConversation.displayName = title;
+    newConversation.displayAvatarUrl = groupAvatarUrl;
+  }
+  return newConversation;
+}
+
 export default function Home() {
   const { user, accessToken, fetchCurrentUser } = useAuth();
   const { socket, isConnected, isConnecting, error: socketError } = useAppSocket();
@@ -165,10 +189,17 @@ export default function Home() {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleNewMessage = (message) => {
-      console.log('🔴 [DEBUG CLIENT] Đã nhận event new_message từ server:', message);
-      const normalizedMessage = normalizeMessage(message);
-      const conversationId = message.conversationId || message.conversationId?._id || message.conversationId?.id;
+    const handleNewMessage = (data) => {
+      console.log('🔴 [DEBUG CLIENT] Đã nhận event new_message từ server:', data);
+      const { message: rawMessage, conversation: backendConv } = data;
+
+      if (!rawMessage || !backendConv) {
+        console.warn('🔴 [DEBUG CLIENT] Payload của new_message không hợp lệ!');
+        return;
+      }
+
+      const normalizedMessage = normalizeMessage(rawMessage);
+      const conversationId = resolveConversationId(backendConv);
 
       if (!conversationId) {
         console.warn('🔴 [DEBUG CLIENT] Không tìm thấy conversationId trong tin nhắn!');
@@ -179,33 +210,21 @@ export default function Home() {
       setMessagesByConversation((prev) => {
         const currentMessages = prev[conversationId] || [];
 
-        // Check if this message matches a pending message (by clientMessageId)
         const pendingMessageIndex = currentMessages.findIndex(m =>
           m.clientMessageId && m.clientMessageId === normalizedMessage.clientMessageId
         );
 
         if (pendingMessageIndex !== -1) {
-          // Replace pending message with real message and update status
-          console.log('🔴 [DEBUG CLIENT] Cập nhật tin nhắn đang gửi với dữ liệu thật.');
           const updatedMessages = [...currentMessages];
           updatedMessages[pendingMessageIndex] = { ...normalizedMessage, status: 'sent' };
-          return {
-            ...prev,
-            [conversationId]: updatedMessages,
-          };
+          return { ...prev, [conversationId]: updatedMessages };
         }
 
-        // Prevent duplicate messages - check by id or content + senderId
-        const isDuplicate = currentMessages.some(m =>
-          m.id === normalizedMessage.id ||
-          (m.text === normalizedMessage.text && m.from === normalizedMessage.from)
-        );
+        const isDuplicate = currentMessages.some(m => m.id === normalizedMessage.id);
         if (isDuplicate) {
-          console.log('🔴 [DEBUG CLIENT] Bỏ qua tin nhắn vì bị trùng lặp (duplicate).');
           return prev;
         }
-
-        console.log('🔴 [DEBUG CLIENT] Đã thêm tin nhắn mới vào state messagesByConversation.');
+        
         return {
           ...prev,
           [conversationId]: [...currentMessages, normalizedMessage],
@@ -215,15 +234,36 @@ export default function Home() {
       // Update conversations list in sidebar
       setConversations((prev) => {
         const index = prev.findIndex((c) => resolveConversationId(c) === conversationId);
+
+        // Case 1: This is a new conversation
         if (index === -1) {
-          refreshInbox(); // Fetch updated inbox if it's a new conversation
-          return prev;
+          console.log('🔴 [DEBUG CLIENT] Phát hiện cuộc trò chuyện mới, thêm vào danh sách.');
+          const newConversation = normalizeConversationFromSocket(backendConv, currentUserId);
+          if (!newConversation) return prev;
+
+          newConversation.lastMessage = normalizedMessage.text;
+          newConversation.time = normalizedMessage.time;
+          newConversation.lastActivityAt = normalizedMessage.createdAt;
+          newConversation.unread = 1;
+
+          // Add new room to socket
+          const id = resolveConversationId(newConversation);
+          if (id && !joinedRoomsRef.current.has(id)) {
+            console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại MỚI:`, id);
+            socket.emit('join_room', { conversationId: id });
+            joinedRoomsRef.current.add(id);
+          }
+
+          return [newConversation, ...prev];
         }
 
+        // Case 2: This is an existing conversation
         const updatedConversations = [...prev];
         const updatedConv = { ...updatedConversations[index] };
         updatedConv.lastMessage = normalizedMessage.text;
         updatedConv.time = normalizedMessage.time;
+        updatedConv.lastActivityAt = normalizedMessage.createdAt;
+
         if (selectedId !== conversationId) {
           updatedConv.unread = (updatedConv.unread || 0) + 1;
         }
@@ -234,10 +274,9 @@ export default function Home() {
         return updatedConversations;
       });
 
-      // Mark as read if we are looking at it (but not if we just sent it ourselves)
-      // The sender marks it as read in handleSend, so we only need to mark for incoming messages
+      // Mark as read if we are looking at it
       const isOwnMessage = normalizedMessage.from === currentUserId;
-      if (selectedId === conversationId && !isOwnMessage && normalizedMessage.seq !== undefined && normalizedMessage.seq !== null) {
+      if (selectedId === conversationId && !isOwnMessage && normalizedMessage.seq != null) {
         markConversationReadApi(accessToken, conversationId, normalizedMessage.seq).catch(console.error);
       }
     };
@@ -247,7 +286,7 @@ export default function Home() {
     return () => {
       socket.off('new_message', handleNewMessage);
     };
-  }, [socket, isConnected, selectedId, accessToken, setConversations]);
+  }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
 
   const selected = useMemo(
     () => conversations.find((c) => resolveConversationId(c) === selectedId) || null,
@@ -461,7 +500,7 @@ export default function Home() {
       </div>
 
       {sidebarView === 'chat' ? (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden shadow-[8px_0_30px_rgba(15,23,42,0.04)] ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'}`}>
+        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'}`}>
           <div className="w-full h-full">
             <ChatSidebar
               user={user}
@@ -474,7 +513,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden shadow-[8px_0_30px_rgba(15,23,42,0.04)] ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100 p-4'}`}>
+        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100 p-4'}`}>
           <div className="w-full h-full">
             <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
             <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
@@ -484,7 +523,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex-1 min-w-0 h-full flex flex-col relative bg-[#f7fbff]">
+      <div className="flex-1 min-w-0 h-full flex flex-col relative">
         {sidebarView === 'chat' && selectedId ? (
           <div className="w-full h-full flex flex-col overflow-hidden">
             <ChatArea
@@ -514,7 +553,7 @@ export default function Home() {
       </div>
 
       {/* Cột thông tin bên phải */}
-      <div className={`z-30 h-full flex flex-col transition-all duration-300 ease-in-out bg-white border-l border-slate-200 overflow-hidden shadow-[-8px_0_30px_rgba(15,23,42,0.04)] flex-shrink-0 ${isInfoOpen && selectedId ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+      <div className={`z-30 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-l border-slate-200/80 overflow-hidden shadow-lg flex-shrink-0 ${isInfoOpen && selectedId ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
         <div className="w-full h-full">
            {isInfoOpen && selectedId && (
              <ConversationInfo 

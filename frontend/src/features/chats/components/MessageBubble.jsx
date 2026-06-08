@@ -95,15 +95,20 @@ export default function MessageBubble({ m, isMine }) {
     };
 
     return (
-        <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2 mb-2`}>
-            {!isMine && <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700 shrink-0">T</div>}
+        <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
+            {!isMine && (
+                <img 
+                    src={m.sender?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender?.displayName || '?')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                    alt={m.sender?.displayName || 'Avatar'}
+                    className="w-7 h-7 rounded-full bg-slate-200 flex-shrink-0"
+                />
+            )}
 
-            <div className={`flex flex-col max-w-[74%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
+            <div className={`flex flex-col max-w-[70%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
                 {/* Phân vùng 1: Hiển thị file/hình ảnh đính kèm */}
                 {hasAttachments && (
-                    <div className={`flex flex-col gap-2 ${isMine ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
                         {attachments.map((att, idx) => {
-                            // Kiểm tra ảnh kỹ hơn để tránh bỏ sót
                             const isImage = att.mimeType?.startsWith('image/') || 
                                             m.type === 'image' || 
                                             (att.url && att.url.match(/\.(jpg|jpeg|png|gif|webp|svg)(?:\?.*)?$/i));
@@ -112,43 +117,37 @@ export default function MessageBubble({ m, isMine }) {
                                 return (
                                     <div 
                                         key={idx} 
-                                        className="relative group overflow-hidden rounded-2xl border border-slate-200/50 shadow-sm max-w-[240px] sm:max-w-xs cursor-pointer block p-0 outline-none active:scale-[0.98] transition-transform z-10"
+                                        className="relative group overflow-hidden rounded-xl border border-black/10 shadow-sm max-w-[240px] sm:max-w-xs cursor-pointer block p-0 outline-none active:scale-[0.98] transition-transform"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            console.log("🔥 [CLICK EVENT] Đã kích hoạt mở ảnh:", att.url);
                                             setPreviewImage(att);
                                         }}
                                     >
                                         <img 
                                             src={att.url} 
                                             alt={att.fileName || 'image'} 
-                                            className="w-full object-cover bg-slate-100 block pointer-events-none select-none" 
+                                            className="w-full object-cover bg-slate-200 block pointer-events-none select-none" 
                                             style={{ maxHeight: '280px' }} 
                                         />
-                                        {/* Lớp phủ mờ báo hiệu có thể click xem */}
-                                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                                     </div>
                                 );
                             }
                             
-                            // Giao diện cho File tài liệu (PDF, Word, Zip...)
                             return (
                                 <button
                                     key={idx} 
                                     type="button"
                                     onClick={(e) => handleDownloadFile(e, att.url, att.fileName)}
-                                    className={`flex items-center gap-3 p-3 rounded-2xl border shadow-sm transition-colors max-w-[240px] sm:max-w-xs cursor-pointer text-left w-full
-                                        ${isMine ? 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-800'}`}
+                                    className={`flex items-center gap-3 p-2.5 rounded-xl border shadow-sm transition-colors max-w-[250px] sm:max-w-xs cursor-pointer text-left w-full
+                                        ${isMine ? 'bg-blue-500 border-blue-600/50 hover:bg-blue-600 text-white' : 'bg-slate-200 border-slate-300/80 hover:bg-slate-300/70 text-slate-800'}`}
                                 >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isMine ? 'bg-slate-700 text-slate-300' : 'bg-blue-50 text-blue-500'}`}>
+                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isMine ? 'bg-blue-600/80 text-blue-100' : 'bg-white/80 text-slate-600'}`}>
                                         {getFileIcon(att.fileName)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium truncate">{att.fileName || 'Tài liệu đính kèm'}</div>
-                                        {att.size && <div className={`text-xs mt-0.5 ${isMine ? 'text-slate-400' : 'text-slate-500'}`}>{(att.size / 1024).toFixed(1)} KB</div>}
-                                    </div>
-                                    <div className={`p-2 rounded-full shrink-0 ${isMine ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}>
-                                        <Download size={16} />
+                                        <div className="text-sm font-semibold truncate">{att.fileName || 'Tài liệu đính kèm'}</div>
+                                        {att.size && <div className={`text-xs mt-0.5 ${isMine ? 'text-blue-100' : 'text-slate-500'}`}>{(att.size / 1024).toFixed(1)} KB</div>}
                                     </div>
                                 </button>
                             );
@@ -158,70 +157,53 @@ export default function MessageBubble({ m, isMine }) {
 
                 {/* Phân vùng 2: Khung chữ văn bản */}
                 {hasText && (
-                    <div className={`px-4 py-2.5 shadow-sm ${isMine ? 'bg-slate-900 text-white rounded-[1.4rem] rounded-br-sm' : 'bg-white text-slate-900 rounded-[1.4rem] rounded-bl-sm border border-slate-100'}`}>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.text}</div>
+                    <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words
+                        ${isMine 
+                            ? 'bg-blue-500 text-white rounded-2xl rounded-br-lg' 
+                            : 'bg-slate-200 text-slate-800 rounded-2xl rounded-bl-lg'
+                        }`}
+                    >
+                        {m.text}
                     </div>
                 )}
-
-                {/* Phân vùng 3: Trạng thái và thời gian */}
-                <div className={`flex items-center gap-1 mt-0.5 px-1 text-slate-400`}>
-                    <span className="text-[11px]">{m.time}</span>
-                    {getStatusIcon()}
-                </div>
             </div>
 
-            {isMine && <div className="w-8 h-8 shrink-0" />}
+            {isMine && <div className="w-7 h-7 shrink-0" />}
 
             {/* Modal hiển thị ảnh phóng to (Lightbox) */}
             {previewImage && createPortal(
                 <div 
-                    className="fixed flex flex-col" 
-                    style={{ 
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        width: '100vw', height: '100vh',
-                        backgroundColor: 'rgba(0, 0, 0, 0.92)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        zIndex: 10000000,
-                        display: 'flex'
-                    }}
+                    className="fixed inset-0 bg-black/90 backdrop-blur-lg flex flex-col z-[100]"
+                    onClick={() => setPreviewImage(null)}
                 >
-                    {console.log("🛠 [PORTAL RENDER] Modal ảnh đang hiển thị")}
-                    {/* Thanh công cụ phía trên (Header) ép về bên phải */}
-                    <div 
-                        className="z-50 shrink-0"
-                        style={{ 
-                            display: 'flex', 
-                            justifyContent: 'flex-end', 
-                            gap: '10px', // Khoảng cách giữa 2 nút (Tải về và X)
-                            padding: '5px 32px' // Spacing: 24px lề trên/dưới, 32px lề trái/phải
-                        }}
-                    >
+                    {/* Thanh công cụ phía trên */}
+                    <div className="flex-shrink-0 text-right p-4">
                         <a 
                             href={getDownloadUrl(previewImage.url)}
                             download={previewImage.fileName || 'image.jpg'}
                             target="_blank"
                             rel="noopener noreferrer"
-                             className="text-white opacity-80 hover:opacity-100 transition-all hover:scale-125 flex items-center justify-center"
+                            className="inline-block p-2 text-white/80 hover:text-white transition-opacity mr-2"
                             title="Tải ảnh về máy"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                             <Download size={28} color="white" strokeWidth={2.5} />
+                             <Download size={24} />
                         </a>
                         <button 
-                             type="button"
-                             className="text-white opacity-80 hover:opacity-100 transition-all hover:scale-125 cursor-pointer outline-none flex items-center justify-center appearance-none bg-transparent border-none"
-                             onClick={() => {
-                                 console.log("❌ [CLOSE EVENT] Đã bấm nút đóng");
+                            type="button"
+                            className="inline-block p-2 text-white/80 hover:text-white transition-opacity"
+                            onClick={(e) => {
+                                 e.stopPropagation();
                                  setPreviewImage(null);
                              }}
-                            title="Đóng (X)"
+                            title="Đóng"
                         >
-                             <X size={28} color="white" strokeWidth={2.5} />
+                             <X size={24} />
                         </button>
                     </div>
 
                     {/* Vùng hiển thị ảnh */}
-                    <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+                    <div className="flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
                         <img 
                             src={previewImage.url} 
                             alt={previewImage.fileName || 'Preview'} 

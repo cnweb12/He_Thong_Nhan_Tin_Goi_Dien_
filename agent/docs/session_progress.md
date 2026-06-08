@@ -3,7 +3,7 @@
 *File này ghi nhận tiến độ tổng quan của toàn bộ dự án từ góc nhìn của Agent, nhằm duy trì bối cảnh (context) dài hạn.*
 
 ## Trạng thái dự án
-- **Giai đoạn hiện tại:** Đang cấu hình và tối ưu hóa quy trình làm việc của Agent/LLM và cải thiện giao diện người dùng (UI/UX). Chuẩn bị chuyển đổi hệ thống lưu trữ tệp tin.
+- **Giai đoạn hiện tại:** Tối ưu hóa và sửa các lỗi cốt lõi. Chuẩn bị cho việc cải thiện UI/UX.
 - **Backend:** 
   - **Công nghệ:** Node.js (Express.js), MongoDB (Mongoose), Socket.io.
   - **Testing:** Native Node.js Test Runner (`node --test`), C8 (Coverage).
@@ -22,6 +22,7 @@
   - Xây dựng thành công hệ thống Xem trước ảnh (Lightbox) hiển thị toàn màn hình, sử dụng Inline Styles và tinh chỉnh màu sắc icon để đạt trải nghiệm tốt nhất.
   - Khắc phục hoàn toàn cơ chế download tệp tin từ Cloudinary và cải thiện bộ nhận diện icon cho đa dạng loại tệp.
   - Cấu hình bảo mật Cloudinary để cho phép phân phối các định dạng tài liệu đặc biệt (PDF/ZIP).
+  - **Khắc phục lỗi real-time:** Sửa lỗi nghiêm trọng khi cuộc trò chuyện mới không được tự động cập nhật trong danh sách chat của người nhận. Đã tái cấu trúc luồng sự kiện `new_message` ở cả backend và frontend để đảm bảo cập nhật tức thì.
 
 
 ## Các vấn đề tồn đọng (Backlog)
@@ -40,3 +41,4 @@
 - Đã thiết lập cơ chế Tracking Session để lưu ngữ cảnh làm việc liên tục.
 - Hoàn thiện hệ thống hướng dẫn Agent (GEMINI.md) phân cấp theo Frontend, Backend và Root; bao gồm quy tắc tự động cập nhật tiến độ (Auto-update Session).
 - Hoàn thiện cơ chế Upload File: Chuyển đổi thành công sang Cloudinary Storage để lưu trữ hình ảnh/tệp tin, sẵn sàng cho việc deploy lên mạng (Render).
+- **Hoàn thiện luồng giao tiếp real-time cho việc tạo cuộc trò chuyện mới.**

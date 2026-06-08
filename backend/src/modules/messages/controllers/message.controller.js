@@ -22,7 +22,7 @@ function createMessageController(dependencies = {}) {
         return next(createValidationError(validation.errors));
       }
 
-      const message = await service.sendMessage({
+      const { message, conversation } = await service.sendMessage({
         conversationId: req.body.conversationId,
         senderId: req.user.userId,
         type: req.body.type,
@@ -34,18 +34,21 @@ function createMessageController(dependencies = {}) {
       // Emit new_message event to the conversation room and personal user rooms
       try {
         const io = getIO();
+        const payload = { message, conversation };
+
         console.log('🔴 [DEBUG SERVER] Bắt đầu emit new_message cho conversationId:', req.body.conversationId);
         
         // Broadcast to conversation room (includes sender)
-        io.to(req.body.conversationId).emit("new_message", message);
+        io.to(req.body.conversationId).emit("new_message", payload);
         
         // Push notification to members' personal room to ensure delivery for new conversations
-        const members = await memberModel.find({ conversationId: req.body.conversationId, isActive: true }, 'userId');
-        console.log(`🔴 [DEBUG SERVER] Đang emit new_message cho các user cá nhân:`, members.map(m => m.userId.toString()));
+        const members = conversation.members || [];
+        const memberIds = members.map(m => m.userId.toString());
+        console.log(`🔴 [DEBUG SERVER] Đang emit new_message cho các user cá nhân:`, memberIds);
         
-        members.forEach(member => {
-          io.to(member.userId.toString()).emit("new_message", message);
-        });
+        if (memberIds.length > 0) {
+          io.to(memberIds).emit("new_message", payload);
+        }
       } catch (socketError) {
         console.error("🔴 [DEBUG SERVER] [message] Failed to emit new_message event:", socketError);
       }

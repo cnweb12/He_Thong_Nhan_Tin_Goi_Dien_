@@ -1,43 +1,64 @@
 import React from 'react';
 
-const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 const resolveId = (c) => c?.conversationId || c?.id || c?._id || null;
+const formatTime = (value) => {
+    if (!value) return '';
+  
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+  
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
 export default function ChatItem({ chat, active, onClick }) {
     const peer = chat?.peer || {};
     const title = chat?.displayName || peer.displayName || chat?.name || 'Cuộc trò chuyện';
-    const subtitle = chat?.phone || (isPhoneLike(chat?.username) ? chat.username : '')
-        || peer.phone || (isPhoneLike(peer.username) ? peer.username : '');
-    const avatarUrl = chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
-    const initials = (title || 'C').slice(0, 1).toUpperCase();
-    const readLabel = chat?.unread > 0
-        ? `${chat.unread} chưa đọc`
-        : '';
+    const avatarUrl = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl;
     const conversationId = resolveId(chat);
+    const time = chat?.lastActivityAt ? formatTime(chat.lastActivityAt) : (chat.time || '');
+
+    const lastMessageText = chat?.lastMessage ? (
+        chat.lastMessage.length > 30
+            ? `${chat.lastMessage.substring(0, 30)}...`
+            : chat.lastMessage
+    ) : 'Chưa có tin nhắn';
+
+    const unreadCount = chat?.unreadCount || chat?.unread || 0;
+    const isUnread = unreadCount > 0;
 
     return (
         <button
             type="button"
             onClick={() => onClick(conversationId)}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition border-l-4 cursor-pointer ${active ? 'bg-slate-50 border-l-slate-900' : 'border-l-transparent hover:bg-slate-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-150 cursor-pointer border-b border-slate-100 ${active ? 'bg-slate-200/60' : 'hover:bg-slate-100'}`}
         >
-            {avatarUrl ? (
-                <img src={avatarUrl} className="w-12 h-12 rounded-[1.2rem] object-cover bg-slate-200 shadow-sm" alt={title} />
-            ) : (
-                <div className="w-12 h-12 rounded-[1.2rem] bg-slate-100 flex items-center justify-center text-slate-700 text-sm font-semibold shadow-sm">
-                    {initials}
-                </div>
-            )}
-            <div className="flex-1">
-                <div className="flex justify-between items-center">
-                    <div className="font-semibold text-slate-900 text-sm truncate pr-2">{title}</div>
-                    <div className="text-[11px] text-slate-400 shrink-0">{chat.time}</div>
-                </div>
-                <div className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</div>
-                <div className="text-sm text-slate-600 truncate mt-1">{chat.lastMessage}</div>
-                {readLabel && <div className="text-[11px] text-slate-400 mt-1">{readLabel}</div>}
+            {/* Avatar */}
+            <div className="relative shrink-0">
+                <img 
+                    src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&background=random&color=fff&rounded=true&font-size=0.45`}
+                    alt={title}
+                    className="w-5 h-5 rounded-full object-cover bg-slate-200"
+                />
+                 {/* Online status dot can be added here if needed, e.g., based on peer.isOnline */}
             </div>
-            {chat.unread > 0 && <div className="ml-2 bg-slate-900 text-white text-xs px-2.5 py-0.5 rounded-full shadow-sm">{chat.unread}</div>}
+
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+                <div className={`font-semibold text-sm truncate ${isUnread ? 'text-slate-800' : 'text-slate-700'}`}>{title}</div>
+                <div className={`text-xs truncate mt-1 ${isUnread ? 'text-blue-600 font-semibold' : 'text-slate-500'}`}>
+                    {lastMessageText}
+                </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="flex flex-col items-end self-start shrink-0 w-14">
+                <div className="text-[11px] text-slate-400 mb-1">{time}</div>
+                {isUnread && (
+                    <div className="mt-1 w-5 h-5 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] font-bold shadow-md">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </div>
+                )}
+            </div>
         </button>
     );
 }

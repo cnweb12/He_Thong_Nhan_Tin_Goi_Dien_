@@ -59,6 +59,68 @@ function createConversationService(dependencies = {}) {
   const transactionMode = String(dependencies.transactionMode || process.env.TRANSACTION_MODE || "transaction").toLowerCase();
   const useTransactions = dependencies.useTransactions ?? transactionMode !== "local";
 
+  async function getConversationWithMembers(conversationId, session) {
+    const aggregation = [
+      { $match: { _id: new mongooseLib.Types.ObjectId(conversationId) } },
+      {
+        $lookup: {
+          from: 'conversation_members',
+          localField: '_id',
+          foreignField: 'conversationId',
+          as: 'members'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'members.userId',
+          foreignField: '_id',
+          as: 'memberUsers'
+        }
+      },
+      {
+        $addFields: {
+          members: {
+            $map: {
+              input: '$members',
+              as: 'member',
+              in: {
+                $mergeObjects: [
+                  '$$member',
+                  {
+                    user: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$memberUsers',
+                            as: 'user',
+                            cond: { $eq: ['$$user._id', '$$member.userId'] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          'members.user.password': 0,
+          'members.user.phone': 0,
+          'members.user.email': 0,
+          'memberUsers': 0,
+        }
+      }
+    ];
+
+    const results = await conversationModel.aggregate(aggregation).session(session || null);
+    return results[0] || null;
+  }
+
   async function ensureUserExists(userId) {
     const user = await userModel.findById(userId);
     if (!user) {
@@ -86,7 +148,8 @@ function createConversationService(dependencies = {}) {
   async function createDirectConversationWithoutTransaction({ userId, peerUserId, createdBy = userId, currentUser, peerUser, directKey }) {
     const existingConversation = await conversationModel.findOne({ type: "direct", directKey });
     if (existingConversation) {
-      return sanitizeConversation(existingConversation);
+      const fullConversation = await getConversationWithMembers(existingConversation._id);
+      return sanitizeConversation(fullConversation);
     }
 
     const createdConversation = await conversationModel.create([
@@ -126,7 +189,8 @@ function createConversationService(dependencies = {}) {
       ]
     );
 
-    return sanitizeConversation(conversation);
+    const fullConversation = await getConversationWithMembers(conversation._id);
+    return sanitizeConversation(fullConversation);
   }
 
   async function markAsReadWithoutTransaction({ conversationId, userId, lastSeenSeq }) {
@@ -236,7 +300,8 @@ function createConversationService(dependencies = {}) {
         );
       });
 
-      return sanitizeConversation(conversation);
+      const fullConversation = await getConversationWithMembers(conversation._id, session);
+      return sanitizeConversation(fullConversation);
     } catch (error) {
       if (!error.statusCode) {
         const mapped = mongoErrorMapper(error);

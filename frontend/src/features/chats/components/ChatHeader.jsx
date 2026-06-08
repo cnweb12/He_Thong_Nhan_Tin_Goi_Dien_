@@ -1,17 +1,13 @@
 import React from 'react';
 import { ArrowLeft, Info, MoreVertical, Phone, Search, Video } from 'lucide-react';
 
-const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
-
 export default function ChatHeader({ chat, onToggleInfo, onBack }) {
     const peer = chat?.peer || {};
     const title = chat?.displayName || peer.displayName || chat?.name || 'Chọn hội thoại';
-    const subtitle = chat?.phone || (isPhoneLike(chat?.username) ? chat.username : '')
-        || peer.phone || (isPhoneLike(peer.username) ? peer.username : '');
-    const avatarUrl = chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
+    const avatarUrl = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
 
     return (
-        <div className="h-[76px] flex items-center justify-between px-5 border-b border-slate-200 bg-white/85 backdrop-blur shadow-[0_1px_0_rgba(15,23,42,0.03)]">
+        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
             <div className="flex items-center gap-3">
                 <button 
                     onClick={onBack}
@@ -19,34 +15,38 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                {avatarUrl ? (
-                    <img src={avatarUrl} className="w-11 h-11 rounded-[1.2rem] object-cover bg-slate-200 ring-1 ring-slate-200 shadow-sm" alt={title} />
-                ) : (
-                    <div className="w-11 h-11 rounded-[1.2rem] bg-slate-100 flex items-center justify-center text-lg font-semibold text-slate-700 ring-1 ring-slate-200 shadow-sm">
-                        {(title || 'C').slice(0, 1).toUpperCase()}
-                    </div>
-                )}
+                
+                <div className="relative">
+                    <img 
+                        src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&background=random&color=fff&rounded=true&font-size=0.45`}
+                        alt={title}
+                        className="w-10 h-10 rounded-full object-cover bg-slate-200"
+                    />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                </div>
+
                 <div>
-                    <div className="font-semibold text-slate-900 text-sm">{title}</div>
-                    <div className="text-xs text-slate-500 flex items-center gap-2">
-                        <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                        {subtitle || 'Chưa có số điện thoại'}
+                    <div className="font-semibold text-slate-800 text-sm">{title}</div>
+                    <div className="text-xs text-slate-500">
+                        Đang hoạt động
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 text-slate-600">
-                <button className="p-2.5 rounded-full hover:bg-slate-100 hidden sm:block cursor-pointer"><Search size={18} /></button>
-                <button className="p-2.5 rounded-full hover:bg-slate-100 cursor-pointer"><Phone size={18} /></button>
-                <button className="p-2.5 rounded-full hover:bg-slate-100 cursor-pointer"><Video size={18} /></button>
+            <div className="flex items-center gap-1 text-slate-500">
+                <button className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer" title="Gọi thoại">
+                    <Phone size={20} />
+                </button>
+                <button className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer" title="Gọi video">
+                    <Video size={20} />
+                </button>
                 <button 
                     onClick={onToggleInfo} 
-                    className="p-2.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
                     title="Thông tin hội thoại"
                 >
-                    <Info size={18} />
+                    <Info size={20} />
                 </button>
-                <button className="p-2.5 rounded-full hover:bg-slate-100 hidden sm:block cursor-pointer"><MoreVertical size={18} /></button>
             </div>
         </div>
     );
