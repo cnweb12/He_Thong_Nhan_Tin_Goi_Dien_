@@ -26,6 +26,7 @@ services:
       start_period: 60s
     volumes:
       - ./backend:/app
+      - /app/node_modules
 
   frontend:
     image: chat-app-frontend:dev

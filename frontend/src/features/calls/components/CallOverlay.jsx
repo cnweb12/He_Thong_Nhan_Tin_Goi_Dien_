@@ -45,138 +45,116 @@ export default function CallOverlay() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-slate-950/80 backdrop-blur-xl text-white p-8">
-      {/* Top Banner / Status */}
-      <div className="flex flex-col items-center mt-12 space-y-2 text-center animate-fade-in">
-        <span className="text-sm font-medium tracking-widest text-slate-400 uppercase">
-          {getStatusText()}
-        </span>
-        {callState === 'connected' && (
-          <span className="text-2xl font-mono font-semibold text-emerald-400">
-            {formatTime(duration)}
-          </span>
-        )}
-      </div>
-
-      {/* Center Avatar & Pulsing Effect */}
-      <div className="relative flex items-center justify-center my-auto">
-        {/* Pulsing Outer Rings */}
+    <div 
+      className="fixed top-0 left-0 right-0 bottom-0 w-full h-full z-[9999] flex flex-col items-center justify-center p-4 transition-all"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+    >
+      {/* Khung Modal Trắng (Giống Zalo) */}
+      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-[320px] p-6 flex flex-col items-center relative overflow-hidden">
+        
+        {/* Hiệu ứng sóng tỏa ra khi đang đổ chuông */}
         {(callState === 'calling' || callState === 'ringing') && (
-          <>
-            <div className="absolute w-44 h-44 rounded-full border border-white/10 animate-ping opacity-75" />
-            <div className="absolute w-56 h-56 rounded-full border border-white/5 animate-ping [animation-delay:0.5s] opacity-50" />
-            <div className="absolute w-64 h-64 rounded-full border border-white/5 animate-ping [animation-delay:1s] opacity-25" />
-          </>
+          <div className="absolute top-[3.5rem] w-28 h-28 rounded-full animate-ping" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }} />
         )}
 
-        {/* Inner Avatar Container */}
-        <div className="relative z-10 w-36 h-36 rounded-full p-1 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
-          <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
-            {callInfo?.peerAvatar ? (
-              <img
-                src={callInfo.peerAvatar}
-                alt={callInfo.peerName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <User className="w-16 h-16 text-slate-400" />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom User Profile & Actions */}
-      <div className="w-full max-w-sm flex flex-col items-center space-y-8 mb-12">
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-bold tracking-wide">{callInfo?.peerName || 'Người dùng'}</h2>
-          <p className="text-sm text-slate-400">Cuộc gọi thoại qua mạng</p>
+        {/* Avatar Area */}
+        <div className="relative z-10 w-24 h-24 rounded-full overflow-hidden flex items-center justify-center border-4 border-white shadow-md mt-4 mb-4" style={{ backgroundColor: '#f1f5f9' }}>
+          {callInfo?.peerAvatar ? (
+            <img
+              src={callInfo.peerAvatar}
+              alt={callInfo.peerName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-12 h-12 text-slate-400" />
+          )}
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center justify-center gap-8 w-full animate-slide-up">
-          {/* Ringing (Incoming Call): Accept & Reject */}
+        {/* Thông tin người dùng & Trạng thái */}
+        <h2 className="text-xl font-bold text-slate-800 text-center w-full truncate mb-1">
+          {callInfo?.peerName || 'Người dùng'}
+        </h2>
+        <div className="text-slate-500 text-sm font-medium mb-8 h-6 flex flex-col items-center justify-center">
+          {callState === 'connected' ? (
+            <span className="text-green-600 font-bold text-lg">{formatTime(duration)}</span>
+          ) : (
+            <span>{getStatusText()}</span>
+          )}
+        </div>
+
+        {/* Các nút điều khiển */}
+        <div className="flex items-center justify-center gap-6 w-full mb-2">
+          
+          {/* Giao diện cuộc gọi đến */}
           {callState === 'ringing' && (
             <>
               <button
                 onClick={rejectCall}
-                className="group flex items-center justify-center w-16 h-16 rounded-full bg-rose-500 hover:bg-rose-600 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg shadow-rose-500/30 cursor-pointer"
+                className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg text-white active:scale-95 transition-transform cursor-pointer"
+                style={{ backgroundColor: '#ef4444', boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.39)' }}
                 title="Từ chối"
               >
-                <PhoneOff className="w-7 h-7 text-white" />
+                <PhoneOff className="w-6 h-6" />
               </button>
 
               <button
                 onClick={acceptCall}
-                className="group flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-600 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg shadow-emerald-500/30 animate-bounce cursor-pointer"
+                className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg text-white active:scale-95 transition-transform animate-bounce cursor-pointer"
+                style={{ backgroundColor: '#22c55e', boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.39)' }}
                 title="Trả lời"
               >
-                <Phone className="w-7 h-7 text-white" />
+                <Phone className="w-6 h-6" />
               </button>
             </>
           )}
 
-          {/* Calling (Outgoing Dialing): Cancel */}
+          {/* Giao diện đang gọi đi */}
           {callState === 'calling' && (
             <button
               onClick={cancelCall}
-              className="group flex items-center justify-center w-16 h-16 rounded-full bg-rose-500 hover:bg-rose-600 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg shadow-rose-500/30 cursor-pointer"
+              className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg text-white active:scale-95 transition-transform cursor-pointer"
+              style={{ backgroundColor: '#ef4444', boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.39)' }}
               title="Hủy cuộc gọi"
             >
-              <PhoneOff className="w-7 h-7 text-white" />
+              <PhoneOff className="w-7 h-7" />
             </button>
           )}
 
-          {/* Connected (Ongoing Call): Mute & End */}
+          {/* Giao diện đang trò chuyện (kết nối thành công) */}
           {callState === 'connected' && (
             <>
               <button
                 onClick={toggleMute}
-                className={`group flex items-center justify-center w-14 h-14 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 border cursor-pointer ${
-                  isMuted
-                    ? 'bg-amber-500 hover:bg-amber-600 border-amber-500 shadow-lg shadow-amber-500/20'
-                    : 'bg-white/10 hover:bg-white/20 border-white/10'
-                }`}
+                className="w-14 h-14 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-colors cursor-pointer"
+                style={{ 
+                  backgroundColor: isMuted ? '#eab308' : '#f1f5f9', 
+                  color: isMuted ? 'white' : '#334155',
+                  boxShadow: isMuted ? '0 4px 14px 0 rgba(234, 179, 8, 0.39)' : '' 
+                }}
                 title={isMuted ? 'Bật micro' : 'Tắt tiếng'}
               >
-                {isMuted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+                {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
               </button>
 
               <button
                 onClick={() => endCall(duration)}
-                className="group flex items-center justify-center w-16 h-16 rounded-full bg-rose-500 hover:bg-rose-600 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg shadow-rose-500/30 cursor-pointer"
+                className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg text-white active:scale-95 transition-transform cursor-pointer"
+                style={{ backgroundColor: '#ef4444', boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.39)' }}
                 title="Kết thúc"
               >
-                <PhoneOff className="w-7 h-7 text-white" />
+                <PhoneOff className="w-7 h-7" />
               </button>
             </>
           )}
 
-          {/* Ended State (Displaying Finished Call): Disabled controls */}
+          {/* Trạng thái kết thúc */}
           {callState === 'ended' && (
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 opacity-50 cursor-not-allowed">
-              <PhoneOff className="w-7 h-7 text-slate-400" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#e2e8f0', color: '#94a3b8' }}>
+              <PhoneOff className="w-7 h-7" />
             </div>
           )}
         </div>
       </div>
-
-      {/* Standard Animation Keyframes inserted dynamically to wow user */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-slide-up {
-          animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
     </div>
   );
 }

@@ -24,7 +24,8 @@ if errorlevel 1 (
 )
 
 echo [dev-rebuild] Stopping development stack...
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+REM Them tham so -v de xoa bo cac volume cu (node_modules bi loi)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 if errorlevel 1 (
   echo [dev-rebuild] Failed to stop the development stack.
   exit /b 1
