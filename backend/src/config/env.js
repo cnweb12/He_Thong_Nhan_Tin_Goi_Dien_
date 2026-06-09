@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
+const normalizeEnvValue = (value) => (typeof value === "string" ? value.trim() : value);
+
 const toNumber = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -71,4 +73,8 @@ module.exports = {
     apiSecret: process.env.CLOUDINARY_API_SECRET,
     folder: process.env.CLOUDINARY_FOLDER || "chat_uploads",
   },
+  twilioAccountSid: normalizeEnvValue(process.env.TWILIO_ACCOUNT_SID),
+  twilioApiKeySid: normalizeEnvValue(process.env.TWILIO_API_KEY_SID),
+  twilioApiKeySecret: normalizeEnvValue(process.env.TWILIO_API_KEY_SECRET),
+  twilioTwimlAppSid: normalizeEnvValue(process.env.TWILIO_TWIML_APP_SID),
 };

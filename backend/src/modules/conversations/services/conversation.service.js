@@ -423,6 +423,51 @@ function createConversationService(dependencies = {}) {
       {
         $unwind: '$conversation'
       },
+      // For direct chats, include the other participant so the client can call them.
+      {
+        $lookup: {
+          from: 'conversation_members',
+          let: {
+            conversationId: '$conversationId',
+            currentUserId: '$userId'
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$conversationId', '$$conversationId'] },
+                    { $ne: ['$userId', '$$currentUserId'] },
+                    { $eq: ['$isActive', true] }
+                  ]
+                }
+              }
+            },
+            { $limit: 1 }
+          ],
+          as: 'peerMember'
+        }
+      },
+      {
+        $unwind: {
+          path: '$peerMember',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'peerMember.userId',
+          foreignField: '_id',
+          as: 'peerUser'
+        }
+      },
+      {
+        $unwind: {
+          path: '$peerUser',
+          preserveNullAndEmptyArrays: true
+        }
+      },
       // Chi join bang conversation_members neu tim thay friend qua SDT (giup tiet kiem tai nguyen)
       ...(matchPeerId ? [{
         $lookup: {
@@ -493,6 +538,13 @@ function createConversationService(dependencies = {}) {
             lastMessage: 1,
             lastMessageSeq: 1,
             lastActivityAt: 1
+          },
+          peer: {
+            userId: '$peerUser._id',
+            displayName: '$peerUser.displayName',
+            phone: '$peerUser.phone',
+            username: '$peerUser.username',
+            avatarUrl: '$peerUser.avatarUrl'
           }
         }
       }

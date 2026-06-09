@@ -8,6 +8,7 @@ const {
 const { messageRouter } = require("../modules/messages/routes/message.routes");
 const { deviceRouter } = require("../modules/devices/routes/device.routes");
 const { callRouter } = require("../modules/calls/routes/calls.routes");
+const { twilioRouter } = require("../modules/calls/routes/twilio.routes");
 const adminRouter = require("../modules/admin/routes/admin.routes");
 const uploadRouter = require("../modules/upload/routes/upload.routes");
 
@@ -20,6 +21,7 @@ router.use("/api/conversations", conversationRouter);
 router.use("/api/messages", messageRouter);
 router.use("/api/devices", deviceRouter);
 router.use("/api/calls", callRouter);
+router.use("/api/twilio", twilioRouter);
 router.use("/api/admin", adminRouter);
 router.use("/api/upload", uploadRouter);
 

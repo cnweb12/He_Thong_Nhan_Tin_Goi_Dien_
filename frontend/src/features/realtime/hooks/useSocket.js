@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { getDeviceId } from '../../../utils/device';
+import { getDeviceId, getPlatform } from '../../../utils/device';
 
 const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000').trim();
 
@@ -24,8 +24,9 @@ export const useSocket = (token) => {
     console.log("🔴 [DEBUG CLIENT] Bắt đầu kết nối Socket.IO tới:", SOCKET_URL);
 
     const deviceId = getDeviceId();
+    const platform = getPlatform();
     const socketImpl = io(SOCKET_URL, {
-      auth: { token, deviceId },
+      auth: { token, deviceId, platform },
       transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
       reconnection: true,
       reconnectionAttempts: 5,

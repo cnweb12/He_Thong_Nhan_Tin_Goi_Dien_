@@ -1,10 +1,32 @@
 import React from 'react';
 import { ArrowLeft, Info, MoreVertical, Phone, Search, Video } from 'lucide-react';
+import { useCall } from '../../calls/hooks/useCall';
+
+const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+const resolvePeerId = (peer) => peer?._id || peer?.id || peer?.userId || null;
 
 export default function ChatHeader({ chat, onToggleInfo, onBack }) {
-    const peer = chat?.peer || {};
+    const { makeCall } = useCall();
+    const conversationId = chat?._id || chat?.id || chat?.conversationId;
+
+    // Determine peer object: prefer explicit `chat.peer`, otherwise if `chat` looks
+    // like a user object (no members/participants) use `chat` as peer.
+    const inferredPeer = chat?.peer || chat?.participant || ((chat && !chat.members && !chat.participants && (chat.displayName || chat.name || chat.phone || chat.username)) ? chat : null);
+    const peer = inferredPeer || {};
+
     const title = chat?.displayName || peer.displayName || chat?.name || 'Chọn hội thoại';
+    const subtitle = (chat?.phone || (isPhoneLike(chat?.username) ? chat.username : ''))
+        || (peer?.phone || (isPhoneLike(peer?.username) ? peer.username : '')) || '';
     const avatarUrl = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
+    const peerId = resolvePeerId(peer);
+
+    const handleCallClick = (type = 'audio') => {
+        if (peerId && conversationId) {
+            makeCall(peer, conversationId, type);
+        } else {
+            console.warn('[ChatHeader] Cannot initiate call: missing peer info or conversation ID', chat);
+        }
+    };
 
     return (
         <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
@@ -34,10 +56,10 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
             </div>
 
             <div className="flex items-center gap-1 text-slate-500">
-                <button className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer" title="Gọi thoại">
+                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-emerald-600" title="Gọi thoại">
                     <Phone size={20} />
                 </button>
-                <button className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer" title="Gọi video">
+                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-blue-600" title="Gọi video">
                     <Video size={20} />
                 </button>
                 <button 

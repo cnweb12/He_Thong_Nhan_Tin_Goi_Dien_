@@ -2,6 +2,9 @@ const { Server } = require("socket.io");
 const { verifyJWTToken } = require("../modules/auth/middleware/auth.middleware");
 const { ConversationMemberModel } = require("../modules/conversations/models/conversation-member.model");
 const { UserDeviceModel } = require("../modules/devices/models/user-device.model");
+const { UserModel } = require("../modules/users/models/user.model");
+const { CallModel } = require("../modules/calls/models/call.model");
+const { callService } = require("../modules/calls/services/call.service");
 const config = require("../config/env");
 
 let io;
@@ -24,6 +27,53 @@ async function getPeerUserIds(userId) {
     console.error('[socket] Error getting peer user ids:', error);
     return [];
   }
+}
+
+function getCallParticipantIds(call) {
+  const ids = new Set();
+  if (call?.initiatedBy) {
+    ids.add(call.initiatedBy.toString());
+  }
+
+  if (Array.isArray(call?.participants)) {
+    call.participants.forEach((participant) => {
+      if (participant?.userId) {
+        ids.add(participant.userId.toString());
+      }
+    });
+  }
+
+  return ids;
+}
+
+async function relayCallSignal({ socket, callId, targetUserId, eventName, payload, callback }) {
+  if (!callId || !targetUserId) {
+    if (callback) callback({ ok: false, error: "Missing required fields" });
+    return;
+  }
+
+  const call = await CallModel.findById(callId);
+  if (!call) {
+    if (callback) callback({ ok: false, error: "Call not found" });
+    return;
+  }
+
+  const participantIds = getCallParticipantIds(call);
+  const senderId = socket.user.userId.toString();
+  const receiverId = targetUserId.toString();
+
+  if (!participantIds.has(senderId) || !participantIds.has(receiverId) || senderId === receiverId) {
+    if (callback) callback({ ok: false, error: "Invalid call participant" });
+    return;
+  }
+
+  io.to(receiverId).emit(eventName, {
+    callId,
+    fromUserId: senderId,
+    ...payload,
+  });
+
+  if (callback) callback({ ok: true });
 }
 
 /**
@@ -74,6 +124,7 @@ function initializeSocket(httpServer) {
   io.on("connection", async (socket) => {
     const { userId } = socket.user;
     const deviceId = socket.handshake.auth.deviceId;
+    const devicePlatform = socket.handshake.auth.platform || 'web';
 
     console.log(`[socket] User connected: ${userId}, Device: ${deviceId}`);
 
@@ -171,6 +222,263 @@ function initializeSocket(httpServer) {
       }
     });
 
+    // --- Call Signaling Events ---
+
+    // Call Initiate Event
+    socket.on("call:initiate", async (data, callback) => {
+      try {
+        const { calleeId, conversationId, type } = data;
+
+        if (!calleeId || !conversationId || !type) {
+          if (callback) callback({ ok: false, error: "Missing required fields" });
+          return;
+        }
+
+        const caller = await UserModel.findById(userId);
+        if (!caller) {
+          if (callback) callback({ ok: false, error: "Caller not found" });
+          return;
+        }
+
+        // Create the call log in status "missed" by default
+        const call = await callService.createCallLog({
+          conversationId,
+          type,
+          status: "missed",
+          initiatedBy: userId,
+          startedAt: new Date(),
+          participants: [
+            { userId: userId, joinedAt: new Date() },
+            { userId: calleeId }
+          ]
+        });
+
+        // Emit call:incoming to the callee's room
+        io.to(calleeId.toString()).emit("call:incoming", {
+          callId: call._id,
+          callerId: userId,
+          callerName: caller.displayName,
+          callerAvatar: caller.avatarUrl,
+          conversationId,
+          type,
+        });
+
+        if (callback) callback({ ok: true, callId: call._id });
+      } catch (error) {
+        console.error("[socket] Error in call:initiate:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to initiate call" });
+      }
+    });
+
+    // Call Accept Event
+    socket.on("call:accept", async (data, callback) => {
+      try {
+        const { callId } = data;
+        if (!callId) {
+          if (callback) callback({ ok: false, error: "Missing callId" });
+          return;
+        }
+
+        const call = await CallModel.findById(callId);
+        if (!call) {
+          if (callback) callback({ ok: false, error: "Call not found" });
+          return;
+        }
+
+        // Update callee's participant state
+        await callService.upsertParticipantState({
+          callId,
+          userId,
+          participantUserId: userId,
+          joinedAt: new Date(),
+        });
+
+        // Notify caller that call was accepted. The caller will create the WebRTC offer.
+        io.to(call.initiatedBy.toString()).emit("call:accepted", {
+          callId,
+          acceptedBy: userId,
+        });
+
+        if (callback) callback({ ok: true });
+      } catch (error) {
+        console.error("[socket] Error in call:accept:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to accept call" });
+      }
+    });
+
+    socket.on("call:webrtc-offer", async (data, callback) => {
+      try {
+        const { callId, targetUserId, offer } = data;
+        if (!offer) {
+          if (callback) callback({ ok: false, error: "Missing offer" });
+          return;
+        }
+
+        await relayCallSignal({
+          socket,
+          callId,
+          targetUserId,
+          eventName: "call:webrtc-offer",
+          payload: { offer },
+          callback,
+        });
+      } catch (error) {
+        console.error("[socket] Error in call:webrtc-offer:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to relay offer" });
+      }
+    });
+
+    socket.on("call:webrtc-answer", async (data, callback) => {
+      try {
+        const { callId, targetUserId, answer } = data;
+        if (!answer) {
+          if (callback) callback({ ok: false, error: "Missing answer" });
+          return;
+        }
+
+        await relayCallSignal({
+          socket,
+          callId,
+          targetUserId,
+          eventName: "call:webrtc-answer",
+          payload: { answer },
+          callback,
+        });
+      } catch (error) {
+        console.error("[socket] Error in call:webrtc-answer:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to relay answer" });
+      }
+    });
+
+    socket.on("call:webrtc-ice", async (data, callback) => {
+      try {
+        const { callId, targetUserId, candidate } = data;
+        if (!candidate) {
+          if (callback) callback({ ok: false, error: "Missing candidate" });
+          return;
+        }
+
+        await relayCallSignal({
+          socket,
+          callId,
+          targetUserId,
+          eventName: "call:webrtc-ice",
+          payload: { candidate },
+          callback,
+        });
+      } catch (error) {
+        console.error("[socket] Error in call:webrtc-ice:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to relay ICE candidate" });
+      }
+    });
+
+    // Call Reject Event
+    socket.on("call:reject", async (data, callback) => {
+      try {
+        const { callId } = data;
+        if (!callId) {
+          if (callback) callback({ ok: false, error: "Missing callId" });
+          return;
+        }
+
+        const call = await CallModel.findById(callId);
+        if (!call) {
+          if (callback) callback({ ok: false, error: "Call not found" });
+          return;
+        }
+
+        // Update call status to rejected
+        await callService.updateCallStatus({
+          callId,
+          userId,
+          status: "rejected",
+        });
+
+        // Notify caller that call was rejected
+        io.to(call.initiatedBy.toString()).emit("call:rejected", { callId });
+
+        if (callback) callback({ ok: true });
+      } catch (error) {
+        console.error("[socket] Error in call:reject:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to reject call" });
+      }
+    });
+
+    // Call Cancel Event
+    socket.on("call:cancel", async (data, callback) => {
+      try {
+        const { callId, calleeId } = data;
+        if (!callId || !calleeId) {
+          if (callback) callback({ ok: false, error: "Missing required fields" });
+          return;
+        }
+
+        // Update call status to cancelled
+        await callService.updateCallStatus({
+          callId,
+          userId,
+          status: "cancelled",
+        });
+
+        // Notify callee that call was cancelled
+        io.to(calleeId.toString()).emit("call:cancelled", { callId });
+
+        if (callback) callback({ ok: true });
+      } catch (error) {
+        console.error("[socket] Error in call:cancel:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to cancel call" });
+      }
+    });
+
+    // Call End Event
+    socket.on("call:end", async (data, callback) => {
+      try {
+        const { callId, durationSec } = data;
+        if (!callId) {
+          if (callback) callback({ ok: false, error: "Missing callId" });
+          return;
+        }
+
+        const call = await CallModel.findById(callId);
+        if (!call) {
+          if (callback) callback({ ok: false, error: "Call not found" });
+          return;
+        }
+
+        // Update participant leftAt state
+        await callService.upsertParticipantState({
+          callId,
+          userId,
+          participantUserId: userId,
+          leftAt: new Date(),
+        });
+
+        // Check if all participants left or update call status
+        // Usually, in browser-to-browser, ending the call by either party ends it for both
+        await callService.updateCallStatus({
+          callId,
+          userId,
+          status: "completed",
+          durationSec,
+        });
+
+        // Notify both parties that call has ended
+        const otherPartyId = call.initiatedBy.toString() === userId.toString()
+          ? call.participants.find(p => p.userId.toString() !== userId.toString())?.userId
+          : call.initiatedBy;
+
+        io.to(userId.toString()).emit("call:ended", { callId });
+        if (otherPartyId) {
+          io.to(otherPartyId.toString()).emit("call:ended", { callId });
+        }
+
+        if (callback) callback({ ok: true });
+      } catch (error) {
+        console.error("[socket] Error in call:end:", error);
+        if (callback) callback({ ok: false, error: error.message || "Failed to end call" });
+      }
+    });
+
     // Disconnect handler
     socket.on("disconnect", async () => {
       console.log(`[socket] User disconnected: ${userId}, Device: ${deviceId}`);
@@ -203,8 +511,11 @@ function initializeSocket(httpServer) {
       if (deviceId) {
         await UserDeviceModel.findOneAndUpdate(
           { userId, deviceId },
-          { $set: { isOnline: true, lastActiveAt: new Date() } },
-          { upsert: true }
+          {
+            $setOnInsert: { platform: devicePlatform, createdAt: new Date() },
+            $set: { isOnline: true, lastActiveAt: new Date() },
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
         // Kịch bản Multi-device: Kiểm tra xem đây có phải là thiết bị ĐẦU TIÊN online không

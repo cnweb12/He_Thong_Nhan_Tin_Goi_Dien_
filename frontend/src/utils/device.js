@@ -46,3 +46,15 @@ export function resetDeviceId() {
 }
 
 export default { getDeviceId, resetDeviceId };
+
+/**
+ * Get device platform string for server-side presence tracking
+ * Returns one of: 'web', 'android', 'ios'
+ */
+export function getPlatform() {
+  if (typeof navigator === 'undefined') return 'web';
+  const ua = navigator.userAgent || '';
+  if (/android/i.test(ua)) return 'android';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  return 'web';
+}

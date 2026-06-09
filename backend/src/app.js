@@ -9,6 +9,7 @@ const app = express();
 
 app.use(createCorsMiddleware(config.corsOrigins));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(routes);
 
 app.use(errorHandler);

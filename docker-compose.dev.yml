@@ -12,13 +12,21 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
       TRANSACTION_MODE: local
       MONGO_AUTO_INDEX: "true"
       CORS_ORIGIN: http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     volumes:
       - ./backend:/app
+      - /app/node_modules
 
   frontend:
     image: chat-app-frontend:dev
@@ -33,6 +41,9 @@ services:
       NODE_ENV: development
       VITE_API_URL: http://backend:3000
       VITE_SOCKET_URL: http://localhost:3000
+    depends_on:
+      backend:
+        condition: service_healthy
     volumes:
       - ./frontend:/app
       - /app/node_modules
