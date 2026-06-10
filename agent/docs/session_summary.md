@@ -1,5 +1,14 @@
 # Session Summary
 
+## Cập nhật 10/06/2026 - Frontend Chat UI Phase 3
+- Đã tiếp tục `frontend-chat-ui-polish-roadmap` Phase 3: Responsive Chat Navigation.
+- `Home.jsx` có `mobileView` rõ ràng cho mobile: `list`, `thread`, `info`; desktop vẫn giữ layout nhiều cột hiện tại.
+- Trên mobile, `ChatSidebar`, `ChatArea`, `ConversationInfo` chỉ hiển thị một view tại một thời điểm; back trong `ChatHeader` quay về list thay vì xóa selected conversation.
+- Nút info trong `ChatHeader` mở panel thông tin full-screen trên mobile và panel phải trên desktop; đóng info quay lại thread trên mobile.
+- Đã chuẩn hóa lại text user-facing trong `ChatHeader` và `ConversationInfo` bị mojibake.
+- Kiểm tra: `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh vẫn cần chạy ngoài sandbox do sandbox chặn spawn `esbuild` với `EPERM`.
+- Bước tiếp theo đề xuất: Phase 4 `Header Và Info Panel`, gồm search/menu header và ConversationInfo hiển thị media/file thật từ messages.
+
 ## Cập nhật 10/06/2026 - Frontend Chat UI Phase 2
 - Đã tiếp tục `frontend-chat-ui-polish-roadmap` Phase 2: Message Experience.
 - `MessageList` có auto-scroll có kiểm soát: chỉ tự cuộn khi user đang gần cuối thread, có nút "Tin nhắn mới nhất" khi user đang đọc phần cũ.

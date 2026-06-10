@@ -80,6 +80,7 @@ export default function Home() {
   const [threadError, setThreadError] = useState(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(true);
+  const [mobileView, setMobileView] = useState('list');
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
 
@@ -291,15 +292,38 @@ export default function Home() {
 
   const selectedMessages = messagesByConversation[selectedId] || [];
 
+  const handleSidebarSelect = (nextView) => {
+    setSidebarView(nextView);
+    setMobileView('list');
+  };
+
+  const handleToggleInfo = () => {
+    if (selectedId) {
+      setMobileView('info');
+    }
+    setIsInfoOpen((current) => !current);
+  };
+
+  const handleCloseInfo = () => {
+    setIsInfoOpen(false);
+    if (selectedId) {
+      setMobileView('thread');
+    }
+  };
+
   const refreshInbox = async () => {
     if (!accessToken) return;
     await fetchInbox(accessToken);
   };
 
   const handleSelectConversation = (conversationId) => {
-    if (selectedId === conversationId) return; // Tránh chọn lại gây lỗi đơ
+    if (selectedId === conversationId) {
+      setMobileView('thread');
+      return;
+    }
     setSelectedId(conversationId);
     setSidebarView('chat');
+    setMobileView('thread');
   };
 
   const handleStartConversation = async (peerUser) => {
@@ -311,6 +335,7 @@ export default function Home() {
       const conversationId = resolveConversationId(directConversation);
       if (conversationId) {
         setSelectedId(conversationId);
+        setMobileView('thread');
       }
       setSidebarView('chat');
     } catch (err) {
@@ -486,17 +511,17 @@ export default function Home() {
         </div>
       )}
 
-      <div className="z-20 h-full flex-shrink-0 relative">
+      <div className="z-20 hidden h-full flex-shrink-0 sm:block relative">
         <SidebarLeft 
             active={sidebarView} 
-            onSelect={setSidebarView} 
+            onSelect={handleSidebarSelect} 
             isChatListOpen={isChatListOpen}
             setIsChatListOpen={setIsChatListOpen}
         />
       </div>
 
       {sidebarView === 'chat' ? (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'}`}>
+        <div className={`z-10 h-full flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/80 overflow-hidden shadow-lg ${mobileView === 'list' ? 'flex flex-1' : 'hidden'} sm:flex sm:flex-shrink-0 ${!isChatListOpen ? 'sm:w-0 sm:opacity-0 sm:border-none' : 'sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100'}`}>
           <div className="w-full h-full">
             <ChatSidebar
               user={user}
@@ -509,7 +534,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100 p-4'}`}>
+        <div className={`z-10 h-full flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/80 overflow-hidden shadow-lg ${mobileView === 'list' ? 'flex flex-1 p-4' : 'hidden'} sm:flex sm:flex-shrink-0 ${!isChatListOpen ? 'sm:w-0 sm:opacity-0 sm:border-none sm:p-0' : 'sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 sm:p-4'}`}>
           <div className="w-full h-full">
             <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
             <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
@@ -519,7 +544,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex-1 min-w-0 h-full flex flex-col relative">
+      <div className={`${mobileView === 'thread' ? 'flex' : 'hidden'} sm:flex flex-1 min-w-0 h-full flex-col relative`}>
         {sidebarView === 'chat' && selectedId ? (
           <div className="w-full h-full flex flex-col overflow-hidden">
             <ChatArea
@@ -530,9 +555,9 @@ export default function Home() {
               error={threadError}
               onSend={handleSend}
               sending={sendingMessage}
-              onToggleInfo={() => setIsInfoOpen(!isInfoOpen)}
+              onToggleInfo={handleToggleInfo}
               onBack={() => {
-                setSelectedId(null);
+                setMobileView('list');
                 setIsInfoOpen(false);
               }}
             />
@@ -548,15 +573,24 @@ export default function Home() {
         )}
       </div>
 
+      <div className={`${mobileView === 'info' && selectedId ? 'flex' : 'hidden'} sm:hidden z-20 h-full flex-1 min-w-0 flex-col bg-white`}>
+        <ConversationInfo
+          chat={selected}
+          messages={selectedMessages}
+          currentUserId={currentUserId}
+          onClose={handleCloseInfo}
+        />
+      </div>
+
       {/* Cột thông tin bên phải */}
-      <div className={`z-30 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-l border-slate-200/80 overflow-hidden shadow-lg flex-shrink-0 ${isInfoOpen && selectedId ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+      <div className={`z-30 hidden h-full flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-l border-slate-200/80 overflow-hidden shadow-lg flex-shrink-0 sm:flex ${isInfoOpen && selectedId ? 'sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100' : 'sm:w-0 sm:opacity-0 sm:border-none'}`}>
         <div className="w-full h-full">
            {isInfoOpen && selectedId && (
              <ConversationInfo 
                chat={selected} 
                messages={selectedMessages} 
                currentUserId={currentUserId} 
-               onClose={() => setIsInfoOpen(false)} 
+               onClose={handleCloseInfo} 
              />
            )}
         </div>

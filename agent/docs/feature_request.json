@@ -171,7 +171,8 @@
       "Phase 1 dựa trên design system primitives trong docs/frontend_design_system_plan.md.",
       "Phase 1 đã hoàn tất ngày 10/06/2026: tạo UI primitives và áp dụng vào chat UI.",
       "Phase 2 đã hoàn tất ngày 10/06/2026: auto-scroll có kiểm soát, date divider, grouping message, timestamp/status và textarea auto-grow.",
-      "Bước tiếp theo của roadmap là Phase 3 responsive chat navigation cho mobile với view state list/thread/info.",
+      "Phase 3 đã hoàn tất ngày 10/06/2026: responsive chat navigation cho mobile với view state list/thread/info.",
+      "Bước tiếp theo của roadmap là Phase 4 header actions và info panel, ưu tiên ConversationInfo hiển thị media/file thật từ messages.",
       "Một số mục trong docs/ui_bugs_and_missing_features.md đã lỗi thời vì gọi audio/video, info panel và upload file đã được nối chức năng."
     ]
   },
