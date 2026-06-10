@@ -23,9 +23,18 @@
   - Khắc phục hoàn toàn cơ chế download tệp tin từ Cloudinary và cải thiện bộ nhận diện icon cho đa dạng loại tệp.
   - Cấu hình bảo mật Cloudinary để cho phép phân phối các định dạng tài liệu đặc biệt (PDF/ZIP).
   - **Khắc phục lỗi real-time:** Sửa lỗi nghiêm trọng khi cuộc trò chuyện mới không được tự động cập nhật trong danh sách chat của người nhận. Đã tái cấu trúc luồng sự kiện `new_message` ở cả backend và frontend để đảm bảo cập nhật tức thì.
+  - **Hoàn thiện Account/Profile phase đầu:** Chuẩn hóa backend settings contract sang `allowStrangerMessage`, bổ sung `readReceiptEnabled`, thêm route `/profile`, nối nút "Tài khoản", hoàn thiện trang hồ sơ/chỉnh sửa settings/đổi mật khẩu và chuẩn hóa frontend `deviceId` dùng `getDeviceId()`.
 
 
 ## Các vấn đề tồn đọng (Backlog)
+- **Ưu tiên gần nhất (Account/Profile):**
+  - Phase đầu đã hoàn tất. Nếu phát triển tiếp Profile, ưu tiên tab Thiết bị/quản lý phiên đăng nhập dựa trên `/api/devices/me`.
+  - Trước khi mở rộng Settings UI, nên thực hiện task `backend-settings-contract-hardening`: gom settings contract về một nguồn định nghĩa, chặn field lạ ở validator/service, bổ sung integration test cho `allowStrangerMessage`/`readReceiptEnabled`, và siết MongoDB JSON schema sau khi migration dữ liệu cũ.
+  - Nếu database đã từng ghi field sai `settings.allowStrangerMessages`, cần chạy migration `$rename` sang `settings.allowStrangerMessage` trước khi bật ràng buộc `additionalProperties: false` cho `settings`.
+- **DB schema hardening:**
+  - Mở rộng sau settings bằng task `backend-db-schema-contract-hardening-roadmap`: lập schema matrix cho toàn bộ collections, đối chiếu Mongoose model với MongoDB `$jsonSchema`, validators/services, docs và integration tests.
+  - Ưu tiên theo thứ tự nhỏ an toàn: `users.settings`/`system_settings` -> `refresh_tokens`/`user_devices` -> conversations/messages -> admin/support collections.
+  - Không bật `additionalProperties: false` hàng loạt trước khi audit dữ liệu hiện có và migration field legacy.
 - **Lỗi UI/UX (Bugs):**
   - Bị mất danh sách đoạn chat trên màn hình Mobile (do logic tự động chọn chat đầu tiên).
   - Load trang chậm khi đăng nhập do bị block chờ dữ liệu (Cần nâng cấp thành Skeleton loading).

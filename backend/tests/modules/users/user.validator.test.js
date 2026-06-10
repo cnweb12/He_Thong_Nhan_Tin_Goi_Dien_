@@ -27,14 +27,29 @@ test("validateUpdateSettingsRequest rejects unsupported values", () => {
   const result = validators.validateUpdateSettingsRequest({
     body: {
       theme: "blue",
-      allowStrangerMessages: "yes",
+      allowStrangerMessage: "yes",
+      readReceiptEnabled: "yes",
       timezone: "Asia/Saigon",
     },
   });
 
   assert.equal(result.isValid, false);
-  assert.equal(result.errors.length, 3);
+  assert.equal(result.errors.length, 4);
   assert.deepEqual(result.errors[0], { field: "timezone", message: "Unsupported settings field" });
+});
+
+test("validateUpdateSettingsRequest accepts supported settings fields", () => {
+  const result = validators.validateUpdateSettingsRequest({
+    body: {
+      theme: "dark",
+      language: "en",
+      allowStrangerMessage: false,
+      readReceiptEnabled: true,
+    },
+  });
+
+  assert.equal(result.isValid, true);
+  assert.deepEqual(result.errors, []);
 });
 
 test("validateSearchUsersQuery validates query text and limit bounds", () => {

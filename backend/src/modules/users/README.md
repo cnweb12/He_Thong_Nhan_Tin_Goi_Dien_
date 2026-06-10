@@ -25,7 +25,7 @@ Module `users` chịu trách nhiệm quản lý dữ liệu hồ sơ người d�
 - Cập nhật hồ sơ cá nhân:
   `username`, `displayName`, `avatarUrl`
 - Cập nhật cài đặt người dùng:
-  `theme`, `language`, `allowStrangerMessages`
+  `theme`, `language`, `allowStrangerMessage`, `readReceiptEnabled`
 - Gửi lời mời kết bạn
 - Chấp nhận lời mời kết bạn
 - Danh sách bạn bè hiện tại

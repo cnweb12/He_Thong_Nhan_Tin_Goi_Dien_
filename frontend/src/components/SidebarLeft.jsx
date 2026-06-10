@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bell, CircleUserRound, Clock3, LayoutGrid, MessageCircle, Settings, UserRound, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
 const sidebarItems = [
@@ -11,6 +12,16 @@ const sidebarItems = [
 
 export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen }) {
     const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSelect = (itemId) => {
+        if (typeof onSelect === 'function') {
+            onSelect(itemId);
+            return;
+        }
+
+        navigate('/');
+    };
 
     return (
         <div className="h-full flex-shrink-0 relative z-50 w-[84px]">
@@ -28,7 +39,12 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                         </button>
                     )}
 
-                    <button type="button" className="w-13 h-13 rounded-[1.3rem] bg-white/10 border border-white/10 flex items-center justify-center shadow-sm cursor-pointer" aria-label="Tài khoản">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/profile')}
+                        className={`h-12 w-12 rounded-[1.3rem] border flex items-center justify-center shadow-sm cursor-pointer transition-colors ${active === 'account' ? 'bg-white text-slate-900 border-white' : 'bg-white/10 border-white/10 hover:bg-white/20'}`}
+                        aria-label="Tài khoản"
+                    >
                         <CircleUserRound size={28} />
                     </button>
                     <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/55">Chat</div>
@@ -39,7 +55,7 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                         <button
                             type="button"
                             key={item.id}
-                            onClick={() => onSelect(item.id)}
+                            onClick={() => handleSelect(item.id)}
                             className={`w-11 h-11 rounded-[1rem] flex items-center justify-center transition duration-200 border cursor-pointer ${active === item.id ? 'bg-white text-slate-900 border-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'} focus:outline-none`}
                             aria-label={item.label}
                         >

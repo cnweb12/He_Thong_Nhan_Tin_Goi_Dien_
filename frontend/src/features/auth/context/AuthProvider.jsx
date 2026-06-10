@@ -6,7 +6,6 @@ export const AuthContext = createContext(null);
 
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
-const DEVICE_ID = 'device-uuid-1234';
 
 export function AuthProvider({ children }) {
     const navigate = useNavigate();
@@ -33,7 +32,7 @@ export function AuthProvider({ children }) {
             return null;
         }
 
-        const refreshed = await refreshApi(refreshToken, DEVICE_ID);
+        const refreshed = await refreshApi(refreshToken);
         if (!refreshed?.accessToken) {
             throw new Error('Không thể khôi phục phiên đăng nhập');
         }
@@ -129,6 +128,20 @@ export function AuthProvider({ children }) {
         })();
     };
 
+    const forceLogout = useCallback(() => {
+        clearSession();
+        navigate('/login');
+    }, [clearSession, navigate]);
+
+    const syncCurrentUser = useCallback((profile) => {
+        if (!profile) {
+            return;
+        }
+
+        setUser(profile);
+        sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
+    }, []);
+
     const fetchCurrentUser = useCallback(async () => {
         let tokenToUse = accessToken;
 
@@ -156,9 +169,11 @@ export function AuthProvider({ children }) {
         error,
         login,
         logout,
+        forceLogout,
+        syncCurrentUser,
         fetchCurrentUser,
         restoreSession,
-    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, fetchCurrentUser, restoreSession]);
+    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, forceLogout, syncCurrentUser, fetchCurrentUser, restoreSession]);
 
     return (
         <AuthContext.Provider value={contextValue}>

@@ -89,7 +89,7 @@ function validateUpdateProfileRequest(req) {
 function validateUpdateSettingsRequest(req) {
   const errors = [];
   const body = req.body || {};
-  const allowedKeys = ["theme", "language", "allowStrangerMessages"];
+  const allowedKeys = ["theme", "language", "allowStrangerMessage", "readReceiptEnabled"];
   const providedKeys = Object.keys(body);
 
   if (providedKeys.length === 0) {
@@ -112,8 +112,12 @@ function validateUpdateSettingsRequest(req) {
     }
   }
 
-  if (body.allowStrangerMessages !== undefined && typeof body.allowStrangerMessages !== "boolean") {
-    errors.push({ field: "allowStrangerMessages", message: "allowStrangerMessages must be a boolean" });
+  if (body.allowStrangerMessage !== undefined && typeof body.allowStrangerMessage !== "boolean") {
+    errors.push({ field: "allowStrangerMessage", message: "allowStrangerMessage must be a boolean" });
+  }
+
+  if (body.readReceiptEnabled !== undefined && typeof body.readReceiptEnabled !== "boolean") {
+    errors.push({ field: "readReceiptEnabled", message: "readReceiptEnabled must be a boolean" });
   }
 
   return {

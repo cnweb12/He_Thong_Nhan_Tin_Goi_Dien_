@@ -344,7 +344,8 @@ Headers:
       "settings": {
         "theme": "light",
         "language": "en",
-        "allowStrangerMessages": true
+        "allowStrangerMessage": true,
+        "readReceiptEnabled": true
       }
     }
   }
@@ -384,7 +385,8 @@ Headers:
   {
     "theme": "dark",
     "language": "vi",
-    "allowStrangerMessages": false
+    "allowStrangerMessage": false,
+    "readReceiptEnabled": false
   }
   ```
 - **Success Response (200)**:
@@ -395,7 +397,8 @@ Headers:
       "settings": {
         "theme": "dark",
         "language": "vi",
-        "allowStrangerMessages": false
+        "allowStrangerMessage": false,
+        "readReceiptEnabled": false
       }
     }
   }

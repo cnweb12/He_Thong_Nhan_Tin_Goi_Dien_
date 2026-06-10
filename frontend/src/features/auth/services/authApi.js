@@ -1,4 +1,5 @@
 import { get, post } from '../../../services/apiClient';
+import { getDeviceId, getPlatform } from '../../../utils/device';
 
 const withAuth = (accessToken) => ({
   headers: {
@@ -10,8 +11,8 @@ export const loginApi = async (phone, password) => {
   const body = {
     phone,
     password,
-    deviceId: 'device-uuid-1234',
-    platform: 'web',
+    deviceId: getDeviceId(),
+    platform: getPlatform(),
   };
 
   const res = await post('/api/auth/login', body);
@@ -27,13 +28,13 @@ export const registerApi = async (phone, displayName, password, passwordConfirm)
   return res.data && res.data.data ? res.data.data : res.data;
 };
 
-export const logoutApi = async (accessToken, deviceId = 'device-uuid-1234') => {
+export const logoutApi = async (accessToken, deviceId = getDeviceId()) => {
   const res = await post('/api/auth/logout', { deviceId }, withAuth(accessToken));
   if (!res.ok) throw new Error(res.error || 'Logout failed');
   return res.data && res.data.data ? res.data.data : res.data;
 };
 
-export const refreshApi = async (refreshToken, deviceId = 'device-uuid-1234') => {
+export const refreshApi = async (refreshToken, deviceId = getDeviceId()) => {
   const res = await post('/api/auth/refresh', { refreshToken, deviceId });
   if (!res.ok) throw new Error(res.error || 'Refresh failed');
   return res.data && res.data.data ? res.data.data : res.data;
@@ -42,5 +43,11 @@ export const refreshApi = async (refreshToken, deviceId = 'device-uuid-1234') =>
 export const getMeApi = async (accessToken) => {
   const res = await get('/api/auth/me', withAuth(accessToken));
   if (!res.ok) throw new Error(res.error || 'Fetch profile failed');
+  return res.data && res.data.data ? res.data.data : res.data;
+};
+
+export const changePasswordApi = async (accessToken, payload) => {
+  const res = await post('/api/auth/change-password', payload, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Change password failed');
   return res.data && res.data.data ? res.data.data : res.data;
 };

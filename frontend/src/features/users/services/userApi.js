@@ -1,4 +1,4 @@
-import { get } from '../../../services/apiClient';
+import { get, patch } from '../../../services/apiClient';
 
 const withAuth = (accessToken) => ({
   headers: {
@@ -25,6 +25,27 @@ export const searchUsersApi = async (accessToken, query, { limit = 10 } = {}) =>
   return Array.isArray(payload) ? payload.map(normalizeUserRecord) : payload;
 };
 
+export const getCurrentUserProfileApi = async (accessToken) => {
+  const res = await get('/api/users/me', withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không tải được hồ sơ');
+  return normalizeUserRecord(unwrapData(res.data));
+};
+
+export const updateCurrentUserProfileApi = async (accessToken, payload) => {
+  const res = await patch('/api/users/me', payload, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không cập nhật được hồ sơ');
+  return normalizeUserRecord(unwrapData(res.data));
+};
+
+export const updateCurrentUserSettingsApi = async (accessToken, payload) => {
+  const res = await patch('/api/users/me/settings', payload, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không cập nhật được cài đặt');
+  return normalizeUserRecord(unwrapData(res.data));
+};
+
 export default {
   searchUsersApi,
+  getCurrentUserProfileApi,
+  updateCurrentUserProfileApi,
+  updateCurrentUserSettingsApi,
 };

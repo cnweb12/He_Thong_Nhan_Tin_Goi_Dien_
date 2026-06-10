@@ -107,7 +107,8 @@ test("updateSettings writes nested settings fields", async () => {
           settings: {
             theme: "dark",
             language: "en",
-            allowStrangerMessages: false,
+            allowStrangerMessage: false,
+            readReceiptEnabled: false,
           },
           passwordHash: "secret",
         };
@@ -118,14 +119,16 @@ test("updateSettings writes nested settings fields", async () => {
   const user = await userService.updateSettings("user-1", {
     theme: "dark",
     language: "en",
-    allowStrangerMessages: false,
+    allowStrangerMessage: false,
+    readReceiptEnabled: false,
   });
 
   assert.deepEqual(receivedUpdate, {
     $set: {
       "settings.theme": "dark",
       "settings.language": "en",
-      "settings.allowStrangerMessages": false,
+      "settings.allowStrangerMessage": false,
+      "settings.readReceiptEnabled": false,
     },
   });
   assert.equal(user.passwordHash, undefined);

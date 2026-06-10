@@ -1,0 +1,114 @@
+[
+  {
+    "id": "backend-settings-contract-normalization",
+    "title": "Chuẩn hóa backend settings contract cho profile/settings UI",
+    "status": "completed",
+    "priority": "high",
+    "scope": "backend",
+    "description": "Đồng bộ tên field settings cho allowStrangerMessage theo UserModel và DATABASE_CONVENTIONS trước khi frontend implement settings UI.",
+    "acceptanceCriteria": [
+      "Validator users settings chấp nhận allowStrangerMessage thay vì allowStrangerMessages.",
+      "Service update nested field settings.allowStrangerMessage.",
+      "Tests users được cập nhật và pass.",
+      "Docs API/README đồng bộ với field allowStrangerMessage.",
+      "Có ghi chú migration nếu database từng lưu allowStrangerMessages."
+    ],
+    "notes": [
+      "Đã bổ sung readReceiptEnabled vào validator/service."
+    ]
+  },
+  {
+    "id": "backend-settings-contract-hardening",
+    "title": "Phase 1: Gia cố schema/contract cho các settings liên quan trực tiếp",
+    "status": "planned",
+    "priority": "high",
+    "scope": "backend",
+    "description": "Bổ sung lớp bảo vệ cho users.settings trước, sau đó rà system_settings để validator/service/DB/tests cùng phát hiện field sai như allowStrangerMessages thay vì update no-op hoặc bị mock test che mất.",
+    "acceptanceCriteria": [
+      "Tạo một nguồn định nghĩa contract settings dùng chung cho allowed keys, validator, service và tests.",
+      "Validator trả 400 rõ ràng với field ngoài contract, đặc biệt là allowStrangerMessages.",
+      "Service không được silently no-op khi payload sau validation không tạo ra thay đổi hợp lệ.",
+      "Bổ sung integration test cập nhật allowStrangerMessage/readReceiptEnabled rồi re-fetch để xác nhận dữ liệu thật đổi đúng.",
+      "Bổ sung integration/API test gửi allowStrangerMessages và kỳ vọng 400.",
+      "Bổ sung hoặc cập nhật MongoDB JSON schema để settings không nhận thêm field lạ nếu dữ liệu hiện có đã được migration an toàn.",
+      "Thêm migration/collMod script để rename hoặc cleanup settings.allowStrangerMessages trước khi siết schema.",
+      "Dọn các integration test helper stale contract liên quan profile/device hoặc tách thành task test-maintenance rõ ràng."
+    ],
+    "notes": [
+      "Thứ tự rollout nên là audit dữ liệu -> migration field sai -> cập nhật DB validator -> chạy integration tests.",
+      "Không phải blocker cho Profile UI đã hoàn thành, nhưng nên làm trước khi mở rộng Settings UI hoặc Device/session management.",
+      "Với system_settings, cần registry key/type ở application layer trước vì collection này là key-value linh hoạt."
+    ]
+  },
+  {
+    "id": "backend-db-schema-contract-hardening-roadmap",
+    "title": "Mở rộng hardening cho toàn bộ DB schema",
+    "status": "planned",
+    "priority": "high",
+    "scope": "backend/database",
+    "description": "Rà soát và đồng bộ contract giữa Mongoose models, MongoDB $jsonSchema, validators/services, API docs và integration tests cho toàn bộ collections.",
+    "acceptanceCriteria": [
+      "Tạo schema matrix cho mọi collection: users, refresh_tokens, user_devices, conversations, conversation_members, user_conversation_inbox, messages, calls, system_settings, banned_keywords và user_friends.",
+      "Đối chiếu từng collection giữa Mongoose model, database/mongo/init, sync-indexes/register-models, API docs, validators/services và test helpers.",
+      "Phân loại field theo nhóm strict, optional nullable, generated/timestamps, flexible key-value và legacy để tránh siết nhầm.",
+      "Liệt kê migration cần chạy trước khi bật additionalProperties: false hoặc collMod validator chặt hơn.",
+      "Bổ sung integration/schema tests để insert/update sai field phải fail, update đúng field phải persist thật.",
+      "Đưa user_friends vào DB init/register-models/schema matrix hoặc quyết định rõ không quản lý bằng DB validator.",
+      "Làm rõ isLocked/lockedAt trong users: thêm vào UserModel/DB schema/docs nếu admin lock là feature chính thức, hoặc sửa service nếu không còn dùng.",
+      "Chuẩn hóa system_settings bằng registry key/type/defaults trước khi validator admin cho phép upsert.",
+      "Cập nhật DATABASE_CONVENTIONS với checklist rollout schema hardening và quy tắc không duplicate contract thủ công."
+    ],
+    "notes": [
+      "Triển khai theo vòng nhỏ: settings -> auth/devices -> conversations/messages -> admin/support collections.",
+      "Không bật additionalProperties: false toàn bộ ngay từ đầu; cần audit dữ liệu hiện có và migration trước."
+    ]
+  },
+  {
+    "id": "frontend-account-profile-page",
+    "title": "Implement nút Tài khoản và trang Profile đầy đủ",
+    "status": "completed",
+    "priority": "high",
+    "scope": "frontend",
+    "description": "Bấm nút Tài khoản ở SidebarLeft sẽ điều hướng tới trang /profile để hiển thị thông tin account hiện tại.",
+    "acceptanceCriteria": [
+      "App.jsx có protected route /profile.",
+      "SidebarLeft.jsx điều hướng nút Tài khoản tới /profile.",
+      "ProfilePage.jsx hiển thị avatar, displayName, phone, username, role, user id, createdAt, updatedAt.",
+      "Trang profile có nút quay lại chat và giữ phong cách UI nhất quán với app hiện tại.",
+      "Có trạng thái loading/error/empty phù hợp.",
+      "Phase đầu chưa bắt buộc implement tab Thiết bị hoặc quản lý phiên đăng nhập."
+    ]
+  },
+  {
+    "id": "frontend-profile-security-password",
+    "title": "Thêm luồng đổi mật khẩu trong Profile/Bảo mật",
+    "status": "completed",
+    "priority": "medium",
+    "scope": "frontend",
+    "description": "Thêm form đổi mật khẩu trong phần Bảo mật của trang Profile, gọi /api/auth/change-password.",
+    "acceptanceCriteria": [
+      "Form có currentPassword, newPassword, confirmPassword.",
+      "Validate frontend theo rule backend: mật khẩu mới tối thiểu 6 ký tự và confirm khớp.",
+      "Hiển thị lỗi thân thiện nếu mật khẩu hiện tại sai hoặc request thất bại.",
+      "Sau khi đổi thành công, clear session và redirect về /login."
+    ]
+  },
+  {
+    "id": "frontend-device-id-normalization",
+    "title": "Chuẩn hóa deviceId frontend trước khi làm tab Thiết bị",
+    "status": "completed",
+    "priority": "medium",
+    "scope": "frontend",
+    "description": "Thay deviceId hardcode trong auth API bằng getDeviceId() để login/logout/refresh và socket dùng cùng một định danh thiết bị.",
+    "acceptanceCriteria": [
+      "authApi.js không còn hardcode device-uuid-1234 cho login/logout/refresh.",
+      "Luồng auth sử dụng getDeviceId() từ frontend/src/utils/device.js.",
+      "Socket và auth dùng cùng deviceId ổn định trên cùng browser.",
+      "Việc này được thực hiện trước khi implement UI danh sách thiết bị hoặc quản lý phiên đăng nhập."
+    ],
+    "notes": [
+      "Không phải blocker cho Profile overview, chỉnh sửa hồ sơ, settings cơ bản hoặc đổi mật khẩu.",
+      "Có thể cần cập nhật test auth frontend nếu có coverage liên quan deviceId."
+    ]
+  }
+]

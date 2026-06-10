@@ -7,6 +7,7 @@ import { TwilioProvider } from './features/calls/context/TwilioProvider';
 import CallOverlay from './features/calls/components/CallOverlay';
 import { ConversationProvider } from './features/conversations/context/ConversationProvider';
 import Home from './pages/Home';
+import ProfilePage from './features/users/ProfilePage';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -47,6 +48,13 @@ function App() {
               path="/"
               element={
                 isAuthenticated ? <Home /> : <Navigate to="/login" replace />
+              }
+            />
+
+            <Route
+              path="/profile"
+              element={
+                isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />
               }
             />
 

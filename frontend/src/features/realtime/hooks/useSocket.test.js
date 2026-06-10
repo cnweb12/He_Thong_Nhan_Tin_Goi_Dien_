@@ -15,6 +15,7 @@ vi.mock('socket.io-client', () => ({
 // Mock device utility
 vi.mock('../../../utils/device', () => ({
   getDeviceId: vi.fn(() => 'mock-device-id'),
+  getPlatform: vi.fn(() => 'web'),
 }));
 
 describe('useSocket Hook', () => {

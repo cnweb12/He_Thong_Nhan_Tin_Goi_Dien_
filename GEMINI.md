@@ -6,7 +6,7 @@ Các quy tắc chung về Vai trò, Giao tiếp, Clean Code và Xử lý lỗi �
 - **Khảo sát trước khi test:** Trước khi viết test, bắt buộc kiểm tra và hiểu rõ ngữ cảnh, mục đích của đối tượng. Đảm bảo không có sự mơ hồ hay thiếu sót.
 - **Framework:** Sử dụng framework tương ứng với từng phần của dự án (ví dụ: Jest/Mocha cho Node.js, Vitest/Cypress cho Frontend).
 - **Unit Test:** Luôn đính kèm Unit Test cho các hàm logic quan trọng.
-- **Tài liệu:** Chỉ viết Javadoc/Docstring cho public API và các class/interface quan trọng, tránh comment cho code hiển nhiên. Nếu cần hiểu context codebase hãy đọc các file `README.md` tại mỗi thư mục cũng như các thư mục `docs`
+- **Tài liệu:** Chỉ viết Javadoc/Docstring cho public API và các class/interface quan trọng, tránh comment cho code hiển nhiên. Nếu cần hiểu context codebase hãy đọc các file `README.md` tại mỗi thư mục cũng như các thư mục `docs` trong backend, frontend và root.
 
 ## 2. Hợp đồng Phạm vi Tác vụ (Scope Contract)
 Phạm vi (Scope) của một task **được xác định dựa trên yêu cầu cụ thể của từng task do user giao**. Để tránh rủi ro hỏng hệ thống do tự ý mở rộng, Agent phải tuân thủ:

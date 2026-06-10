@@ -174,8 +174,12 @@ function createUserService(dependencies = {}) {
       $set["settings.language"] = settings.language;
     }
 
-    if (settings.allowStrangerMessages !== undefined) {
-      $set["settings.allowStrangerMessages"] = settings.allowStrangerMessages;
+    if (settings.allowStrangerMessage !== undefined) {
+      $set["settings.allowStrangerMessage"] = settings.allowStrangerMessage;
+    }
+
+    if (settings.readReceiptEnabled !== undefined) {
+      $set["settings.readReceiptEnabled"] = settings.readReceiptEnabled;
     }
 
     try {
