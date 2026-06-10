@@ -1,5 +1,10 @@
 # Session Progress
 
+## Cập nhật 10/06/2026 - Frontend Chat UI Phase 2
+- **Hoàn thành message experience phase 2:** `MessageList` đã có auto-scroll có kiểm soát, date divider, grouping message cùng sender; `MessageBubble` hiển thị timestamp/status rõ hơn và giảm lặp avatar trong cụm; `MessageInput` có textarea auto-grow.
+- **Trạng thái kiểm tra:** `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh cần chạy ngoài sandbox vì sandbox chặn spawn `esbuild` với `EPERM`.
+- **Backlog sau phase này:** tiếp tục `frontend-chat-ui-polish-roadmap` Phase 3: responsive chat navigation cho mobile với view state `list`/`thread`/`info`.
+
 ## Cập nhật 10/06/2026
 - **Hoàn thành UI primitives frontend phase 1:** Đã tạo `frontend/src/components/ui` với `cn`, `Avatar`, `IconButton`, `SearchInput`, `Badge`, `EmptyState`, `Skeleton`; áp dụng vào các chat components để chuẩn hóa avatar, search, unread badge, icon buttons, empty/loading states và dọn debug logs trong chat/realtime runtime.
 - **Trạng thái kiểm tra:** `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh cần chạy ngoài sandbox vì sandbox chặn spawn `esbuild` với `EPERM`.

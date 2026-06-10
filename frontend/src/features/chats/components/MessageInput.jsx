@@ -1,11 +1,22 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Paperclip, Send, Smile, X, FileText } from 'lucide-react';
 import { IconButton } from '../../../components/ui';
+
+const resizeTextarea = (textarea) => {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 112)}px`;
+};
 
 export default function MessageInput({ onSend, disabled = false, sending = false }) {
     const [text, setText] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);
+    const textareaRef = useRef(null);
+
+    useEffect(() => {
+        resizeTextarea(textareaRef.current);
+    }, [text]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -96,8 +107,8 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                     </div>
                 </div>
             )}
-            <div className="p-3 sm:p-4 flex items-start sm:items-center gap-3">
-                <div className="flex items-center gap-1 text-slate-500">
+            <div className="p-3 sm:p-4 flex items-end gap-3">
+                <div className="flex items-center gap-1 text-slate-500 pb-0.5">
                     <IconButton icon={Smile} label="Emoji" disabled />
                     <IconButton icon={Paperclip} label="Đính kèm tệp" onClick={() => fileInputRef.current?.click()} />
                     <input
@@ -110,12 +121,13 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                 </div>
 
                 <textarea
+                    ref={textareaRef}
                     rows={1}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Nhập tin nhắn..."
-                    className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="min-h-10 flex-1 resize-none overflow-y-auto rounded-2xl border-transparent bg-slate-100 px-4 py-2.5 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <IconButton
                     icon={Send}

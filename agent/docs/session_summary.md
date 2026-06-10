@@ -1,5 +1,14 @@
 # Session Summary
 
+## Cập nhật 10/06/2026 - Frontend Chat UI Phase 2
+- Đã tiếp tục `frontend-chat-ui-polish-roadmap` Phase 2: Message Experience.
+- `MessageList` có auto-scroll có kiểm soát: chỉ tự cuộn khi user đang gần cuối thread, có nút "Tin nhắn mới nhất" khi user đang đọc phần cũ.
+- `MessageList` thêm date divider theo ngày và tính grouping message liên tiếp cùng sender trong cùng ngày/khoảng 5 phút.
+- `MessageBubble` nhận grouping props để bớt lặp avatar, chỉnh bo góc bubble theo cụm, hiển thị timestamp và trạng thái gửi (`Đang gửi`, `Đã gửi`, `Lỗi gửi`) rõ hơn.
+- `MessageInput` thêm textarea auto-grow đến giới hạn 112px, giữ Enter để gửi và Shift+Enter để xuống dòng.
+- Kiểm tra: `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh vẫn cần chạy ngoài sandbox do sandbox chặn spawn `esbuild` với `EPERM`.
+- Bước tiếp theo đề xuất: Phase 3 `Responsive Chat Navigation`, chuyển mobile sang state rõ `list`/`thread`/`info`.
+
 ## Cập nhật 10/06/2026
 - Đã kiểm tra điều kiện thực thi kế hoạch `frontend-design-system-primitives-phase-1`: working tree sạch trước khi làm, dependency frontend có sẵn `clsx` và `tailwind-merge`, scope chỉ nằm trong frontend chat/UI primitives.
 - Đã tạo `frontend/src/components/ui` gồm `cn`, `Avatar`, `IconButton`, `SearchInput`, `Badge`, `EmptyState`, `Skeleton` và `index.js`.
