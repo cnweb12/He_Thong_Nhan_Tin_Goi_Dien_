@@ -6,7 +6,7 @@ import { Avatar, IconButton } from '../../../components/ui';
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 const resolvePeerId = (peer) => peer?._id || peer?.id || peer?.userId || null;
 
-export default function ChatHeader({ chat, onToggleInfo, onBack }) {
+export default function ChatHeader({ chat, onToggleInfo, onBack, isInfoOpen = false }) {
     const { makeCall } = useCall();
     const conversationId = chat?._id || chat?.id || chat?.conversationId;
 
@@ -51,7 +51,7 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
             <div className="flex items-center gap-1 text-slate-500">
                 <IconButton icon={Phone} label="Gọi thoại" tone="success" onClick={() => handleCallClick('audio')} />
                 <IconButton icon={Video} label="Gọi video" tone="primary" onClick={() => handleCallClick('video')} />
-                <IconButton icon={Info} label="Thông tin hội thoại" onClick={onToggleInfo} />
+                <IconButton icon={Info} label="Thông tin hội thoại" active={isInfoOpen} onClick={onToggleInfo} />
             </div>
         </div>
     );

@@ -172,7 +172,8 @@
       "Phase 1 đã hoàn tất ngày 10/06/2026: tạo UI primitives và áp dụng vào chat UI.",
       "Phase 2 đã hoàn tất ngày 10/06/2026: auto-scroll có kiểm soát, date divider, grouping message, timestamp/status và textarea auto-grow.",
       "Phase 3 đã hoàn tất ngày 10/06/2026: responsive chat navigation cho mobile với view state list/thread/info.",
-      "Bước tiếp theo của roadmap là Phase 4 header actions và info panel, ưu tiên ConversationInfo hiển thị media/file thật từ messages.",
+      "Phase 4 đã hoàn tất ngày 10/06/2026: ConversationInfo hiển thị ảnh/file thật từ messages và ChatHeader có active state cho nút info.",
+      "Bước tiếp theo của roadmap là Phase 5 interaction nice-to-have: typing indicator, emoji picker/panel nhỏ và micro-interactions.",
       "Một số mục trong docs/ui_bugs_and_missing_features.md đã lỗi thời vì gọi audio/video, info panel và upload file đã được nối chức năng."
     ]
   },

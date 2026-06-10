@@ -1,5 +1,14 @@
 # Session Summary
 
+## Cập nhật 10/06/2026 - Frontend Chat UI Phase 4
+- Đã tiếp tục `frontend-chat-ui-polish-roadmap` Phase 4: Header và Info Panel.
+- `ConversationInfo` không còn placeholder attachment: đã derive ảnh/file thật từ `messages.attachments` và fallback `fileUrl/url`, hiển thị `ẢNH GẦN ĐÂY` dạng grid và `TỆP GẦN ĐÂY` dạng list.
+- Empty states trong info panel giờ tách riêng ảnh/tệp và chỉ hiện khi không có dữ liệu thật.
+- `ChatHeader` nhận `isInfoOpen`, nút thông tin hội thoại có active state khi panel info đang mở; `ChatArea` và `Home.jsx` truyền prop này qua đúng luồng desktop/mobile.
+- Đã chuẩn hóa lại text user-facing trong `ChatHeader` và `ConversationInfo`.
+- Kiểm tra: `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh vẫn cần chạy ngoài sandbox do sandbox chặn spawn `esbuild` với `EPERM`.
+- Bước tiếp theo đề xuất: Phase 5 `Interaction Nice-To-Have`, gồm typing indicator nếu socket/backend đã sẵn sàng, emoji picker/panel nhỏ và micro-interactions.
+
 ## Cập nhật 10/06/2026 - Frontend Chat UI Phase 3
 - Đã tiếp tục `frontend-chat-ui-polish-roadmap` Phase 3: Responsive Chat Navigation.
 - `Home.jsx` có `mobileView` rõ ràng cho mobile: `list`, `thread`, `info`; desktop vẫn giữ layout nhiều cột hiện tại.

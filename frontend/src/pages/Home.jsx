@@ -556,6 +556,7 @@ export default function Home() {
               onSend={handleSend}
               sending={sendingMessage}
               onToggleInfo={handleToggleInfo}
+              isInfoOpen={isInfoOpen || mobileView === 'info'}
               onBack={() => {
                 setMobileView('list');
                 setIsInfoOpen(false);
