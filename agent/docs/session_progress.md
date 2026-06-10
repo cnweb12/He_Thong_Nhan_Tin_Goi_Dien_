@@ -11,7 +11,7 @@
 - **Frontend:** 
   - **Công nghệ:** React 19, Vite, Tailwind CSS (v4), Socket.io-client.
   - **Testing:** Vitest, React Testing Library.
-  - **Tiến độ:** Đang hoàn thiện giao diện. Khung sườn và các Component cơ bản đã có nhưng còn nhiều lỗi UI/UX và nhiều chức năng/nút bấm chỉ mới là dạng giao diện tĩnh (mockup). Đã tích hợp gửi tin nhắn có hình ảnh/tệp tin.
+  - **Tiến độ:** Đang hoàn thiện giao diện. Khung sườn chat đã có các luồng chính: inbox, tìm user để mở hội thoại, realtime message, gửi text/ảnh/tệp, preview/download attachment, gọi audio/video và panel thông tin. Còn cần polish UI/UX, responsive mobile, empty/loading states, search trong hội thoại, emoji và attachment/media panel thật.
 
 -  **Đã hoàn thành**:
    - Thiết lập module upload file sử dụng Adapter Pattern để dễ chuyển đổi dịch vụ lưu trữ.
@@ -24,26 +24,34 @@
   - Cấu hình bảo mật Cloudinary để cho phép phân phối các định dạng tài liệu đặc biệt (PDF/ZIP).
   - **Khắc phục lỗi real-time:** Sửa lỗi nghiêm trọng khi cuộc trò chuyện mới không được tự động cập nhật trong danh sách chat của người nhận. Đã tái cấu trúc luồng sự kiện `new_message` ở cả backend và frontend để đảm bảo cập nhật tức thì.
   - **Hoàn thiện Account/Profile phase đầu:** Chuẩn hóa backend settings contract sang `allowStrangerMessage`, bổ sung `readReceiptEnabled`, thêm route `/profile`, nối nút "Tài khoản", hoàn thiện trang hồ sơ/chỉnh sửa settings/đổi mật khẩu và chuẩn hóa frontend `deviceId` dùng `getDeviceId()`.
+  - **Gia cố `users.settings` phase đầu:** Tạo contract chung cho settings keys, chặn legacy `allowStrangerMessages`, thêm integration test persist boolean settings, cập nhật Mongo init nested strict schema, thêm migration/collMod script cho dữ liệu legacy, sửa route order bạn bè trong users và dọn profile integration helper stale contract.
+  - **Khám phá UI chat frontend:** Đã map UI/chức năng hiện có và lập kế hoạch cải thiện theo phase trong `docs/frontend_chat_ui_map_and_plan.md`.
+  - **Lập kế hoạch design system frontend:** Đã ghi kế hoạch tạo UI primitives dùng chung trong `docs/frontend_design_system_plan.md`, làm nền cho phase polish chat UI.
 
 
 ## Các vấn đề tồn đọng (Backlog)
 - **Ưu tiên gần nhất (Account/Profile):**
   - Phase đầu đã hoàn tất. Nếu phát triển tiếp Profile, ưu tiên tab Thiết bị/quản lý phiên đăng nhập dựa trên `/api/devices/me`.
-  - Trước khi mở rộng Settings UI, nên thực hiện task `backend-settings-contract-hardening`: gom settings contract về một nguồn định nghĩa, chặn field lạ ở validator/service, bổ sung integration test cho `allowStrangerMessage`/`readReceiptEnabled`, và siết MongoDB JSON schema sau khi migration dữ liệu cũ.
-  - Nếu database đã từng ghi field sai `settings.allowStrangerMessages`, cần chạy migration `$rename` sang `settings.allowStrangerMessage` trước khi bật ràng buộc `additionalProperties: false` cho `settings`.
+  - Trước khi mở rộng Settings UI, phần `users.settings` của task `backend-settings-contract-hardening` đã hoàn tất trong scope users. `system_settings` và devices helper đã tách thành task riêng theo module tương ứng.
+  - Nếu database đã từng ghi field sai `settings.allowStrangerMessages`, cần chạy migration `backend/database/mongo/migrations/2026-06-10-harden-user-settings-schema.js` trước hoặc cùng lúc bật validator strict cho DB thật.
 - **DB schema hardening:**
   - Mở rộng sau settings bằng task `backend-db-schema-contract-hardening-roadmap`: lập schema matrix cho toàn bộ collections, đối chiếu Mongoose model với MongoDB `$jsonSchema`, validators/services, docs và integration tests.
+  - `system_settings` thuộc module admin, đã được tách khỏi phạm vi `users.settings`; nếu làm tiếp cần mở task riêng cho admin settings registry/type contract.
   - Ưu tiên theo thứ tự nhỏ an toàn: `users.settings`/`system_settings` -> `refresh_tokens`/`user_devices` -> conversations/messages -> admin/support collections.
   - Không bật `additionalProperties: false` hàng loạt trước khi audit dữ liệu hiện có và migration field legacy.
 - **Lỗi UI/UX (Bugs):**
-  - Bị mất danh sách đoạn chat trên màn hình Mobile (do logic tự động chọn chat đầu tiên).
+  - Tailwind class cho các pattern UI lặp lại như avatar, icon button, search input, unread badge đang rải rác ở từng component; cần tạo UI primitives dùng chung để giảm bất định thiết kế.
   - Load trang chậm khi đăng nhập do bị block chờ dữ liệu (Cần nâng cấp thành Skeleton loading).
+  - Chat UI chưa tối ưu mobile: cần state rõ cho list/thread/info thay vì nén/ẩn các cột bằng width transition.
+  - Thread chính chưa có auto-scroll, date divider, grouping message; các empty/loading states còn đơn giản.
+  - Còn debug logs trong luồng chat/realtime frontend (`Home.jsx`, `MessageList.jsx`, `useSocket.js`).
 - **Tính năng cần phát triển (Missing Features):**
   - Hoàn thiện API và logic Socket cho tính năng Thu hồi tin nhắn (Soft Delete).
-  - Chức năng trong Khung Chat: Tìm kiếm, Gọi thoại, Gọi video, Xem thông tin.
-  - Chức năng ở Thanh điều hướng (Sidebar): Xem Thông báo, Cài đặt, Quản lý tài khoản.
-  - Chức năng gửi tin: Gửi Emoji.
-  - Chức năng lọc danh sách Chat: Tab "Ưu tiên" và "Khác".
+  - Chức năng trong Khung Chat: tìm kiếm trong hội thoại, menu mở rộng, typing indicator trong luồng chính.
+  - Chức năng ở Thanh điều hướng (Sidebar): xem thông báo, cài đặt.
+  - Chức năng gửi tin: gửi Emoji hoặc tối thiểu emoji picker/panel nhỏ.
+  - Conversation info: hiển thị media/file thật từ messages thay vì placeholder "Trống".
+  - Chức năng lọc danh sách Chat: tab/bộ lọc như "Ưu tiên" và "Khác" nếu sản phẩm cần.
 
 ## Thành tựu chính (Milestones)
 - Đã quy chuẩn hóa luật chạy multi-task/luồng tác vụ cho Agent.

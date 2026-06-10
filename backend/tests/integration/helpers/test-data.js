@@ -160,8 +160,6 @@ function createSettingsData(settings = {}) {
 function createProfileUpdateData(profileData = {}) {
   return {
     displayName: generateDisplayName(),
-    avatar: null,
-    status: 'online',
     ...profileData,
   };
 }

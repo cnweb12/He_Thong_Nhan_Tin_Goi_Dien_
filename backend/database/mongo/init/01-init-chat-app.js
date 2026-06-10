@@ -50,6 +50,7 @@ function createJsonSchemaCollections() {
           avatarUrl: { bsonType: ["string", "null"] },
           settings: {
             bsonType: ["object", "null"],
+            additionalProperties: false,
             properties: {
               theme: { enum: ["light", "dark"] },
               language: { bsonType: ["string", "null"] },

@@ -281,8 +281,13 @@ describe('Full User Flow Integration Tests', () => {
       assert.strictEqual(response.data.data.displayName, 'Updated Display Name');
     });
     
-    it('should update settings', async () => {
-      const settingsData = createSettingsData({ theme: 'dark', language: 'en' });
+    it('should update settings and persist boolean fields', async () => {
+      const settingsData = createSettingsData({
+        theme: 'dark',
+        language: 'en',
+        allowStrangerMessage: false,
+        readReceiptEnabled: false,
+      });
       
       const response = await makeRequest({
         method: 'PATCH',
@@ -294,6 +299,34 @@ describe('Full User Flow Integration Tests', () => {
       
       assert.strictEqual(response.statusCode, 200);
       assert.strictEqual(response.data.ok, true);
+      assert.strictEqual(response.data.data.settings.theme, 'dark');
+      assert.strictEqual(response.data.data.settings.language, 'en');
+      assert.strictEqual(response.data.data.settings.allowStrangerMessage, false);
+      assert.strictEqual(response.data.data.settings.readReceiptEnabled, false);
+
+      const profileResponse = await makeRequest({
+        method: 'GET',
+        path: '/api/users/me',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+      });
+
+      assert.strictEqual(profileResponse.statusCode, 200);
+      assert.strictEqual(profileResponse.data.data.settings.allowStrangerMessage, false);
+      assert.strictEqual(profileResponse.data.data.settings.readReceiptEnabled, false);
+    });
+
+    it('should reject legacy plural settings field', async () => {
+      const response = await makeRequest({
+        method: 'PATCH',
+        path: '/api/users/me/settings',
+        port: testPort,
+        headers: { Authorization: `Bearer ${testState.user1Token}` },
+        body: { allowStrangerMessages: false },
+      });
+
+      assert.strictEqual(response.statusCode, 400);
+      assert.strictEqual(response.data.ok, false);
     });
   });
   

@@ -134,3 +134,22 @@ test("updateSettings writes nested settings fields", async () => {
   assert.equal(user.passwordHash, undefined);
   assert.equal(user.settings.theme, "dark");
 });
+
+test("updateSettings rejects payloads without valid settings fields", async () => {
+  const userService = createUserService({
+    UserModel: {
+      findByIdAndUpdate: async () => {
+        throw new Error("findByIdAndUpdate should not be called");
+      },
+    },
+  });
+
+  await assert.rejects(
+    () => userService.updateSettings("user-1", { allowStrangerMessages: false }),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.message, "No valid settings fields provided");
+      return true;
+    }
+  );
+});

@@ -26,6 +26,7 @@ Module `users` chịu trách nhiệm quản lý dữ liệu hồ sơ người d�
   `username`, `displayName`, `avatarUrl`
 - Cập nhật cài đặt người dùng:
   `theme`, `language`, `allowStrangerMessage`, `readReceiptEnabled`
+  Các key hợp lệ được định nghĩa tập trung trong `user-settings.contract.js` để validator và service dùng chung contract.
 - Gửi lời mời kết bạn
 - Chấp nhận lời mời kết bạn
 - Danh sách bạn bè hiện tại

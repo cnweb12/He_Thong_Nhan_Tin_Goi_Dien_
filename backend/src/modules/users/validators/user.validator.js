@@ -1,3 +1,9 @@
+const {
+  USER_SETTING_KEYS,
+  getUnsupportedUserSettingKeys,
+  validateUserSettingValue,
+} = require("../user-settings.contract");
+
 /**
  * Có nhiệm vụ chặn và kiểm tra request trước khi cho vào service 
  * trả về hoặc là isValid, hoặc là array các error theo field thể hiện vi phạm ở đâu
@@ -89,35 +95,24 @@ function validateUpdateProfileRequest(req) {
 function validateUpdateSettingsRequest(req) {
   const errors = [];
   const body = req.body || {};
-  const allowedKeys = ["theme", "language", "allowStrangerMessage", "readReceiptEnabled"];
   const providedKeys = Object.keys(body);
 
   if (providedKeys.length === 0) {
     errors.push({ field: "body", message: "At least one settings field is required" });
   }
 
-  const invalidKeys = providedKeys.filter((key) => !allowedKeys.includes(key));
+  const invalidKeys = getUnsupportedUserSettingKeys(body);
   for (const key of invalidKeys) {
     errors.push({ field: key, message: "Unsupported settings field" });
   }
 
-  if (body.theme !== undefined && !["light", "dark"].includes(body.theme)) {
-    errors.push({ field: "theme", message: "Theme must be either 'light' or 'dark'" });
-  }
-
-  if (body.language !== undefined) {
-    const normalized = String(body.language || "").trim();
-    if (!normalized || normalized.length > 10) {
-      errors.push({ field: "language", message: "Language must be a non-empty string up to 10 characters" });
+  for (const key of USER_SETTING_KEYS) {
+    if (body[key] !== undefined) {
+      const validation = validateUserSettingValue(key, body[key]);
+      if (!validation.isValid) {
+        errors.push({ field: key, message: validation.message });
+      }
     }
-  }
-
-  if (body.allowStrangerMessage !== undefined && typeof body.allowStrangerMessage !== "boolean") {
-    errors.push({ field: "allowStrangerMessage", message: "allowStrangerMessage must be a boolean" });
-  }
-
-  if (body.readReceiptEnabled !== undefined && typeof body.readReceiptEnabled !== "boolean") {
-    errors.push({ field: "readReceiptEnabled", message: "readReceiptEnabled must be a boolean" });
   }
 
   return {

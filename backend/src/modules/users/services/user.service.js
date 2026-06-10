@@ -2,6 +2,7 @@ const { mapMongoError } = require("../../../../database/mongo/mongo-error.mapper
 const { normalizePhone, normalizeUsername } = require("../../../../database/mongo/normalize");
 const { UserModel } = require("../models/user.model");
 const { FriendModel } = require("../models/friend.model");
+const { buildUserSettingsUpdate } = require("../user-settings.contract");
 
 /**
  * Hàm này sẽ có nhiệm vụ chuyển đổi từ object dạng document của Mongoose về object thường của JS. Nếu truyền vào object thường thì sẽ trả về y nguyên
@@ -164,22 +165,10 @@ function createUserService(dependencies = {}) {
   }
 
   async function updateSettings(userId, settings = {}) {
-    const $set = {};
+    const $set = buildUserSettingsUpdate(settings);
 
-    if (settings.theme !== undefined) {
-      $set["settings.theme"] = settings.theme;
-    }
-
-    if (settings.language !== undefined) {
-      $set["settings.language"] = settings.language;
-    }
-
-    if (settings.allowStrangerMessage !== undefined) {
-      $set["settings.allowStrangerMessage"] = settings.allowStrangerMessage;
-    }
-
-    if (settings.readReceiptEnabled !== undefined) {
-      $set["settings.readReceiptEnabled"] = settings.readReceiptEnabled;
+    if (Object.keys($set).length === 0) {
+      throw createHttpError(400, "No valid settings fields provided");
     }
 
     try {

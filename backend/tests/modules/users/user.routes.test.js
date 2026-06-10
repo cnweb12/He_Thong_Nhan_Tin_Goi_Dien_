@@ -91,6 +91,14 @@ test("user routes call the expected controller handlers", async () => {
         calls.push(["searchUsers", req.query.q]);
         res.json({ ok: true, route: "search" });
       },
+      listFriends: (req, res) => {
+        calls.push(["listFriends", req.user.userId]);
+        res.json({ ok: true, route: "friends" });
+      },
+      listPendingRequests: (req, res) => {
+        calls.push(["listPendingRequests", req.user.userId]);
+        res.json({ ok: true, route: "friend-requests" });
+      },
       getUserById: (req, res) => {
         calls.push(["getUserById", req.params.userId]);
         res.json({ ok: true, route: "detail" });
@@ -118,6 +126,14 @@ test("user routes call the expected controller handlers", async () => {
       method: "GET",
       path: "/api/users/search?q=ali",
     });
+    const friends = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/me/friends",
+    });
+    const friendRequests = await requestJson(server, {
+      method: "GET",
+      path: "/api/users/me/friend-requests",
+    });
     const detail = await requestJson(server, {
       method: "GET",
       path: "/api/users/user-22",
@@ -127,12 +143,16 @@ test("user routes call the expected controller handlers", async () => {
     assert.equal(update.statusCode, 200);
     assert.equal(settings.statusCode, 200);
     assert.equal(search.body.route, "search");
+    assert.equal(friends.body.route, "friends");
+    assert.equal(friendRequests.body.route, "friend-requests");
     assert.equal(detail.body.route, "detail");
     assert.deepEqual(calls, [
       ["getMe", "viewer-1"],
       ["updateMe"],
       ["updateMySettings"],
       ["searchUsers", "ali"],
+      ["listFriends", "viewer-1"],
+      ["listPendingRequests", "viewer-1"],
       ["getUserById", "user-22"],
     ]);
   } finally {

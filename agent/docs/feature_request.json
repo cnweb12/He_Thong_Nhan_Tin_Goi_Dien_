@@ -19,11 +19,11 @@
   },
   {
     "id": "backend-settings-contract-hardening",
-    "title": "Phase 1: Gia cố schema/contract cho các settings liên quan trực tiếp",
-    "status": "planned",
+    "title": "Phase 1: Gia cố schema/contract cho users.settings",
+    "status": "completed",
     "priority": "high",
     "scope": "backend",
-    "description": "Bổ sung lớp bảo vệ cho users.settings trước, sau đó rà system_settings để validator/service/DB/tests cùng phát hiện field sai như allowStrangerMessages thay vì update no-op hoặc bị mock test che mất.",
+    "description": "Bổ sung lớp bảo vệ cho users.settings để validator/service/DB/tests cùng phát hiện field sai như allowStrangerMessages thay vì update no-op hoặc bị mock test che mất.",
     "acceptanceCriteria": [
       "Tạo một nguồn định nghĩa contract settings dùng chung cho allowed keys, validator, service và tests.",
       "Validator trả 400 rõ ràng với field ngoài contract, đặc biệt là allowStrangerMessages.",
@@ -32,12 +32,32 @@
       "Bổ sung integration/API test gửi allowStrangerMessages và kỳ vọng 400.",
       "Bổ sung hoặc cập nhật MongoDB JSON schema để settings không nhận thêm field lạ nếu dữ liệu hiện có đã được migration an toàn.",
       "Thêm migration/collMod script để rename hoặc cleanup settings.allowStrangerMessages trước khi siết schema.",
-      "Dọn các integration test helper stale contract liên quan profile/device hoặc tách thành task test-maintenance rõ ràng."
+      "Dọn integration test helper stale contract liên quan profile hoặc tách phần ngoài users thành task riêng."
     ],
     "notes": [
-      "Thứ tự rollout nên là audit dữ liệu -> migration field sai -> cập nhật DB validator -> chạy integration tests.",
+      "Đã triển khai phần users.settings: contract chung user-settings.contract.js, validator reject field lạ, service no-op guard, unit tests, integration tests persist allowStrangerMessage/readReceiptEnabled, Mongo init additionalProperties:false cho settings và migration/collMod script 2026-06-10-harden-user-settings-schema.js.",
+      "Đã sửa route order trong users để /me/friends và /me/friend-requests không bị /:userId che.",
+      "Đã dọn createProfileUpdateData() để không sinh avatar/status ngoài contract profile users.",
+      "Tests đã chạy: npm run test:users pass 17/17; npm run test:integration pass 96/96.",
+      "Với DB thật, thứ tự rollout nên là audit dữ liệu -> chạy migration field sai -> áp dụng collMod validator.",
       "Không phải blocker cho Profile UI đã hoàn thành, nhưng nên làm trước khi mở rộng Settings UI hoặc Device/session management.",
-      "Với system_settings, cần registry key/type ở application layer trước vì collection này là key-value linh hoạt."
+      "system_settings đã được tách thành task backend-admin-system-settings-contract-hardening vì thuộc module admin."
+    ]
+  },
+  {
+    "id": "backend-devices-test-helper-maintenance",
+    "title": "Dọn integration helper stale contract cho devices",
+    "status": "planned",
+    "priority": "low",
+    "scope": "backend/devices",
+    "description": "Cập nhật createDeviceData() trong integration helpers để khớp contract /api/devices/current hiện tại.",
+    "acceptanceCriteria": [
+      "createDeviceData() sinh deviceId, platform, pushToken, isOnline, lastActiveAt theo API hiện tại.",
+      "Integration tests devices dùng helper đúng contract hoặc bỏ helper nếu không còn cần.",
+      "Chạy test devices/integration liên quan và pass."
+    ],
+    "notes": [
+      "Không sửa trong task users.settings để giữ đúng Scope Contract."
     ]
   },
   {
@@ -61,6 +81,26 @@
     "notes": [
       "Triển khai theo vòng nhỏ: settings -> auth/devices -> conversations/messages -> admin/support collections.",
       "Không bật additionalProperties: false toàn bộ ngay từ đầu; cần audit dữ liệu hiện có và migration trước."
+    ]
+  },
+  {
+    "id": "backend-admin-system-settings-contract-hardening",
+    "title": "Gia cố contract cho admin system settings",
+    "status": "planned",
+    "priority": "medium",
+    "scope": "backend/admin",
+    "description": "Tách riêng việc chuẩn hóa system_settings khỏi users.settings vì đây là chức năng thuộc module admin.",
+    "acceptanceCriteria": [
+      "Rà lại model, validator, service, controller, routes và tests của admin system settings.",
+      "Thiết kế registry key/type/defaults cho các system settings hợp lệ theo code/docs hiện có.",
+      "Validator reject key lạ, value sai type và payload rỗng với lỗi 400 rõ ràng.",
+      "Service chỉ upsert key hợp lệ và lưu type theo registry thay vì đoán type tự do.",
+      "Bổ sung unit tests cho admin validator/service.",
+      "Cập nhật docs nếu API contract thay đổi."
+    ],
+    "notes": [
+      "Không triển khai trong task users.settings hiện tại để giữ đúng Scope Contract.",
+      "Chỉ siết MongoDB $jsonSchema sâu hơn sau khi registry application-layer ổn định."
     ]
   },
   {
@@ -109,6 +149,50 @@
     "notes": [
       "Không phải blocker cho Profile overview, chỉnh sửa hồ sơ, settings cơ bản hoặc đổi mật khẩu.",
       "Có thể cần cập nhật test auth frontend nếu có coverage liên quan deviceId."
+    ]
+  },
+  {
+    "id": "frontend-chat-ui-polish-roadmap",
+    "title": "Cải thiện UI/UX giao diện chat theo từng phase",
+    "status": "planned",
+    "priority": "high",
+    "scope": "frontend/chats",
+    "description": "Nâng cấp giao diện chat hiện có đẹp hơn, dễ dùng hơn và responsive hơn, bắt đầu từ layout/states cơ bản rồi đến message experience.",
+    "acceptanceCriteria": [
+      "Có inventory/map UI chat hiện có và kế hoạch phase rõ ràng trong docs.",
+      "Phase 1 chuẩn hóa avatar, spacing search/sidebar, empty/loading/error states và dọn debug logs.",
+      "Phase 2 bổ sung auto-scroll có kiểm soát, date divider, grouping message, timestamp/status hiển thị rõ và textarea auto-grow.",
+      "Phase 3 hoàn thiện responsive mobile với trạng thái list/thread/info rõ ràng.",
+      "Phase 4 hoàn thiện header actions và ConversationInfo hiển thị media/file thật từ messages.",
+      "Mỗi phase có build/test frontend phù hợp trước khi hoàn tất."
+    ],
+    "notes": [
+      "Map/kế hoạch chi tiết nằm ở docs/frontend_chat_ui_map_and_plan.md.",
+      "Phase 1 dựa trên design system primitives trong docs/frontend_design_system_plan.md.",
+      "Một số mục trong docs/ui_bugs_and_missing_features.md đã lỗi thời vì gọi audio/video, info panel và upload file đã được nối chức năng."
+    ]
+  },
+  {
+    "id": "frontend-design-system-primitives-phase-1",
+    "title": "Tạo UI primitives dùng chung cho frontend chat",
+    "status": "planned",
+    "priority": "high",
+    "scope": "frontend/components-ui",
+    "description": "Tạo lớp UI primitives nhỏ để giảm Tailwind class thủ công lặp lại và chuẩn hóa các pattern thiết kế đang dùng nhiều lần trong chat UI.",
+    "acceptanceCriteria": [
+      "Tạo thư mục frontend/src/components/ui với cn.js và index.js.",
+      "Tạo các primitive phase đầu: Avatar, IconButton, SearchInput, Badge, EmptyState, Skeleton.",
+      "Thay avatar thủ công trong ChatSidebar, ChatItem, ChatHeader và ConversationInfo bằng Avatar.",
+      "Thay các nút icon chính trong ChatHeader/MessageInput bằng IconButton hoặc ghi rõ lý do giữ nguyên.",
+      "Thay SearchBar bằng SearchInput hoặc wrapper tương thích để tránh padding lồng và emoji icon.",
+      "Unread badge dùng Badge chung.",
+      "MessageList và inbox có empty/loading state nhất quán hơn.",
+      "Không thay đổi API, socket, upload, call hoặc orchestration trong Home.jsx.",
+      "Frontend build/test pass sau khi triển khai."
+    ],
+    "notes": [
+      "Kế hoạch chi tiết nằm ở docs/frontend_design_system_plan.md.",
+      "Không thêm thư viện UI mới trong phase đầu vì repo đã có clsx và tailwind-merge."
     ]
   }
 ]

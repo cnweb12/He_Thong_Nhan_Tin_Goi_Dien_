@@ -38,6 +38,17 @@ test("validateUpdateSettingsRequest rejects unsupported values", () => {
   assert.deepEqual(result.errors[0], { field: "timezone", message: "Unsupported settings field" });
 });
 
+test("validateUpdateSettingsRequest rejects legacy plural allowStrangerMessages", () => {
+  const result = validators.validateUpdateSettingsRequest({
+    body: {
+      allowStrangerMessages: false,
+    },
+  });
+
+  assert.equal(result.isValid, false);
+  assert.deepEqual(result.errors, [{ field: "allowStrangerMessages", message: "Unsupported settings field" }]);
+});
+
 test("validateUpdateSettingsRequest accepts supported settings fields", () => {
   const result = validators.validateUpdateSettingsRequest({
     body: {
