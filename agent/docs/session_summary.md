@@ -1,5 +1,14 @@
 # Session Summary
 
+## Cập nhật 10/06/2026
+- Đã kiểm tra điều kiện thực thi kế hoạch `frontend-design-system-primitives-phase-1`: working tree sạch trước khi làm, dependency frontend có sẵn `clsx` và `tailwind-merge`, scope chỉ nằm trong frontend chat/UI primitives.
+- Đã tạo `frontend/src/components/ui` gồm `cn`, `Avatar`, `IconButton`, `SearchInput`, `Badge`, `EmptyState`, `Skeleton` và `index.js`.
+- Đã áp dụng primitives vào chat UI: `ChatSidebar`, `ChatItem`, `SearchBar`, `ChatHeader`, `MessageList`, `MessageBubble`, `MessageInput`, `ConversationInfo`.
+- Đã chuẩn hóa avatar, unread badge, search input, icon buttons, empty/loading states; dọn debug `console.log` trong `MessageList`, `Home.jsx`, `useSocket.js`.
+- Đã khôi phục input file ẩn trong `MessageInput` để nút paperclip dùng đúng `fileInputRef` và giữ nguyên contract gửi attachment hiện có.
+- Kiểm tra: `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh cần chạy ngoài sandbox do sandbox chặn spawn `esbuild` với `EPERM`.
+- Bước tiếp theo đề xuất: tiếp tục `frontend-chat-ui-polish-roadmap` Phase 2 cho message experience: auto-scroll có kiểm soát, date divider, grouping message, timestamp/status rõ hơn và textarea auto-grow.
+
 *File này dùng để lưu trữ tóm tắt về phiên làm việc hiện tại và các công việc tiếp theo để duy trì context giữa các session.*
 
 ## Phiên làm việc gần nhất

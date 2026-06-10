@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Paperclip, Send, Smile, X, Image as ImageIcon, FileText } from 'lucide-react';
+import { Paperclip, Send, Smile, X, FileText } from 'lucide-react';
+import { IconButton } from '../../../components/ui';
 
 export default function MessageInput({ onSend, disabled = false, sending = false }) {
     const [text, setText] = useState('');
@@ -9,7 +10,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = (event) => {
             setSelectedFile({
@@ -17,12 +18,11 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                 fileName: file.name,
                 mimeType: file.type,
                 size: file.size,
-                url: event.target.result // Base64 data URL
+                url: event.target.result,
             });
         };
         reader.readAsDataURL(file);
-        
-        // Reset input value so same file can be selected again if removed
+
         e.target.value = null;
     };
 
@@ -41,8 +41,8 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                         url: selectedFile.url,
                         mimeType: selectedFile.mimeType,
                         size: selectedFile.size,
-                        file: selectedFile.file
-                    }]
+                        file: selectedFile.file,
+                    }],
                 });
                 setSelectedFile(null);
             } else {
@@ -66,7 +66,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
             {selectedFile && (
                 <div className="px-4 pt-3 pb-1">
                     <div className="relative inline-block group">
-                        <button 
+                        <button
                             type="button"
                             onClick={() => setSelectedFile(null)}
                             className="absolute -top-2 -right-2 bg-slate-700 text-white hover:bg-slate-800 border-2 border-white rounded-full p-0.5 shadow-md z-10 transition-colors cursor-pointer"
@@ -74,9 +74,9 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                         >
                             <X size={14} />
                         </button>
-                        
+
                         {selectedFile.mimeType.startsWith('image/') ? (
-                            <div 
+                            <div
                                 className="rounded-lg border border-slate-200 overflow-hidden shadow-sm bg-slate-100 flex-shrink-0"
                                 style={{ width: '120px', height: '120px' }}
                             >
@@ -98,15 +98,15 @@ export default function MessageInput({ onSend, disabled = false, sending = false
             )}
             <div className="p-3 sm:p-4 flex items-start sm:items-center gap-3">
                 <div className="flex items-center gap-1 text-slate-500">
-                    <button type="button" className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"><Smile size={20} /></button>
-                    <button 
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-                        title="Đính kèm tệp"
-                    >
-                        <Paperclip size={20} />
-                    </button>
+                    <IconButton icon={Smile} label="Emoji" disabled />
+                    <IconButton icon={Paperclip} label="Đính kèm tệp" onClick={() => fileInputRef.current?.click()} />
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileChange}
+                        disabled={disabled || sending}
+                    />
                 </div>
 
                 <textarea
@@ -117,13 +117,13 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                     placeholder="Nhập tin nhắn..."
                     className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <button
+                <IconButton
+                    icon={Send}
+                    label="Gửi tin nhắn"
                     onClick={send}
                     disabled={disabled || sending || (!text.trim() && !selectedFile)}
-                    className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
-                >
-                    <Send size={18} />
-                </button>
+                    className="h-10 w-10 bg-blue-500 text-white shadow-lg hover:bg-blue-600 disabled:bg-slate-300"
+                />
             </div>
         </div>
     );

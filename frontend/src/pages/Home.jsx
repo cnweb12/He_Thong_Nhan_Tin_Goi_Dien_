@@ -178,7 +178,6 @@ export default function Home() {
     conversations.forEach((c) => {
       const id = resolveConversationId(c);
       if (id && !joinedRoomsRef.current.has(id)) {
-        console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại:`, id);
         socket.emit('join_room', { conversationId: id });
         joinedRoomsRef.current.add(id);
       }
@@ -190,11 +189,10 @@ export default function Home() {
     if (!socket || !isConnected) return;
 
     const handleNewMessage = (data) => {
-      console.log('🔴 [DEBUG CLIENT] Đã nhận event new_message từ server:', data);
       const { message: rawMessage, conversation: backendConv } = data;
 
       if (!rawMessage || !backendConv) {
-        console.warn('🔴 [DEBUG CLIENT] Payload của new_message không hợp lệ!');
+        console.warn('[Home] Payload của new_message không hợp lệ.');
         return;
       }
 
@@ -202,7 +200,7 @@ export default function Home() {
       const conversationId = resolveConversationId(backendConv);
 
       if (!conversationId) {
-        console.warn('🔴 [DEBUG CLIENT] Không tìm thấy conversationId trong tin nhắn!');
+        console.warn('[Home] Không tìm thấy conversationId trong tin nhắn.');
         return;
       }
 
@@ -237,7 +235,6 @@ export default function Home() {
 
         // Case 1: This is a new conversation
         if (index === -1) {
-          console.log('🔴 [DEBUG CLIENT] Phát hiện cuộc trò chuyện mới, thêm vào danh sách.');
           const newConversation = normalizeConversationFromSocket(backendConv, currentUserId);
           if (!newConversation) return prev;
 
@@ -249,7 +246,6 @@ export default function Home() {
           // Add new room to socket
           const id = resolveConversationId(newConversation);
           if (id && !joinedRoomsRef.current.has(id)) {
-            console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại MỚI:`, id);
             socket.emit('join_room', { conversationId: id });
             joinedRoomsRef.current.add(id);
           }

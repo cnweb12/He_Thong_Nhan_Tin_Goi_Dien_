@@ -175,7 +175,7 @@
   {
     "id": "frontend-design-system-primitives-phase-1",
     "title": "Tạo UI primitives dùng chung cho frontend chat",
-    "status": "planned",
+    "status": "completed",
     "priority": "high",
     "scope": "frontend/components-ui",
     "description": "Tạo lớp UI primitives nhỏ để giảm Tailwind class thủ công lặp lại và chuẩn hóa các pattern thiết kế đang dùng nhiều lần trong chat UI.",
@@ -192,7 +192,9 @@
     ],
     "notes": [
       "Kế hoạch chi tiết nằm ở docs/frontend_design_system_plan.md.",
-      "Không thêm thư viện UI mới trong phase đầu vì repo đã có clsx và tailwind-merge."
+      "Không thêm thư viện UI mới trong phase đầu vì repo đã có clsx và tailwind-merge.",
+      "Đã triển khai ngày 10/06/2026: tạo frontend/src/components/ui, áp dụng vào chat components, dọn debug logs trong Home.jsx/useSocket.js/MessageList.jsx.",
+      "Kiểm tra pass: npm run build; npm run test:run pass 24/24. Cả hai lệnh cần chạy ngoài sandbox do spawn esbuild bị EPERM trong sandbox."
     ]
   }
 ]

@@ -21,8 +21,6 @@ export const useSocket = (token) => {
 
     setIsConnecting(true);
     setError(null);
-    console.log("🔴 [DEBUG CLIENT] Bắt đầu kết nối Socket.IO tới:", SOCKET_URL);
-
     const deviceId = getDeviceId();
     const platform = getPlatform();
     const socketImpl = io(SOCKET_URL, {
@@ -34,19 +32,18 @@ export const useSocket = (token) => {
     });
 
     const handleConnect = () => {
-      console.log("🔴 [DEBUG CLIENT] Đã kết nối Socket.IO thành công! ID:", socketImpl.id);
       setIsConnected(true);
       setIsConnecting(false);
       setError(null);
     };
 
     const handleDisconnect = (reason) => {
-      console.warn("🔴 [DEBUG CLIENT] Socket.IO bị ngắt kết nối:", reason);
+      console.warn('[Socket] Socket.IO bị ngắt kết nối:', reason);
       setIsConnected(false);
     };
 
     const handleConnectError = (err) => {
-      console.error("🔴 [DEBUG CLIENT] Lỗi kết nối Socket.IO:", err.message);
+      console.error('[Socket] Lỗi kết nối Socket.IO:', err.message);
       setIsConnected(false);
       setIsConnecting(false);
       setError(err.message);
@@ -59,7 +56,6 @@ export const useSocket = (token) => {
     setSocket(socketImpl);
 
     return () => {
-      console.log("🔴 [DEBUG CLIENT] Ngắt kết nối và dọn dẹp Socket.IO");
       socketImpl.off('connect', handleConnect);
       socketImpl.off('disconnect', handleDisconnect);
       socketImpl.off('connect_error', handleConnectError);

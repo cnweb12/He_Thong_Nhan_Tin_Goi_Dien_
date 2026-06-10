@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, Check, AlertCircle, FileText, Download, Trash2, X, FileArchive, FileCode, FileAudio, FileVideo, File } from 'lucide-react';
+import { Clock, Check, AlertCircle, FileText, Download, X, FileArchive, FileCode, FileAudio, FileVideo, File } from 'lucide-react';
+import { Avatar } from '../../../components/ui';
 
 export default function MessageBubble({ m, isMine }) {
     const [previewImage, setPreviewImage] = useState(null);
@@ -97,11 +98,7 @@ export default function MessageBubble({ m, isMine }) {
     return (
         <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
             {!isMine && (
-                <img 
-                    src={m.sender?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender?.displayName || '?')}&background=random&color=fff&rounded=true&font-size=0.45`}
-                    alt={m.sender?.displayName || 'Avatar'}
-                    className="w-7 h-7 rounded-full bg-slate-200 flex-shrink-0"
-                />
+                <Avatar src={m.sender?.avatarUrl} name={m.sender?.displayName || '?'} alt={m.sender?.displayName || 'Avatar'} size="xs" />
             )}
 
             <div className={`flex flex-col max-w-[70%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>

@@ -1,5 +1,10 @@
 # Session Progress
 
+## Cập nhật 10/06/2026
+- **Hoàn thành UI primitives frontend phase 1:** Đã tạo `frontend/src/components/ui` với `cn`, `Avatar`, `IconButton`, `SearchInput`, `Badge`, `EmptyState`, `Skeleton`; áp dụng vào các chat components để chuẩn hóa avatar, search, unread badge, icon buttons, empty/loading states và dọn debug logs trong chat/realtime runtime.
+- **Trạng thái kiểm tra:** `npm run build` pass; `npm run test:run` pass 24/24. Cả hai lệnh cần chạy ngoài sandbox vì sandbox chặn spawn `esbuild` với `EPERM`.
+- **Backlog sau phase này:** `frontend-design-system-primitives-phase-1` đã hoàn tất; bước tiếp theo phù hợp là `frontend-chat-ui-polish-roadmap` Phase 2: auto-scroll, date divider, grouping message, timestamp/status và textarea auto-grow.
+
 *File này ghi nhận tiến độ tổng quan của toàn bộ dự án từ góc nhìn của Agent, nhằm duy trì bối cảnh (context) dài hạn.*
 
 ## Trạng thái dự án

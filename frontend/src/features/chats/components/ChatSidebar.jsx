@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import SearchBar from './SearchBar';
 import ChatItem from './ChatItem';
 import { searchUsersApi } from '../../users/services/userApi';
+import { Avatar, ChatItemSkeleton, EmptyState } from '../../../components/ui';
 
 const resolveConversationId = (conversation) => conversation?.conversationId || conversation?.id || conversation?._id || null;
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
@@ -55,15 +56,14 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
         <div className="w-full h-full flex flex-col bg-slate-50">
             <div className="p-4 border-b border-slate-200">
                 <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <img 
-                            src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'K')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`}
-                            alt="Avatar" 
-                            className="w-5 h-5 rounded-full bg-slate-200"
-                        />
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                    </div>
-                    
+                    <Avatar
+                        src={user?.avatarUrl}
+                        name={user?.displayName || user?.name || 'K'}
+                        alt="Avatar"
+                        size="md"
+                        status="online"
+                    />
+
                     <div className="flex-1 min-w-0">
                         <div className="font-semibold text-slate-800 text-sm truncate">{user?.displayName || user?.name || 'Khách'}</div>
                         <div className="text-xs text-slate-500 truncate">{user?.phone || 'Online'}</div>
@@ -89,21 +89,22 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
                             {searchError && (
                                 <div className="px-3 py-3 text-sm text-red-600">{searchError}</div>
                             )}
+                            {searchLoading && <ChatItemSkeleton count={3} />}
                             {!searchLoading && !searchError && searchResults.length === 0 && (
-                                <div className="px-3 py-3 text-sm text-slate-500">Không có kết quả phù hợp.</div>
+                                <EmptyState
+                                    compact
+                                    title="Không có kết quả"
+                                    description="Thử tìm bằng tên hoặc số điện thoại khác."
+                                />
                             )}
-                            {searchResults.map((item) => (
+                            {!searchLoading && searchResults.map((item) => (
                                 <button
                                     key={item.userId || item._id || item.id}
                                     type="button"
                                     onClick={() => onStartConversation?.(item)}
                                     className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-sky-50 transition cursor-pointer"
                                 >
-                                     <img 
-                                        src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || '?')}&background=random&color=fff&rounded=true&font-size=0.45`}
-                                        alt="Avatar"
-                                        className="w-5 h-5 rounded-full bg-slate-200 flex-shrink-0"
-                                    />
+                                    <Avatar src={item.avatarUrl} name={item.displayName || item.username || '?'} alt="Avatar" size="sm" />
                                     <div className="flex-1 min-w-0">
                                         <div className="font-semibold text-slate-800 text-sm truncate">{item.displayName || item.username}</div>
                                         <div className="text-xs text-slate-500 truncate">{item.phone || (isPhoneLike(item.username) ? item.username : '')}</div>
@@ -117,6 +118,12 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
             )}
 
             <div className="flex-1 overflow-y-auto">
+                {filteredConversations.length === 0 && (
+                    <EmptyState
+                        title="Chưa có cuộc trò chuyện"
+                        description="Tìm người dùng phía trên để bắt đầu nhắn tin."
+                    />
+                )}
                 {filteredConversations.map((conversation) => (
                     <ChatItem
                         key={resolveConversationId(conversation)}
