@@ -283,10 +283,33 @@ export default function Home() {
 
     socket.on('new_message', handleNewMessage);
     
-    return () => {
-      socket.off('new_message', handleNewMessage);
+    // Lắng nghe event người kia đã đọc tin
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleMessageRead = ({ conversationId, userId, lastSeenSeq }) => {
+      // Nếu người đọc không phải mình thì clear unread của conversation đó trong sidebar
+      if (userId !== currentUserId) {
+        setConversations((prev) =>
+          prev.map((c) =>
+            resolveConversationId(c) === conversationId
+              ? { ...c, unread: 0 }
+              : c
+          )
+        );
+      }
     };
-  }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
+
+    socket.on('message_read', handleMessageRead);
+    return () => {
+      socket.off('message_read', handleMessageRead);
+    };
+  }, [socket, isConnected, currentUserId, setConversations]);
+
+      return () => {
+        socket.off('new_message', handleNewMessage);
+      };
+    }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
 
   const selected = useMemo(
     () => conversations.find((c) => resolveConversationId(c) === selectedId) || null,

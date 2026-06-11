@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 
 export default function MessageList({ messages, currentUserId, loading, error }) {
-    // Đặt console.log ở đây để kiểm tra chính xác cấu trúc của các tin nhắn
-    console.log("Danh sách tin nhắn (kiểm tra cấu trúc m):", messages);
+    const bottomRef = useRef(null);
+
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
     return (
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100">
@@ -24,6 +29,7 @@ export default function MessageList({ messages, currentUserId, loading, error })
                 {messages.map((m, idx) => (
                     <MessageBubble key={m.id || idx} m={m} isMine={m.from === currentUserId} />
                 ))}
+                <div ref={bottomRef} />
             </div>
         </div>
     );

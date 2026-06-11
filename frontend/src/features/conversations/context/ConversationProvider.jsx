@@ -39,7 +39,7 @@ const mapInboxItemToConversation = (item) => ({
   phone: resolveConversationPhone(item),
   username: item?.username || item?.peer?.username || '',
   avatarUrl: resolveConversationAvatar(item),
-  lastMessage: item?.lastMessage?.content || '',
+  lastMessage: item?.lastMessage || '',
   time: formatConversationTime(item?.lastMessage?.createdAt),
   unread: item?.unreadCount || 0,
   peer: {
