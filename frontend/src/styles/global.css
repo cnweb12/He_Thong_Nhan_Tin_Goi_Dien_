@@ -1,4 +1,6 @@
-/* @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
     box-sizing: border-box;
@@ -51,7 +53,7 @@ button {
 }
 
 /* keep a few helper classes used by older components */
-/* .min-h-screen {
+.min-h-screen {
     min-height: 100vh;
 }
 
@@ -164,195 +166,6 @@ button {
 
 .hover\:bg-blue-700:hover {
     background: #1e40af;
-}
-
-.opacity-50 {
-    opacity: 0.5;
-}
-
-.cursor-not-allowed {
-    cursor: not-allowed;
-} */
-@import "tailwindcss";
-
-* {
-    box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-    height: 100%;
-    margin: 0;
-}
-
-body {
-    font-family: Inter, 'Segoe UI Variable Text', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    /* Cập nhật Background mạng lưới công nghệ mới cho toàn app */
-    background-image: url('../assets/background.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: #ffffff;
-    /* Đổi text mặc định sang trắng để dễ đọc trên nền tối */
-}
-
-a {
-    color: #38bdf8;
-    /* Đổi màu link sang xanh lá/cyan sáng để nổi bật trên nền tối */
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-input,
-button {
-    font: inherit;
-}
-
-::selection {
-    background: rgba(59, 130, 246, 0.3);
-}
-
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.5);
-    border-radius: 999px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* --- Các Helper Classes cũ được tinh chỉnh lại cho hợp nền mới --- */
-
-.min-h-screen {
-    min-height: 100vh;
-}
-
-.flex {
-    display: flex;
-}
-
-.items-center {
-    align-items: center;
-}
-
-.justify-center {
-    justify-content: center;
-}
-
-/* Sửa lại nền bọc ngoài thành trong suốt để lộ background phía sau */
-.bg-gray-100 {
-    background: transparent;
-    color: #ffffff;
-}
-
-/* Khung đăng nhập màu trắng giữ nguyên hoặc đổ một chút shadow mịn */
-.bg-white {
-    background: #ffffff;
-    color: #0f172a;
-    /* Giữ chữ bên trong form màu tối để dễ đọc */
-}
-
-.p-8 {
-    padding: 2rem;
-}
-
-.rounded-lg {
-    border-radius: 0.75rem;
-    /* Tăng bo góc một chút cho hiện đại giống ảnh mẫu */
-}
-
-.shadow-md {
-    /* Đổ bóng mịn hơn và sâu hơn cho khung đăng nhập nổi lên */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
-}
-
-.w-full {
-    width: 100%;
-}
-
-.max-w-md {
-    max-width: 28rem;
-}
-
-.text-2xl {
-    font-size: 1.5rem;
-}
-
-.font-bold {
-    font-weight: 700;
-}
-
-.mb-6 {
-    margin-bottom: 1.5rem;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.space-y-4>*+* {
-    margin-top: 1rem;
-}
-
-.px-3 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-}
-
-.py-2 {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-
-.border {
-    border: 1px solid #e2e8f0;
-}
-
-.rounded-md {
-    border-radius: 0.375rem;
-}
-
-.focus\:outline-none:focus {
-    outline: none;
-}
-
-.focus\:ring-2:focus {
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
-}
-
-.text-gray-800 {
-    color: #1f2937;
-}
-
-.text-sm {
-    font-size: 0.875rem;
-}
-
-.font-medium {
-    font-weight: 500;
-}
-
-/* Màu nút đăng nhập xanh đậm / Navy sâu theo UI mới */
-.bg-blue-600 {
-    background: #0f172a;
-    color: #ffffff;
-    transition: background 0.2s ease;
-}
-
-.hover\:bg-blue-700:hover {
-    background: #1e293b;
 }
 
 .opacity-50 {
