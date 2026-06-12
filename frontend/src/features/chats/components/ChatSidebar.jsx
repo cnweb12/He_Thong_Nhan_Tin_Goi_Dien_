@@ -3,19 +3,41 @@ import SearchBar from './SearchBar';
 import ChatItem from './ChatItem';
 import { searchUsersApi } from '../../users/services/userApi';
 
-const resolveConversationId = (conversation) => conversation?.conversationId || conversation?.id || conversation?._id || null;
-const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+/** Lấy id hội thoại từ nhiều shape khác nhau */
+const resolveConversationId = (c) => c?.conversationId || c?.id || c?._id || null;
 
-export default function ChatSidebar({ user, accessToken, conversations, selectedId, onSelect, onStartConversation }) {
-    const [query, setQuery] = useState('');
+/** Kiểm tra có phải số điện thoại không */
+const isPhoneLike = (v) => typeof v === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(v.trim());
+
+/**
+ * ChatSidebar — cột danh sách hội thoại + tìm kiếm user.
+ *
+ * Props:
+ *  - user               : object — thông tin user hiện tại
+ *  - accessToken        : string
+ *  - conversations      : array — danh sách hội thoại từ ConversationProvider
+ *  - selectedId         : string — id hội thoại đang chọn
+ *  - onSelect           : (conversationId: string) => void
+ *  - onStartConversation: (userObj) => void — bắt đầu chat với user mới
+ */
+export default function ChatSidebar({
+    user,
+    accessToken,
+    conversations,
+    selectedId,
+    onSelect,
+    onStartConversation,
+}) {
+    const [query,         setQuery]         = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
-    const [searchError, setSearchError] = useState(null);
+    const [searchError,   setSearchError]   = useState(null);
 
+    /* ── Tìm kiếm user với debounce 250ms ── */
     useEffect(() => {
         let active = true;
 
-        const runSearch = async () => {
+        const run = async () => {
             if (!accessToken || query.trim().length < 2) {
                 setSearchResults([]);
                 setSearchError(null);
@@ -30,102 +52,136 @@ export default function ChatSidebar({ user, accessToken, conversations, selected
                 const results = await searchUsersApi(accessToken, query.trim(), { limit: 8 });
                 if (!active) return;
                 setSearchResults(Array.isArray(results) ? results : []);
-            } catch (error) {
+            } catch (err) {
                 if (!active) return;
-                setSearchError(error?.message || 'Không tìm thấy người dùng');
+                setSearchError(err?.message || 'Không tìm thấy người dùng');
                 setSearchResults([]);
             } finally {
-                if (active) {
-                    setSearchLoading(false);
-                }
+                if (active) setSearchLoading(false);
             }
         };
 
-        const timeoutId = window.setTimeout(runSearch, 250);
-
-        return () => {
-            active = false;
-            window.clearTimeout(timeoutId);
-        };
+        const timer = window.setTimeout(run, 250);
+        return () => { active = false; window.clearTimeout(timer); };
     }, [accessToken, query]);
 
     const filteredConversations = useMemo(() => conversations || [], [conversations]);
 
+    const avatarUrl = user?.avatarUrl
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'K')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`;
+
+    const isSearching = query.trim().length >= 2;
+
     return (
         <div className="w-full h-full flex flex-col bg-slate-50">
-            <div className="p-4 border-b border-slate-200">
+
+            {/* ── Header: thông tin user đang đăng nhập ── */}
+            <header className="p-4 border-b border-slate-200">
                 <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <img 
-                            src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'K')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`}
-                            alt="Avatar" 
-                            className="w-5 h-5 rounded-full bg-slate-200"
+                    <div className="relative shrink-0">
+                        <img
+                            src={avatarUrl}
+                            alt="Avatar"
+                            className="w-9 h-9 rounded-full bg-slate-200 object-cover"
                         />
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
                     </div>
-                    
                     <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-slate-800 text-sm truncate">{user?.displayName || user?.name || 'Khách'}</div>
-                        <div className="text-xs text-slate-500 truncate">{user?.phone || 'Online'}</div>
+                        <p className="font-semibold text-slate-800 text-sm truncate">
+                            {user?.displayName || user?.name || 'Khách'}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
+                            {user?.phone || 'Online'}
+                        </p>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div className="p-4 border-b border-slate-200">
+            {/* ── Ô tìm kiếm ── */}
+            <div className="border-b border-slate-200">
                 <SearchBar
                     value={query}
                     onChange={setQuery}
+                    onClear={() => setQuery('')}
+                    loading={searchLoading}
                     placeholder="Tìm kiếm hoặc bắt đầu cuộc trò chuyện"
                 />
             </div>
 
-            {query.trim().length >= 2 && (
-                <div className="px-4 pb-3">
+            {/* ── Kết quả tìm kiếm user (dropdown) ── */}
+            {isSearching && (
+                <div className="px-3 pb-3">
                     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                         <div className="px-3 py-2 text-xs font-semibold text-slate-500 border-b border-slate-100">
                             {searchLoading ? 'Đang tìm kiếm...' : 'Gợi ý liên hệ'}
                         </div>
+
                         <div className="max-h-56 overflow-y-auto">
                             {searchError && (
-                                <div className="px-3 py-3 text-sm text-red-600">{searchError}</div>
+                                <p className="px-3 py-3 text-sm text-red-500">{searchError}</p>
                             )}
+
                             {!searchLoading && !searchError && searchResults.length === 0 && (
-                                <div className="px-3 py-3 text-sm text-slate-500">Không có kết quả phù hợp.</div>
+                                <p className="px-3 py-3 text-sm text-slate-400">
+                                    Không có kết quả phù hợp.
+                                </p>
                             )}
-                            {searchResults.map((item) => (
-                                <button
-                                    key={item.userId || item._id || item.id}
-                                    type="button"
-                                    onClick={() => onStartConversation?.(item)}
-                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-sky-50 transition cursor-pointer"
-                                >
-                                     <img 
-                                        src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || '?')}&background=random&color=fff&rounded=true&font-size=0.45`}
-                                        alt="Avatar"
-                                        className="w-5 h-5 rounded-full bg-slate-200 flex-shrink-0"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-slate-800 text-sm truncate">{item.displayName || item.username}</div>
-                                        <div className="text-xs text-slate-500 truncate">{item.phone || (isPhoneLike(item.username) ? item.username : '')}</div>
-                                    </div>
-                                    <div className="text-xs text-sky-600 font-medium self-start">Nhắn tin</div>
-                                </button>
-                            ))}
+
+                            {searchResults.map((item) => {
+                                const uid         = item.userId || item._id || item.id;
+                                const name        = item.displayName || item.username || '?';
+                                const phone       = item.phone || (isPhoneLike(item.username) ? item.username : '');
+                                const itemAvatar  = item.avatarUrl
+                                    || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&rounded=true&font-size=0.45`;
+
+                                return (
+                                    <button
+                                        key={uid}
+                                        type="button"
+                                        onClick={() => onStartConversation?.(item)}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left
+                                                   hover:bg-sky-50 transition cursor-pointer"
+                                    >
+                                        <img
+                                            src={itemAvatar}
+                                            alt={name}
+                                            className="w-8 h-8 rounded-full bg-slate-200 object-cover shrink-0"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-slate-800 text-sm truncate">{name}</p>
+                                            {phone && (
+                                                <p className="text-xs text-slate-500 truncate">{phone}</p>
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-sky-600 font-medium shrink-0">
+                                            Nhắn tin
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* ── Danh sách hội thoại ── */}
             <div className="flex-1 overflow-y-auto">
-                {filteredConversations.map((conversation) => (
+                {filteredConversations.length === 0 && !isSearching && (
+                    <p className="px-4 py-6 text-sm text-slate-400 text-center">
+                        Chưa có cuộc trò chuyện nào.
+                    </p>
+                )}
+
+                {filteredConversations.map((conv) => (
                     <ChatItem
-                        key={resolveConversationId(conversation)}
-                        chat={conversation}
-                        active={resolveConversationId(conversation) === selectedId}
+                        key={resolveConversationId(conv)}
+                        chat={conv}
+                        active={resolveConversationId(conv) === selectedId}
                         onClick={onSelect}
                     />
                 ))}
             </div>
+
         </div>
     );
 }
