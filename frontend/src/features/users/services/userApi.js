@@ -43,9 +43,44 @@ export const updateCurrentUserSettingsApi = async (accessToken, payload) => {
   return normalizeUserRecord(unwrapData(res.data));
 };
 
+export const listFriendsApi = async (accessToken) => {
+  const res = await get('/api/users/me/friends', withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không tải được danh sách bạn bè');
+  return unwrapData(res.data);
+};
+
+export const listPendingRequestsApi = async (accessToken) => {
+  const res = await get('/api/users/me/friend-requests', withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không tải được danh sách lời mời kết bạn');
+  return unwrapData(res.data);
+};
+
+export const sendFriendRequestApi = async (accessToken, targetUserId) => {
+  const res = await post(`/api/users/${targetUserId}/friends`, {}, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không gửi được lời mời kết bạn');
+  return unwrapData(res.data);
+};
+
+export const acceptFriendRequestApi = async (accessToken, requesterId) => {
+  const res = await post(`/api/users/${requesterId}/friends/accept`, {}, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không chấp nhận được lời mời kết bạn');
+  return unwrapData(res.data);
+};
+
+export const removeFriendApi = async (accessToken, targetUserId) => {
+  const res = await del(`/api/users/${targetUserId}/friends`, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Không hủy được kết bạn');
+  return unwrapData(res.data);
+};
+
 export default {
   searchUsersApi,
   getCurrentUserProfileApi,
   updateCurrentUserProfileApi,
   updateCurrentUserSettingsApi,
+  listFriendsApi,
+  listPendingRequestsApi,
+  sendFriendRequestApi,
+  acceptFriendRequestApi,
+  removeFriendApi,
 };

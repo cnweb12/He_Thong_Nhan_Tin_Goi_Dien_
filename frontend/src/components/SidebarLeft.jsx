@@ -113,6 +113,7 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                     <button
                         type="button"
+                        onClick={() => navigate('/profile')}
                         aria-label="Cài đặt"
                         className="w-11 h-11 rounded-[1rem] bg-white/5 border border-white/10
                                    flex items-center justify-center

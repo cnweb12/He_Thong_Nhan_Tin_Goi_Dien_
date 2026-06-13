@@ -1,0 +1,440 @@
+import React, { useEffect, useState } from 'react';
+import { 
+  Users, UserPlus, Inbox, Search, MessageSquare, 
+  UserX, Loader2, CheckCircle2, UserRound 
+} from 'lucide-react';
+import { 
+  listFriendsApi, 
+  listPendingRequestsApi, 
+  sendFriendRequestApi, 
+  acceptFriendRequestApi, 
+  removeFriendApi,
+  searchUsersApi
+} from './services/userApi';
+
+export default function ContactsPage({ accessToken, onStartConversation }) {
+  const [activeTab, setActiveTab] = useState('friends'); // friends | requests | search
+  const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  
+  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
+
+  // Load friends and pending requests
+  const loadContactsData = async () => {
+    if (!accessToken) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [friendsData, requestsData] = await Promise.all([
+        listFriendsApi(accessToken),
+        listPendingRequestsApi(accessToken)
+      ]);
+      setFriends(friendsData || []);
+      setRequests(requestsData || []);
+    } catch (err) {
+      setError(err?.message || 'Không tải được danh sách liên hệ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadContactsData();
+  }, [accessToken, activeTab]);
+
+  // Handle global search for users
+  useEffect(() => {
+    let active = true;
+    const search = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+      setSearchLoading(true);
+      try {
+        const results = await searchUsersApi(accessToken, searchQuery.trim());
+        if (active) {
+          setSearchResults(results || []);
+        }
+      } catch (err) {
+        console.error('Lỗi tìm kiếm liên hệ:', err);
+      } finally {
+        if (active) setSearchLoading(false);
+      }
+    };
+
+    const timer = setTimeout(search, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, accessToken]);
+
+  const showNotification = (msg) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  };
+
+  const handleSendRequest = async (userId, name) => {
+    setActionLoadingId(userId);
+    try {
+      await sendFriendRequestApi(accessToken, userId);
+      showNotification(`Đã gửi lời mời kết bạn tới ${name}`);
+      // Refresh
+      loadContactsData();
+    } catch (err) {
+      setError(err?.message || 'Không gửi được lời mời kết bạn');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleAcceptRequest = async (userId, name) => {
+    setActionLoadingId(userId);
+    try {
+      await acceptFriendRequestApi(accessToken, userId);
+      showNotification(`Đã chấp nhận kết bạn với ${name}`);
+      loadContactsData();
+    } catch (err) {
+      setError(err?.message || 'Không chấp nhận được lời mời kết bạn');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleRemoveFriend = async (userId, name) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn hủy kết bạn với ${name}?`)) return;
+    setActionLoadingId(userId);
+    try {
+      await removeFriendApi(accessToken, userId);
+      showNotification(`Đã hủy kết bạn với ${name}`);
+      loadContactsData();
+    } catch (err) {
+      setError(err?.message || 'Hủy kết bạn thất bại');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDeclineRequest = async (userId, name) => {
+    setActionLoadingId(userId);
+    try {
+      await removeFriendApi(accessToken, userId); // Decline request in the backend is delete relationship
+      showNotification(`Đã từ chối lời mời kết bạn của ${name}`);
+      loadContactsData();
+    } catch (err) {
+      setError(err?.message || 'Không từ chối được lời mời');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex overflow-hidden bg-slate-50">
+      {/* Cột phụ bên trái: Danh mục */}
+      <div className="w-[280px] h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="text-lg font-bold text-slate-800">Danh bạ</h2>
+          <p className="text-xs text-slate-500">Quản lý bạn bè và kết nối</p>
+        </div>
+        
+        <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
+          <button
+            onClick={() => setActiveTab('friends')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+              activeTab === 'friends' 
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Users size={18} />
+            Danh sách bạn bè
+            {friends.length > 0 && (
+              <span className="ml-auto bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full">
+                {friends.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+              activeTab === 'requests' 
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Inbox size={18} />
+            Lời mời kết bạn
+            {requests.length > 0 && (
+              <span className="ml-auto bg-red-150 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
+                {requests.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('search')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+              activeTab === 'search' 
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <UserPlus size={18} />
+            Tìm bạn mới
+          </button>
+        </nav>
+      </div>
+
+      {/* Cột chính bên phải: Danh sách chi tiết */}
+      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100">
+        {/* Header chi tiết */}
+        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+          <div>
+            <h1 className="font-bold text-slate-800">
+              {activeTab === 'friends' && 'Danh sách bạn bè'}
+              {activeTab === 'requests' && 'Lời mời kết bạn đã nhận'}
+              {activeTab === 'search' && 'Tìm kiếm bạn mới'}
+            </h1>
+            <p className="text-xs text-slate-400">
+              {activeTab === 'friends' && 'Xem và trò chuyện với bạn bè của bạn.'}
+              {activeTab === 'requests' && 'Đồng ý kết bạn để cùng trò chuyện.'}
+              {activeTab === 'search' && 'Tìm kiếm theo Tên hiển thị, Username hoặc Số điện thoại.'}
+            </p>
+          </div>
+        </header>
+
+        {/* Thông báo thành công / lỗi */}
+        {successMsg && (
+          <div className="m-4 mx-6 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium rounded-xl flex items-center gap-2 shadow-sm shrink-0">
+            <CheckCircle2 size={16} />
+            {successMsg}
+          </div>
+        )}
+
+        {error && (
+          <div className="m-4 mx-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-xl flex items-center gap-2 shadow-sm shrink-0">
+            <UserX size={16} />
+            {error}
+          </div>
+        )}
+
+        {/* Nội dung danh sách */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm flex items-center gap-2">
+                <Loader2 className="animate-spin text-blue-500" size={20} />
+                <span className="text-slate-600 font-medium text-sm">Đang tải danh sách...</span>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              
+              {/* TAB: BẠN BÈ */}
+              {activeTab === 'friends' && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  {friends.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500">
+                      <Users size={36} className="mx-auto text-slate-300 mb-2" />
+                      <p className="font-semibold text-sm">Chưa có bạn bè nào</p>
+                      <p className="text-xs mt-1">Hãy chuyển sang tab "Tìm bạn mới" để kết nối.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100">
+                      {friends.map((friend) => (
+                        <div key={friend.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                              alt={friend.displayName}
+                              className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                            />
+                            <div>
+                              <p className="font-semibold text-slate-800 text-sm">{friend.displayName}</p>
+                              <p className="text-xs text-slate-400">{friend.phone || 'Không công khai SĐT'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => onStartConversation({ userId: friend.userId, displayName: friend.displayName })}
+                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+                            >
+                              <MessageSquare size={14} />
+                              Nhắn tin
+                            </button>
+                            <button
+                              onClick={() => handleRemoveFriend(friend.userId, friend.displayName)}
+                              disabled={actionLoadingId === friend.userId}
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50"
+                            >
+                              Hủy kết bạn
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: LỜI MỜI */}
+              {activeTab === 'requests' && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  {requests.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500">
+                      <Inbox size={36} className="mx-auto text-slate-300 mb-2" />
+                      <p className="font-semibold text-sm">Không có lời mời kết bạn nào</p>
+                      <p className="text-xs mt-1">Khi ai đó gửi yêu cầu, nó sẽ hiển thị ở đây.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100">
+                      {requests.map((req) => (
+                        <div key={req.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                              alt={req.displayName}
+                              className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                            />
+                            <div>
+                              <p className="font-semibold text-slate-800 text-sm">{req.displayName}</p>
+                              <p className="text-xs text-slate-400">{req.phone || 'SĐT: Ẩn'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleAcceptRequest(req.userId, req.displayName)}
+                              disabled={actionLoadingId === req.userId}
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+                            >
+                              Đồng ý
+                            </button>
+                            <button
+                              onClick={() => handleDeclineRequest(req.userId, req.displayName)}
+                              disabled={actionLoadingId === req.userId}
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50"
+                            >
+                              Từ chối
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: TÌM BẠN MỚI */}
+              {activeTab === 'search' && (
+                <div className="space-y-4">
+                  {/* Ô tìm kiếm liên hệ */}
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Tìm kiếm theo Tên hiển thị, Username hoặc Số điện thoại..."
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 text-sm"
+                    />
+                  </div>
+
+                  {/* Kết quả tìm kiếm */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500 flex items-center justify-between">
+                      <span>KẾT QUẢ TÌM KIẾM</span>
+                      {searchLoading && <Loader2 className="animate-spin text-blue-500" size={14} />}
+                    </div>
+
+                    {searchQuery.trim().length < 2 ? (
+                      <div className="p-8 text-center text-slate-400">
+                        <Search size={32} className="mx-auto text-slate-200 mb-2" />
+                        <p className="text-xs">Nhập ít nhất 2 ký tự để tìm kiếm.</p>
+                      </div>
+                    ) : searchResults.length === 0 && !searchLoading ? (
+                      <div className="p-8 text-center text-slate-500">
+                        <p className="font-semibold text-sm">Không tìm thấy người dùng phù hợp</p>
+                        <p className="text-xs mt-1">Vui lòng kiểm tra lại thông tin tìm kiếm.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100">
+                        {searchResults.map((item) => {
+                          const isFriend = friends.some((f) => f.userId === item.userId);
+                          const isPending = requests.some((r) => r.userId === item.userId);
+
+                          return (
+                            <div key={item.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                                  alt={item.displayName}
+                                  className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                                />
+                                <div>
+                                  <p className="font-semibold text-slate-800 text-sm">{item.displayName}</p>
+                                  <p className="text-xs text-slate-400">@{item.username || 'user'}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {isFriend ? (
+                                  <>
+                                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                                      Bạn bè
+                                    </span>
+                                    <button
+                                      onClick={() => onStartConversation({ userId: item.userId, displayName: item.displayName })}
+                                      className="p-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
+                                      title="Nhắn tin"
+                                    >
+                                      <MessageSquare size={16} />
+                                    </button>
+                                  </>
+                                ) : isPending ? (
+                                  <button
+                                    onClick={() => handleAcceptRequest(item.userId, item.displayName)}
+                                    disabled={actionLoadingId === item.userId}
+                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold cursor-pointer"
+                                  >
+                                    Đồng ý kết bạn
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSendRequest(item.userId, item.displayName)}
+                                    disabled={actionLoadingId === item.userId}
+                                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-xs font-semibold shadow-sm cursor-pointer"
+                                  >
+                                    {actionLoadingId === item.userId ? (
+                                      <Loader2 className="animate-spin" size={14} />
+                                    ) : (
+                                      'Kết bạn'
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, Save, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, Cpu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLeft from '../../components/SidebarLeft';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -9,6 +9,7 @@ import {
   updateCurrentUserProfileApi,
   updateCurrentUserSettingsApi,
 } from './services/userApi';
+import { getMyDevicesApi } from '../devices/services/deviceApi';
 
 const formatDateTime = (value) => {
   if (!value) return 'Chưa có dữ liệu';
@@ -61,6 +62,7 @@ export default function ProfilePage() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -83,12 +85,21 @@ export default function ProfilePage() {
           throw new Error('Phiên đăng nhập đã hết hạn');
         }
 
-        const loadedProfile = await getCurrentUserProfileApi(token);
+        // Tải thông tin hồ sơ và danh sách thiết bị song song
+        const [loadedProfile, loadedDevices] = await Promise.all([
+          getCurrentUserProfileApi(token),
+          getMyDevicesApi(token).catch(err => {
+            console.error('Không tải được danh sách thiết bị', err);
+            return [];
+          })
+        ]);
+
         if (!active) return;
 
         setProfile(loadedProfile);
         setProfileForm(normalizeProfileForm(loadedProfile));
         setSettingsForm(normalizeSettingsForm(loadedProfile?.settings));
+        setDevices(Array.isArray(loadedDevices) ? loadedDevices : []);
         syncCurrentUser(loadedProfile);
       } catch (err) {
         if (!active) return;
@@ -490,6 +501,75 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 </form>
+
+                {/* ── Thiết bị đang hoạt động ── */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-5 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                      <Smartphone size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">Thiết bị hoạt động</h2>
+                      <p className="text-sm text-slate-500">Các thiết bị đã từng đăng nhập và kết nối vào hệ thống này.</p>
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-slate-100">
+                    {devices.length === 0 ? (
+                      <p className="text-sm text-slate-500 py-3">Chưa có thông tin thiết bị nào.</p>
+                    ) : (
+                      devices.map((dev) => {
+                        const isCurrent = dev.deviceId === localStorage.getItem('deviceId') || (devices.length === 1);
+                        const platform = String(dev.platform || '').toLowerCase();
+                        
+                        let Icon = Globe;
+                        if (platform.includes('win') || platform.includes('mac') || platform.includes('linux')) {
+                          Icon = Laptop;
+                        } else if (platform.includes('ios') || platform.includes('android') || platform.includes('mobile')) {
+                          Icon = Smartphone;
+                        }
+
+                        return (
+                          <div key={dev._id || dev.deviceId} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`p-2.5 rounded-xl ${isCurrent ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'} flex-shrink-0`}>
+                                <Icon size={20} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-slate-800 text-sm truncate">
+                                    {dev.platform || 'Thiết bị không xác định'}
+                                  </p>
+                                  {isCurrent && (
+                                    <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+                                      Thiết bị này
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-400 font-mono truncate select-all">
+                                  ID: {dev.deviceId || 'Chưa cung cấp'}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="text-right shrink-0">
+                              {dev.isOnline ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  Trực tuyến
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
+                                  Ngoại tuyến ({formatDateTime(dev.lastActiveAt)})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -13,6 +13,9 @@ import {
   sendMessageApi,
 } from '../features/messages/services/messageApi';
 import { uploadFilesApi } from '../services/upload.service';
+import ContactsPage from '../features/users/ContactsPage';
+import CloudPage from '../features/users/CloudPage';
+import TasksPage from '../features/users/TasksPage';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -453,79 +456,89 @@ export default function Home() {
         />
       </div>
 
-      {/* Cột danh sách */}
-      <div
-        className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${
-          !isChatListOpen
-            ? 'w-0 opacity-0 border-none'
-            : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
-        }`}
-      >
+      {/* Vùng nội dung chính */}
+      <div className="flex-1 min-w-0 h-full flex overflow-hidden">
         {sidebarView === 'chat' ? (
-          <ChatSidebar
-            user={user}
+          <>
+            {/* Cột danh sách cuộc trò chuyện */}
+            <div
+              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${
+                !isChatListOpen
+                  ? 'w-0 opacity-0 border-none'
+                  : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+              }`}
+            >
+              <ChatSidebar
+                user={user}
+                accessToken={accessToken}
+                conversations={conversations}
+                selectedId={selectedId}
+                onSelect={handleSelectConversation}
+                onStartConversation={handleStartConversation}
+              />
+            </div>
+
+            {/* Vùng chat chính */}
+            <div className="flex-1 min-w-0 h-full flex flex-col relative">
+              {selectedId ? (
+                <ChatArea
+                  chat={selected}
+                  messages={selectedMessages}
+                  currentUserId={currentUserId}
+                  loading={messagesLoadingId === selectedId}
+                  error={threadError}
+                  onSend={handleSend}
+                  sending={sendingMessage}
+                  onToggleInfo={() => setIsInfoOpen((v) => !v)}
+                  onBack={() => {
+                    setSelectedId(null);
+                    setIsInfoOpen(false);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
+                  <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                    <span className="text-blue-300 text-3xl font-semibold">C</span>
+                  </div>
+                  <p className="text-lg font-medium text-slate-600">Chưa chọn cuộc trò chuyện</p>
+                  <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Panel thông tin bên phải */}
+            <div
+              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${
+                isInfoOpen && selectedId
+                  ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+                  : 'w-0 opacity-0 border-none'
+              }`}
+            >
+              {isInfoOpen && selectedId && (
+                <ConversationInfo
+                  chat={selected}
+                  messages={selectedMessages}
+                  currentUserId={currentUserId}
+                  onClose={() => setIsInfoOpen(false)}
+                />
+              )}
+            </div>
+          </>
+        ) : sidebarView === 'contacts' ? (
+          <ContactsPage
             accessToken={accessToken}
-            conversations={conversations}
-            selectedId={selectedId}
-            onSelect={handleSelectConversation}
             onStartConversation={handleStartConversation}
           />
-        ) : (
-          <div className="p-4 h-full">
-            <div className="text-xs uppercase tracking-widest text-slate-400 mb-3">
-              {viewTitle}
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              Nội dung {viewTitle} đang được phát triển.
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Vùng chat chính */}
-      <div className="flex-1 min-w-0 h-full flex flex-col relative">
-        {sidebarView === 'chat' && selectedId ? (
-          <ChatArea
-            chat={selected}
-            messages={selectedMessages}
-            currentUserId={currentUserId}
-            loading={messagesLoadingId === selectedId}
-            error={threadError}
-            onSend={handleSend}
-            sending={sendingMessage}
-            onToggleInfo={() => setIsInfoOpen((v) => !v)}
-            onBack={() => {
-              setSelectedId(null);
-              setIsInfoOpen(false);
-            }}
+        ) : sidebarView === 'cloud' ? (
+          <CloudPage
+            accessToken={accessToken}
+            currentUser={user}
           />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-            <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
-              <span className="text-blue-300 text-3xl font-semibold">C</span>
-            </div>
-            <p className="text-lg font-medium text-slate-600">Chưa chọn cuộc trò chuyện</p>
-            <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Panel thông tin bên phải */}
-      <div
-        className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${
-          isInfoOpen && selectedId
-            ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
-            : 'w-0 opacity-0 border-none'
-        }`}
-      >
-        {isInfoOpen && selectedId && (
-          <ConversationInfo
-            chat={selected}
-            messages={selectedMessages}
-            currentUserId={currentUserId}
-            onClose={() => setIsInfoOpen(false)}
+        ) : sidebarView === 'task' ? (
+          <TasksPage
+            currentUser={user}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );
