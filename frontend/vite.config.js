@@ -4,7 +4,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    usePolling: true,
+    // 🛠️ Đưa usePolling vào bên trong watch
+    watch: {
+      usePolling: true,
+    },
     port: 5173,
     host: '0.0.0.0',
     proxy: {
