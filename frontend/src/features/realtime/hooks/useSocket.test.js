@@ -22,7 +22,7 @@ describe('useSocket Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Reset environment variable
+    // Ghi đè biến môi trường một cách chính xác trước mỗi test case
     import.meta.env.VITE_SOCKET_URL = 'http://localhost:3000';
   });
 

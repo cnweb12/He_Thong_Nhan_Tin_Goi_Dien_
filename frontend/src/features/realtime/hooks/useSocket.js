@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { getDeviceId, getPlatform } from '../../../utils/device';
 
+<<<<<<< Updated upstream
 const SOCKET_URL = (
   import.meta.env.VITE_SOCKET_URL ||
   import.meta.env.VITE_API_URL ||
   'http://localhost:3000'
 ).trim();
 
+=======
+>>>>>>> Stashed changes
 export const useSocket = (token) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -16,6 +19,13 @@ export const useSocket = (token) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    // Đưa cấu hình vào trong useEffect để cập nhật động theo môi trường test
+    const SOCKET_URL = (
+      import.meta.env.VITE_SOCKET_URL || 
+      import.meta.env.VITE_API_URL || 
+      'http://localhost:3000'
+    ).trim().replace(/\/$/, ''); 
+
     if (!token || !SOCKET_URL) {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -38,7 +48,11 @@ export const useSocket = (token) => {
 
     const socketImpl = io(SOCKET_URL, {
       auth: { token, deviceId, platform },
+<<<<<<< Updated upstream
       transports: ['websocket', 'polling'],
+=======
+      transports: ['polling', 'websocket'], // Ưu tiên kết nối polling nhanh rồi upgrade lên WS để đảm bảo độ tin cậy
+>>>>>>> Stashed changes
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -88,4 +102,8 @@ export const useSocket = (token) => {
   return { socket, isConnected, isConnecting, error };
 };
 
+<<<<<<< Updated upstream
 export default useSocket;
+=======
+export default useSocket;
+>>>>>>> Stashed changes
