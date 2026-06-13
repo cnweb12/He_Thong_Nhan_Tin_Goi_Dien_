@@ -86,7 +86,7 @@ export function AuthProvider({ children }) {
         };
     }, [clearSession, restoreSession]);
 
-    const login = async (phone, password) => {
+    const login = useCallback(async (phone, password) => {
         setLoading(true);
         setError(null);
 
@@ -111,22 +111,22 @@ export function AuthProvider({ children }) {
             const errorMsg = err.message || 'Đăng nhập thất bại. Vui lòng thử lại!';
             setError(errorMsg);
             return null;
-        } finally {
-            setLoading(false);
-        }
-    };
+         } finally {
+        setLoading(false);
+    }
+    }, [navigate]);
 
-    const logout = () => {
-        (async () => {
-            try {
-                await logoutApi(accessToken);
-            } catch (e) {
-                // ignore logout API errors
-            }
-            clearSession();
-            navigate('/login');
-        })();
-    };
+    const logout = useCallback(() => {
+    (async () => {
+        try {
+            await logoutApi(accessToken);
+        } catch (e) {
+            // ignore logout API errors
+        }
+        clearSession();
+        navigate('/login');
+    })();
+    }, [accessToken, clearSession, navigate]);
 
     const forceLogout = useCallback(() => {
         clearSession();
