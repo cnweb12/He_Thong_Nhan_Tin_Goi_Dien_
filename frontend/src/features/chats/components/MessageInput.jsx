@@ -112,10 +112,15 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                 <textarea
                     rows={1}
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                        setText(e.target.value);
+                        e.target.style.height = 'auto';
+                        e.target.style.height = `${Math.min(e.target.scrollHeight, 112)}px`;
+                    }}
                     onKeyDown={handleKeyDown}
                     placeholder="Nhập tin nhắn..."
-                    className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition overflow-y-auto"
+                    style={{ height: '42px' }}
                 />
                 <button
                     onClick={send}

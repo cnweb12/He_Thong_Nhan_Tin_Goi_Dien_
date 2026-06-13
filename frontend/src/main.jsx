@@ -9,11 +9,9 @@ const container = document.getElementById('root');
 const root = createRoot(container);
 
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </BrowserRouter>,
 );

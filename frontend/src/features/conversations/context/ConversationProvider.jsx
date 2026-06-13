@@ -40,7 +40,7 @@ const mapInboxItemToConversation = (item) => ({
   username: item?.username || item?.peer?.username || '',
   avatarUrl: resolveConversationAvatar(item),
   lastMessage: item?.lastMessage || '',
-  time: formatConversationTime(item?.lastMessage?.createdAt),
+  time: formatConversationTime(item?.lastActivityAt || item?.lastMessage?.createdAt),
   unread: item?.unreadCount || 0,
   peer: {
     ...(item?.peer || {}),

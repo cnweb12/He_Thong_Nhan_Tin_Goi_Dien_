@@ -166,6 +166,14 @@ export default function MessageBubble({ m, isMine }) {
                         {m.text}
                     </div>
                 )}
+
+                {/* Timestamp + status */}
+                <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    {m.time && (
+                        <span className="text-[10px] text-slate-400">{m.time}</span>
+                    )}
+                    {getStatusIcon()}
+                </div>
             </div>
 
             {isMine && <div className="w-7 h-7 shrink-0" />}

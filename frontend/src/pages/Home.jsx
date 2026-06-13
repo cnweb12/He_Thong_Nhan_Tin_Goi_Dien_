@@ -1,30 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
 import ChatArea from '../features/chats/components/ChatArea';
 import ConversationInfo from '../features/chats/components/ConversationInfo';
-import LogoutButton from '../features/auth/components/LogoutButton';
 import { useAppSocket } from '../features/realtime/hooks/useAppSocket';
 import { useConversations } from '../features/conversations/hooks/useConversations';
 import { getDirectConversationApi } from '../features/conversations/services/conversationApi';
-import { getConversationMessagesApi, markConversationReadApi, sendMessageApi } from '../features/messages/services/messageApi';
+import {
+  getConversationMessagesApi,
+  markConversationReadApi,
+  sendMessageApi,
+} from '../features/messages/services/messageApi';
 import { uploadFilesApi } from '../services/upload.service';
+
+// ─── helpers ────────────────────────────────────────────────────────────────
 
 const formatTime = (value) => {
   if (!value) return '';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const resolveConversationId = (conversation) => conversation?.conversationId || conversation?.id || conversation?._id || null;
+const resolveConversationId = (conversation) =>
+  conversation?.conversationId || conversation?.id || conversation?._id || null;
 
 const normalizeMessage = (message) => ({
-  id: message?._id || message?.id || message?.clientMessageId || `${message?.seq || 'message'}-${message?.createdAt || ''}`,
+  id:
+    message?._id ||
+    message?.id ||
+    message?.clientMessageId ||
+    `${message?.seq || 'msg'}-${message?.createdAt || ''}`,
   from: message?.senderId || message?.from || '',
   text: message?.text || message?.content || '',
   time: formatTime(message?.createdAt),
@@ -35,40 +42,38 @@ const normalizeMessage = (message) => ({
   attachments: message?.attachments || [],
 });
 
-const resolvePeerUser = (chat) => chat?.peer || {
-  userId: chat?.peerUserId || chat?.peer?.userId || '',
-  displayName: chat?.name || chat?.peer?.displayName || 'Cuộc trò chuyện',
-  avatarUrl: chat?.avatarUrl || chat?.peer?.avatarUrl || '',
-};
-
 const normalizeConversationFromSocket = (conversation, currentUserId) => {
   if (!conversation) return null;
-
   const { members = [], type, _id, title, avatarUrl: groupAvatarUrl } = conversation;
-  const newConversation = {
-    ...conversation,
-    conversationId: _id,
-    id: _id,
-  };
+  const base = { ...conversation, conversationId: _id, id: _id };
 
   if (type === 'direct') {
-    const peerMember = members.find(m => m.userId !== currentUserId);
-    if (peerMember && peerMember.user) {
-      newConversation.displayName = peerMember.user.displayName;
-      newConversation.displayAvatarUrl = peerMember.user.avatarUrl;
-      newConversation.peer = peerMember.user;
+    const peer = members.find((m) => m.userId !== currentUserId);
+    if (peer?.user) {
+      base.displayName = peer.user.displayName;
+      base.displayAvatarUrl = peer.user.avatarUrl;
+      base.peer = peer.user;
     }
   } else {
-    newConversation.displayName = title;
-    newConversation.displayAvatarUrl = groupAvatarUrl;
+    base.displayName = title;
+    base.displayAvatarUrl = groupAvatarUrl;
   }
-  return newConversation;
-}
+  return base;
+};
+
+// ─── component ──────────────────────────────────────────────────────────────
 
 export default function Home() {
   const { user, accessToken, fetchCurrentUser } = useAuth();
   const { socket, isConnected, isConnecting, error: socketError } = useAppSocket();
-  const { conversations, setConversations, fetchInbox, loading: inboxLoading, error: inboxError } = useConversations();
+  const {
+    conversations,
+    setConversations,
+    fetchInbox,
+    loading: inboxLoading,
+    error: inboxError,
+  } = useConversations();
+
   const [sidebarView, setSidebarView] = useState('chat');
   const [selectedId, setSelectedId] = useState(null);
   const [messagesByConversation, setMessagesByConversation] = useState({});
@@ -82,25 +87,18 @@ export default function Home() {
   const [isChatListOpen, setIsChatListOpen] = useState(true);
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
+  const joinedRoomsRef = useRef(new Set());
 
-  const joinedRoomsRef = React.useRef(new Set());
-
+  // ── Bootstrap: load user + inbox sau khi socket sẵn sàng ──────────────────
   useEffect(() => {
     if (!accessToken) {
       setIsBootstrapped(false);
       setInitialLoading(true);
       return;
     }
-
-    if (isBootstrapped) {
-      return;
-    }
-
-    // Wait only while socket is still trying and has not failed yet.
-    // If realtime is unavailable, continue bootstrapping protected REST data.
-    if (!isConnected && isConnecting && !socketError) {
-      return;
-    }
+    if (isBootstrapped) return;
+    // Chờ socket thử kết nối xong mới bootstrap (tránh race)
+    if (!isConnected && isConnecting && !socketError) return;
 
     let active = true;
     setInitialLoading(true);
@@ -108,13 +106,9 @@ export default function Home() {
 
     (async () => {
       try {
-        await Promise.all([
-          fetchCurrentUser(),
-          fetchInbox(accessToken),
-        ]);
+        await Promise.all([fetchCurrentUser(), fetchInbox(accessToken)]);
       } catch (err) {
-        if (!active) return;
-        setInitialError(err?.message || 'Không tải được dữ liệu ban đầu');
+        if (active) setInitialError(err?.message || 'Không tải được dữ liệu ban đầu');
       } finally {
         if (active) {
           setIsBootstrapped(true);
@@ -123,333 +117,264 @@ export default function Home() {
       }
     })();
 
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [isConnected, isConnecting, socketError, accessToken, isBootstrapped, fetchCurrentUser, fetchInbox]);
 
+  // ── Load tin nhắn khi chọn conversation ───────────────────────────────────
   useEffect(() => {
-    if (!selectedId || !accessToken) {
-      return;
-    }
+    if (!selectedId || !accessToken) return;
 
     let active = true;
 
     const loadMessages = async () => {
       setMessagesLoadingId(selectedId);
       setThreadError(null);
-
       try {
-        const loadedMessages = await getConversationMessagesApi(accessToken, selectedId, { limit: 50 });
-        const normalizedMessages = Array.isArray(loadedMessages) ? loadedMessages.map(normalizeMessage) : [];
-
+        const raw = await getConversationMessagesApi(accessToken, selectedId, { limit: 50 });
+        const msgs = Array.isArray(raw) ? raw.map(normalizeMessage) : [];
         if (!active) return;
 
-        setMessagesByConversation((prev) => ({
-          ...prev,
-          [selectedId]: normalizedMessages,
-        }));
+        setMessagesByConversation((prev) => ({ ...prev, [selectedId]: msgs }));
 
-        const lastSeenSeq = normalizedMessages.length > 0 ? normalizedMessages[normalizedMessages.length - 1].seq : null;
-        if (lastSeenSeq !== null && lastSeenSeq !== undefined) {
-          await markConversationReadApi(accessToken, selectedId, lastSeenSeq);
+        const lastSeq = msgs.length > 0 ? msgs[msgs.length - 1].seq : null;
+        if (lastSeq != null) {
+          await markConversationReadApi(accessToken, selectedId, lastSeq);
         }
       } catch (err) {
-        if (!active) return;
-        setThreadError(err?.message || 'Không tải được nội dung hội thoại');
+        if (active) setThreadError(err?.message || 'Không tải được nội dung hội thoại');
       } finally {
-        if (active) {
-          setMessagesLoadingId((current) => (current === selectedId ? null : current));
-        }
+        if (active) setMessagesLoadingId((cur) => (cur === selectedId ? null : cur));
       }
     };
 
     loadMessages();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [selectedId, accessToken]);
 
-  // Join ALL socket rooms to receive background updates for Inbox
+  // ── Join socket rooms khi có conversation mới ─────────────────────────────
   useEffect(() => {
-    if (!socket || !isConnected || !conversations) return;
-
+    if (!socket || !isConnected || !conversations.length) return;
     conversations.forEach((c) => {
       const id = resolveConversationId(c);
       if (id && !joinedRoomsRef.current.has(id)) {
-        console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại:`, id);
         socket.emit('join_room', { conversationId: id });
         joinedRoomsRef.current.add(id);
       }
     });
   }, [socket, isConnected, conversations]);
 
-  // Listen for new messages
+  // ── Nhận tin nhắn mới từ socket ───────────────────────────────────────────
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const handleNewMessage = (data) => {
-      console.log('🔴 [DEBUG CLIENT] Đã nhận event new_message từ server:', data);
       const { message: rawMessage, conversation: backendConv } = data;
+      if (!rawMessage || !backendConv) return;
 
-      if (!rawMessage || !backendConv) {
-        console.warn('🔴 [DEBUG CLIENT] Payload của new_message không hợp lệ!');
-        return;
-      }
+      const msg = normalizeMessage(rawMessage);
+      const convId = resolveConversationId(backendConv);
+      if (!convId) return;
 
-      const normalizedMessage = normalizeMessage(rawMessage);
-      const conversationId = resolveConversationId(backendConv);
-
-      if (!conversationId) {
-        console.warn('🔴 [DEBUG CLIENT] Không tìm thấy conversationId trong tin nhắn!');
-        return;
-      }
-
-      // Update messages list
+      // Cập nhật danh sách tin nhắn
       setMessagesByConversation((prev) => {
-        const currentMessages = prev[conversationId] || [];
-
-        const pendingMessageIndex = currentMessages.findIndex(m =>
-          m.clientMessageId && m.clientMessageId === normalizedMessage.clientMessageId
+        const cur = prev[convId] || [];
+        const pendingIdx = cur.findIndex(
+          (m) => m.clientMessageId && m.clientMessageId === msg.clientMessageId
         );
-
-        if (pendingMessageIndex !== -1) {
-          const updatedMessages = [...currentMessages];
-          updatedMessages[pendingMessageIndex] = { ...normalizedMessage, status: 'sent' };
-          return { ...prev, [conversationId]: updatedMessages };
+        if (pendingIdx !== -1) {
+          const updated = [...cur];
+          updated[pendingIdx] = { ...msg, status: 'sent' };
+          return { ...prev, [convId]: updated };
         }
-
-        const isDuplicate = currentMessages.some(m => m.id === normalizedMessage.id);
-        if (isDuplicate) {
-          return prev;
-        }
-        
-        return {
-          ...prev,
-          [conversationId]: [...currentMessages, normalizedMessage],
-        };
+        if (cur.some((m) => m.id === msg.id)) return prev;
+        return { ...prev, [convId]: [...cur, msg] };
       });
 
-      // Update conversations list in sidebar
+      // Cập nhật sidebar
       setConversations((prev) => {
-        const index = prev.findIndex((c) => resolveConversationId(c) === conversationId);
+        const idx = prev.findIndex((c) => resolveConversationId(c) === convId);
 
-        // Case 1: This is a new conversation
-        if (index === -1) {
-          console.log('🔴 [DEBUG CLIENT] Phát hiện cuộc trò chuyện mới, thêm vào danh sách.');
-          const newConversation = normalizeConversationFromSocket(backendConv, currentUserId);
-          if (!newConversation) return prev;
+        if (idx === -1) {
+          // Conversation mới
+          const newConv = normalizeConversationFromSocket(backendConv, currentUserId);
+          if (!newConv) return prev;
+          newConv.lastMessage = msg.text;
+          newConv.time = msg.time;
+          newConv.lastActivityAt = msg.createdAt;
+          newConv.unread = 1;
 
-          newConversation.lastMessage = normalizedMessage.text;
-          newConversation.time = normalizedMessage.time;
-          newConversation.lastActivityAt = normalizedMessage.createdAt;
-          newConversation.unread = 1;
-
-          // Add new room to socket
-          const id = resolveConversationId(newConversation);
+          const id = resolveConversationId(newConv);
           if (id && !joinedRoomsRef.current.has(id)) {
-            console.log(`🔴 [DEBUG CLIENT] Đang join room cho hội thoại MỚI:`, id);
             socket.emit('join_room', { conversationId: id });
             joinedRoomsRef.current.add(id);
           }
-
-          return [newConversation, ...prev];
+          return [newConv, ...prev];
         }
 
-        // Case 2: This is an existing conversation
-        const updatedConversations = [...prev];
-        const updatedConv = { ...updatedConversations[index] };
-        updatedConv.lastMessage = normalizedMessage.text;
-        updatedConv.time = normalizedMessage.time;
-        updatedConv.lastActivityAt = normalizedMessage.createdAt;
+        const updated = [...prev];
+        const conv = { ...updated[idx] };
+        conv.lastMessage = msg.text;
+        conv.time = msg.time;
+        conv.lastActivityAt = msg.createdAt;
+        if (selectedId !== convId) conv.unread = (conv.unread || 0) + 1;
 
-        if (selectedId !== conversationId) {
-          updatedConv.unread = (updatedConv.unread || 0) + 1;
-        }
-
-        // Move to top
-        updatedConversations.splice(index, 1);
-        updatedConversations.unshift(updatedConv);
-        return updatedConversations;
+        updated.splice(idx, 1);
+        updated.unshift(conv);
+        return updated;
       });
 
-      // Mark as read if we are looking at it
-      const isOwnMessage = normalizedMessage.from === currentUserId;
-      if (selectedId === conversationId && !isOwnMessage && normalizedMessage.seq != null) {
-        markConversationReadApi(accessToken, conversationId, normalizedMessage.seq).catch(console.error);
+      // Đánh dấu đã đọc nếu đang xem conversation này
+      if (selectedId === convId && msg.from !== currentUserId && msg.seq != null) {
+        markConversationReadApi(accessToken, convId, msg.seq).catch(() => {});
       }
     };
 
     socket.on('new_message', handleNewMessage);
-    
-    // Lắng nghe event người kia đã đọc tin
+    return () => socket.off('new_message', handleNewMessage);
+  }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
+
+  // ── Người kia đã đọc tin ──────────────────────────────────────────────────
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleMessageRead = ({ conversationId, userId, lastSeenSeq }) => {
-      // Nếu người đọc không phải mình thì clear unread của conversation đó trong sidebar
+    const handleMessageRead = ({ conversationId, userId }) => {
       if (userId !== currentUserId) {
         setConversations((prev) =>
           prev.map((c) =>
-            resolveConversationId(c) === conversationId
-              ? { ...c, unread: 0 }
-              : c
+            resolveConversationId(c) === conversationId ? { ...c, unread: 0 } : c
           )
         );
       }
     };
 
     socket.on('message_read', handleMessageRead);
-    return () => {
-      socket.off('message_read', handleMessageRead);
-    };
+    return () => socket.off('message_read', handleMessageRead);
   }, [socket, isConnected, currentUserId, setConversations]);
 
-      return () => {
-        socket.off('new_message', handleNewMessage);
-      };
-    }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
-
+  // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
     () => conversations.find((c) => resolveConversationId(c) === selectedId) || null,
-    [conversations, selectedId],
+    [conversations, selectedId]
   );
 
   const selectedMessages = messagesByConversation[selectedId] || [];
 
-  const refreshInbox = async () => {
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const refreshInbox = useCallback(async () => {
     if (!accessToken) return;
     await fetchInbox(accessToken);
-  };
+  }, [accessToken, fetchInbox]);
 
-  const handleSelectConversation = (conversationId) => {
-    if (selectedId === conversationId) return; // Tránh chọn lại gây lỗi đơ
+  const handleSelectConversation = useCallback((conversationId) => {
+    if (selectedId === conversationId) return;
     setSelectedId(conversationId);
     setSidebarView('chat');
-  };
+  }, [selectedId]);
 
-  const handleStartConversation = async (peerUser) => {
+  const handleStartConversation = useCallback(async (peerUser) => {
     if (!accessToken || !peerUser?.userId) return;
-
     try {
-      const directConversation = await getDirectConversationApi(accessToken, peerUser.userId);
+      const direct = await getDirectConversationApi(accessToken, peerUser.userId);
       await refreshInbox();
-      const conversationId = resolveConversationId(directConversation);
-      if (conversationId) {
-        setSelectedId(conversationId);
-      }
+      const id = resolveConversationId(direct);
+      if (id) setSelectedId(id);
       setSidebarView('chat');
     } catch (err) {
       setThreadError(err?.message || 'Không mở được cuộc trò chuyện mới');
     }
-  };
+  }, [accessToken, refreshInbox]);
 
-  const handleSend = async (messageData) => {
+  const handleSend = useCallback(async (messageData) => {
     if (!selected || !accessToken) return;
 
-    const conversationId = resolveConversationId(selected);
-    if (!conversationId) return;
+    const convId = resolveConversationId(selected);
+    if (!convId) return;
 
-    const clientMessageId = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `client-${Date.now()}`;
+    const clientMessageId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `client-${Date.now()}`;
 
-    setSendingMessage(true);
-    
-    // messageData can be a string (text) or an object {text, type, attachments}
     const isObject = typeof messageData === 'object' && messageData !== null;
-    const text = isObject ? (messageData.text || '') : messageData;
+    const text = isObject ? messageData.text || '' : messageData;
     const type = isObject && messageData.type ? messageData.type : 'text';
     const attachments = isObject && messageData.attachments ? messageData.attachments : [];
 
-    // Optimistic UI - add message immediately with status 'sending'
-    const optimisticMessage = normalizeMessage({
+    // Optimistic UI
+    const optimistic = normalizeMessage({
       _id: `temp-${clientMessageId}`,
       clientMessageId,
       content: text,
       text,
       senderId: currentUserId,
-      from: currentUserId,
-      conversationId,
+      conversationId: convId,
       createdAt: new Date().toISOString(),
       type,
       attachments,
     });
-    optimisticMessage.status = 'sending';
+    optimistic.status = 'sending';
 
-    setMessagesByConversation((prev) => {
-      const currentMessages = prev[conversationId] || [];
-      return {
-        ...prev,
-        [conversationId]: [...currentMessages, optimisticMessage],
-      };
-    });
-
-    setConversations((prev) => prev.map((conversation) => {
-      const id = resolveConversationId(conversation);
-      if (id !== conversationId) return conversation;
-
-      return {
-        ...conversation,
-        lastMessage: text || (type === 'image' ? '[Hình ảnh]' : type === 'file' ? '[Tệp đính kèm]' : ''),
-        time: formatTime(new Date()),
-        unread: 0,
-      };
+    setMessagesByConversation((prev) => ({
+      ...prev,
+      [convId]: [...(prev[convId] || []), optimistic],
     }));
 
-    // Send API in background
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (resolveConversationId(c) !== convId) return c;
+        return {
+          ...c,
+          lastMessage:
+            text ||
+            (type === 'image' ? '[Hình ảnh]' : type === 'file' ? '[Tệp đính kèm]' : ''),
+          time: formatTime(new Date()),
+          unread: 0,
+        };
+      })
+    );
+
+    setSendingMessage(true);
+
     try {
       let finalAttachments = [...attachments];
-      
-      const filesToUpload = attachments.filter(a => a.file).map(a => a.file);
+      const filesToUpload = attachments.filter((a) => a.file).map((a) => a.file);
       if (filesToUpload.length > 0) {
-        const uploadedFiles = await uploadFilesApi(filesToUpload, accessToken);
-        finalAttachments = uploadedFiles.map(file => ({
-            fileName: file.originalname,
-            url: file.url,
-            mimeType: file.mimetype,
-            size: file.size
+        const uploaded = await uploadFilesApi(filesToUpload, accessToken);
+        finalAttachments = uploaded.map((f) => ({
+          fileName: f.originalname,
+          url: f.url,
+          mimeType: f.mimetype,
+          size: f.size,
         }));
       }
 
-      const payload = {
-        conversationId,
-        type,
-        clientMessageId,
-      };
+      const payload = { conversationId: convId, type, clientMessageId };
       if (text) payload.text = text;
       if (finalAttachments.length > 0) payload.attachments = finalAttachments;
 
-      const sentMessage = await sendMessageApi(accessToken, payload);
+      const sent = await sendMessageApi(accessToken, payload);
+      const normalized = { ...normalizeMessage(sent), status: 'sent' };
 
-      const normalizedMessage = normalizeMessage(sentMessage);
-      normalizedMessage.status = 'sent';
-
-      // Replace optimistic message with real message
       setMessagesByConversation((prev) => {
-        const currentMessages = prev[conversationId] || [];
+        const cur = prev[convId] || [];
         return {
           ...prev,
-          [conversationId]: currentMessages.map((msg) =>
-            msg.clientMessageId === clientMessageId ? normalizedMessage : msg
-          ),
+          [convId]: cur.map((m) => (m.clientMessageId === clientMessageId ? normalized : m)),
         };
       });
 
-      if (normalizedMessage.seq !== undefined && normalizedMessage.seq !== null) {
-        await markConversationReadApi(accessToken, conversationId, normalizedMessage.seq);
+      if (normalized.seq != null) {
+        await markConversationReadApi(accessToken, convId, normalized.seq);
       }
 
-      return sentMessage;
+      return sent;
     } catch (err) {
-      // Update message status to error
       setMessagesByConversation((prev) => {
-        const currentMessages = prev[conversationId] || [];
+        const cur = prev[convId] || [];
         return {
           ...prev,
-          [conversationId]: currentMessages.map((msg) =>
-            msg.clientMessageId === clientMessageId ? { ...msg, status: 'error' } : msg
+          [convId]: cur.map((m) =>
+            m.clientMessageId === clientMessageId ? { ...m, status: 'error' } : m
           ),
         };
       });
@@ -458,21 +383,14 @@ export default function Home() {
     } finally {
       setSendingMessage(false);
     }
-  };
+  }, [selected, accessToken, currentUserId, setConversations]);
 
-  const viewTitle = sidebarView === 'chat'
-    ? 'Tin nhắn'
-    : sidebarView === 'contacts'
-      ? 'Danh bạ'
-      : sidebarView === 'cloud'
-        ? 'Cloud'
-        : 'Công việc';
-
+  // ── Render guards ─────────────────────────────────────────────────────────
   if (inboxError || initialError) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#f7fafc,_#eef2f7_42%,_#f4f7fb_100%)]">
-        <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-[1.5rem] px-6 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] max-w-md">
-          <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu khởi tạo</p>
+      <div className="h-screen flex items-center justify-center">
+        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5 text-center shadow max-w-md">
+          <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu</p>
           <p className="text-sm text-slate-600 mb-4">{inboxError || initialError}</p>
           <button
             type="button"
@@ -481,7 +399,7 @@ export default function Home() {
               setIsBootstrapped(false);
               setInitialLoading(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#0068ff] text-white hover:bg-[#005bd6] transition shadow-md"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             Thử lại
           </button>
@@ -490,103 +408,118 @@ export default function Home() {
     );
   }
 
-  // Only block UI for protected data bootstrap. Realtime can recover in background.
   if (!isBootstrapped || initialLoading || inboxLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#f7fafc,_#eef2f7_42%,_#f4f7fb_100%)]">
-        <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-[1.5rem] px-6 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-          <p className="text-slate-800 font-semibold mb-2">Đang tải dữ liệu...</p>
-          <p className="text-sm text-slate-500">Đồng bộ hồ sơ cá nhân và inbox.</p>
+      <div className="h-screen flex items-center justify-center">
+        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5 text-center shadow">
+          <p className="text-slate-800 font-semibold mb-1">Đang tải dữ liệu...</p>
+          <p className="text-sm text-slate-500">Đồng bộ hồ sơ và inbox.</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_35%,_#f4f7fb_100%)]">
-      <div className="pointer-events-none absolute -top-24 left-1/3 h-72 w-72 rounded-full bg-slate-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute right-8 top-10 h-80 w-80 rounded-full bg-sky-200/30 blur-3xl" />
+  const viewTitle =
+    sidebarView === 'chat'
+      ? 'Tin nhắn'
+      : sidebarView === 'contacts'
+      ? 'Danh bạ'
+      : sidebarView === 'cloud'
+      ? 'Cloud'
+      : 'Công việc';
 
+  // ── JSX ───────────────────────────────────────────────────────────────────
+  return (
+    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100">
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
-          Realtime tạm thời gián đoạn. Ứng dụng vẫn chạy với dữ liệu REST.
+          Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
         </div>
       )}
 
-      <div className="z-20 h-full flex-shrink-0 relative">
-        <SidebarLeft 
-            active={sidebarView} 
-            onSelect={setSidebarView} 
-            isChatListOpen={isChatListOpen}
-            setIsChatListOpen={setIsChatListOpen}
+      {/* Sidebar icon trái */}
+      <div className="z-20 h-full flex-shrink-0">
+        <SidebarLeft
+          active={sidebarView}
+          onSelect={setSidebarView}
+          isChatListOpen={isChatListOpen}
+          setIsChatListOpen={setIsChatListOpen}
         />
       </div>
 
-      {sidebarView === 'chat' ? (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'}`}>
-          <div className="w-full h-full">
-            <ChatSidebar
-              user={user}
-              accessToken={accessToken}
-              conversations={conversations}
-              selectedId={selectedId}
-              onSelect={handleSelectConversation}
-              onStartConversation={handleStartConversation}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className={`z-10 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl flex-shrink-0 border-r border-slate-200/80 overflow-hidden shadow-lg ${!isChatListOpen ? 'w-0 opacity-0 border-none' : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100 p-4'}`}>
-          <div className="w-full h-full">
-            <div className="text-xs uppercase tracking-[0.28em] text-slate-400 mb-3">{viewTitle}</div>
-            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
-              Nội dung {viewTitle} đang hiển thị ở đây.
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-1 min-w-0 h-full flex flex-col relative">
-        {sidebarView === 'chat' && selectedId ? (
-          <div className="w-full h-full flex flex-col overflow-hidden">
-            <ChatArea
-              chat={selected}
-              messages={selectedMessages}
-              currentUserId={currentUserId}
-              loading={messagesLoadingId === selectedId}
-              error={threadError}
-              onSend={handleSend}
-              sending={sendingMessage}
-              onToggleInfo={() => setIsInfoOpen(!isInfoOpen)}
-              onBack={() => {
-                setSelectedId(null);
-                setIsInfoOpen(false);
-              }}
-            />
-          </div>
+      {/* Cột danh sách */}
+      <div
+        className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${
+          !isChatListOpen
+            ? 'w-0 opacity-0 border-none'
+            : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+        }`}
+      >
+        {sidebarView === 'chat' ? (
+          <ChatSidebar
+            user={user}
+            accessToken={accessToken}
+            conversations={conversations}
+            selectedId={selectedId}
+            onSelect={handleSelectConversation}
+            onStartConversation={handleStartConversation}
+          />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
-               <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center shadow-sm">
-                   <span className="text-blue-300 text-3xl font-semibold">C</span>
-               </div>
-               <p className="text-lg font-medium text-slate-700">Chưa chọn nội dung nào</p>
-               <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái để bắt đầu.</p>
+          <div className="p-4 h-full">
+            <div className="text-xs uppercase tracking-widest text-slate-400 mb-3">
+              {viewTitle}
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              Nội dung {viewTitle} đang được phát triển.
+            </div>
           </div>
         )}
       </div>
 
-      {/* Cột thông tin bên phải */}
-      <div className={`z-30 h-full flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-l border-slate-200/80 overflow-hidden shadow-lg flex-shrink-0 ${isInfoOpen && selectedId ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
-        <div className="w-full h-full">
-           {isInfoOpen && selectedId && (
-             <ConversationInfo 
-               chat={selected} 
-               messages={selectedMessages} 
-               currentUserId={currentUserId} 
-               onClose={() => setIsInfoOpen(false)} 
-             />
-           )}
-        </div>
+      {/* Vùng chat chính */}
+      <div className="flex-1 min-w-0 h-full flex flex-col relative">
+        {sidebarView === 'chat' && selectedId ? (
+          <ChatArea
+            chat={selected}
+            messages={selectedMessages}
+            currentUserId={currentUserId}
+            loading={messagesLoadingId === selectedId}
+            error={threadError}
+            onSend={handleSend}
+            sending={sendingMessage}
+            onToggleInfo={() => setIsInfoOpen((v) => !v)}
+            onBack={() => {
+              setSelectedId(null);
+              setIsInfoOpen(false);
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+            <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+              <span className="text-blue-300 text-3xl font-semibold">C</span>
+            </div>
+            <p className="text-lg font-medium text-slate-600">Chưa chọn cuộc trò chuyện</p>
+            <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Panel thông tin bên phải */}
+      <div
+        className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${
+          isInfoOpen && selectedId
+            ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+            : 'w-0 opacity-0 border-none'
+        }`}
+      >
+        {isInfoOpen && selectedId && (
+          <ConversationInfo
+            chat={selected}
+            messages={selectedMessages}
+            currentUserId={currentUserId}
+            onClose={() => setIsInfoOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
