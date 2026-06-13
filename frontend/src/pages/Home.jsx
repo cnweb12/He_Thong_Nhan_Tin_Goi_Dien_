@@ -89,15 +89,11 @@ export default function Home() {
   const currentUserId = user?.userId || user?.id || user?._id || '';
   const joinedRoomsRef = useRef(new Set());
 
-<<<<<<< Updated upstream
-  // ── Bootstrap: load user + inbox sau khi socket sẵn sàng ──────────────────
-=======
   // Lưu trữ giá trị bằng Ref để tránh việc re-bind Socket Event Listener liên tục khi state thay đổi
   const selectedIdRef = useRef(selectedId);
   const accessTokenRef = useRef(accessToken);
   const currentUserIdRef = useRef(currentUserId);
 
->>>>>>> Stashed changes
   useEffect(() => {
     selectedIdRef.current = selectedId;
     accessTokenRef.current = accessToken;
@@ -112,10 +108,6 @@ export default function Home() {
       return;
     }
     if (isBootstrapped) return;
-<<<<<<< Updated upstream
-    // Chờ socket thử kết nối xong mới bootstrap (tránh race)
-=======
->>>>>>> Stashed changes
     if (!isConnected && isConnecting && !socketError) return;
 
     let active = true;
@@ -214,26 +206,14 @@ export default function Home() {
 
         if (idx === -1) {
           // Conversation mới
-<<<<<<< Updated upstream
-          const newConv = normalizeConversationFromSocket(backendConv, currentUserId);
-=======
           const newConv = normalizeConversationFromSocket(backendConv, currentUserIdRef.current);
->>>>>>> Stashed changes
           if (!newConv) return prev;
           newConv.lastMessage = msg.text;
           newConv.time = msg.time;
           newConv.lastActivityAt = msg.createdAt;
           newConv.unread = 1;
 
-<<<<<<< Updated upstream
-          const id = resolveConversationId(newConv);
-          if (id && !joinedRoomsRef.current.has(id)) {
-            socket.emit('join_room', { conversationId: id });
-            joinedRoomsRef.current.add(id);
-          }
-=======
           // Side Effect join_room đã được lược bỏ ở đây vì đã có useEffect chuyên dụng ở trên handle tự động
->>>>>>> Stashed changes
           return [newConv, ...prev];
         }
 
@@ -242,11 +222,7 @@ export default function Home() {
         conv.lastMessage = msg.text;
         conv.time = msg.time;
         conv.lastActivityAt = msg.createdAt;
-<<<<<<< Updated upstream
-        if (selectedId !== convId) conv.unread = (conv.unread || 0) + 1;
-=======
         if (selectedIdRef.current !== convId) conv.unread = (conv.unread || 0) + 1;
->>>>>>> Stashed changes
 
         updated.splice(idx, 1);
         updated.unshift(conv);
@@ -254,34 +230,21 @@ export default function Home() {
       });
 
       // Đánh dấu đã đọc nếu đang xem conversation này
-<<<<<<< Updated upstream
-      if (selectedId === convId && msg.from !== currentUserId && msg.seq != null) {
-        markConversationReadApi(accessToken, convId, msg.seq).catch(() => {});
-=======
       if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null) {
         markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => {});
->>>>>>> Stashed changes
       }
     };
 
     socket.on('new_message', handleNewMessage);
     return () => socket.off('new_message', handleNewMessage);
-<<<<<<< Updated upstream
-  }, [socket, isConnected, selectedId, accessToken, currentUserId, setConversations]);
-=======
   }, [socket, isConnected, setConversations]);
->>>>>>> Stashed changes
 
   // ── Người kia đã đọc tin ──────────────────────────────────────────────────
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const handleMessageRead = ({ conversationId, userId }) => {
-<<<<<<< Updated upstream
-      if (userId !== currentUserId) {
-=======
       if (userId !== currentUserIdRef.current) {
->>>>>>> Stashed changes
         setConversations((prev) =>
           prev.map((c) =>
             resolveConversationId(c) === conversationId ? { ...c, unread: 0 } : c
@@ -292,11 +255,7 @@ export default function Home() {
 
     socket.on('message_read', handleMessageRead);
     return () => socket.off('message_read', handleMessageRead);
-<<<<<<< Updated upstream
-  }, [socket, isConnected, currentUserId, setConversations]);
-=======
   }, [socket, isConnected, setConversations]);
->>>>>>> Stashed changes
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
