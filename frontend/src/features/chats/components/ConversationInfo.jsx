@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, FileText, Image as ImageIcon } from 'lucide-react';
 
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 
@@ -12,6 +12,22 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
     const unread = chat?.unread || 0;
     const totalMessages = messages?.length || 0;
     const myMessages = Array.isArray(messages) ? messages.filter((message) => message.from === currentUserId).length : 0;
+
+    // Extract all attachments from messages
+    const allAttachments = (messages || []).reduce((acc, msg) => {
+        if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+            return acc.concat(msg.attachments);
+        } else if (msg.fileUrl || msg.url) {
+            // Support older message format if necessary
+            acc.push({
+                url: msg.fileUrl || msg.url,
+                mimeType: msg.fileType || msg.mimeType || (msg.type === 'image' ? 'image/jpeg' : 'application/octet-stream'),
+                fileName: msg.fileName || 'attachment',
+                size: msg.size || msg.fileSize
+            });
+        }
+        return acc;
+    }, []);
 
     return (
         <div className="w-full h-full flex-shrink-0 bg-white p-6 overflow-y-auto flex flex-col relative z-10">
@@ -60,11 +76,38 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-3 text-slate-800 text-sm tracking-wide">TỆP ĐÍNH KÈM</h4>
+                        <h4 className="font-semibold mb-3 text-slate-800 text-sm tracking-wide">TỆP ĐÍNH KÈM ({allAttachments.length})</h4>
                         <div className="grid grid-cols-3 gap-2">
-                            <div className="aspect-square bg-slate-100 rounded-[1rem] hover:bg-slate-200 transition cursor-pointer flex items-center justify-center text-slate-400 text-xs">Trống</div>
-                            <div className="aspect-square bg-slate-50 border border-slate-200 rounded-[1rem] hover:bg-slate-100 transition cursor-pointer flex items-center justify-center text-slate-400 text-xs">Trống</div>
-                            <div className="aspect-square bg-slate-100 rounded-[1rem] hover:bg-slate-200 transition cursor-pointer flex items-center justify-center text-slate-400 text-xs">Trống</div>
+                            {allAttachments.length > 0 ? (
+                                allAttachments.map((att, idx) => {
+                                    const isImg = att.mimeType?.startsWith('image/');
+                                    return (
+                                        <a 
+                                            key={idx} 
+                                            href={att.url} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            className="aspect-square bg-slate-100 rounded-[1rem] hover:bg-slate-200 transition cursor-pointer flex items-center justify-center overflow-hidden border border-slate-200 relative group"
+                                            title={att.fileName}
+                                        >
+                                            {isImg ? (
+                                                <img src={att.url} alt={att.fileName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-1 text-slate-500">
+                                                    <FileText size={24} />
+                                                    <span className="text-[10px] font-medium truncate w-full px-2 text-center">{att.fileName?.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                                                </div>
+                                            )}
+                                        </a>
+                                    );
+                                })
+                            ) : (
+                                <>
+                                    <div className="aspect-square bg-slate-100 rounded-[1rem] flex items-center justify-center text-slate-400 text-xs">Trống</div>
+                                    <div className="aspect-square bg-slate-50 border border-slate-200 rounded-[1rem] flex items-center justify-center text-slate-400 text-xs">Trống</div>
+                                    <div className="aspect-square bg-slate-100 rounded-[1rem] flex items-center justify-center text-slate-400 text-xs">Trống</div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

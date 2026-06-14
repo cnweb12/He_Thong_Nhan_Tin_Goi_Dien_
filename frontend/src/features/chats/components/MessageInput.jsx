@@ -26,31 +26,30 @@ export default function MessageInput({ onSend, disabled = false, sending = false
         e.target.value = null;
     };
 
-    const send = async () => {
+    const send = () => {
         const message = text.trim();
-        if ((!message && !selectedFile) || disabled || sending) return;
+        const currentFile = selectedFile;
+        if ((!message && !currentFile) || disabled) return;
 
-        try {
-            if (selectedFile) {
-                const isImage = selectedFile.mimeType.startsWith('image/');
-                await onSend({
-                    text: message,
-                    type: isImage ? 'image' : 'file',
-                    attachments: [{
-                        fileName: selectedFile.fileName,
-                        url: selectedFile.url,
-                        mimeType: selectedFile.mimeType,
-                        size: selectedFile.size,
-                        file: selectedFile.file
-                    }]
-                });
-                setSelectedFile(null);
-            } else {
-                await onSend(message);
-            }
-            setText('');
-        } catch {
-            // Keep the draft so the user can retry after a backend error.
+        // Optimistic UI: Xóa khung chat ngay lập tức
+        setText('');
+        setSelectedFile(null);
+
+        if (currentFile) {
+            const isImage = currentFile.mimeType.startsWith('image/');
+            onSend({
+                text: message,
+                type: isImage ? 'image' : 'file',
+                attachments: [{
+                    fileName: currentFile.fileName,
+                    url: currentFile.url,
+                    mimeType: currentFile.mimeType,
+                    size: currentFile.size,
+                    file: currentFile.file
+                }]
+            }).catch(console.error);
+        } else {
+            onSend(message).catch(console.error);
         }
     };
 
@@ -107,6 +106,13 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                     >
                         <Paperclip size={20} />
                     </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        multiple={false}
+                    />
                 </div>
 
                 <textarea
@@ -124,7 +130,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                 />
                 <button
                     onClick={send}
-                    disabled={disabled || sending || (!text.trim() && !selectedFile)}
+                    disabled={disabled || (!text.trim() && !selectedFile)}
                     className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
                 >
                     <Send size={18} />
