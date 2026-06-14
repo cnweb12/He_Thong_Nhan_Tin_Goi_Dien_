@@ -8,6 +8,11 @@ import CallOverlay from './features/calls/components/CallOverlay';
 import { ConversationProvider } from './features/conversations/context/ConversationProvider';
 import Home from './pages/Home';
 import ProfilePage from './features/users/ProfilePage';
+import AdminLayout from './features/admin/components/AdminLayout';
+import UsersPage from './features/admin/pages/UsersPage';
+import MessagesPage from './features/admin/pages/MessagesPage';
+import SettingsPage from './features/admin/pages/SettingsPage';
+import KeywordsPage from './features/admin/pages/KeywordsPage';
 
 function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -44,6 +49,16 @@ function App() {
                 path="/profile"
                 element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />}
               />
+
+              {/* Admin routes — AdminLayout tự kiểm tra role */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="/admin/users" replace />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="keywords" element={<KeywordsPage />} />
+              </Route>
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           )}
