@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const validate = () => {
     const errors = {};
     const phoneRegex = /(84|0[\d])+([0-9]{8})\b/;
-    
+
     if (!formData.phone) {
       errors.phone = 'Vui lòng nhập số điện thoại';
     } else if (!phoneRegex.test(formData.phone)) {
@@ -108,7 +108,7 @@ export default function RegisterPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Nhập số điện thoại"
-                className={`w-full px-4 py-3.5 rounded-2xl border ${fieldErrors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
+                className={`w-full px-4 py-3.5 rounded-2xl border text-black placeholder:text-gray-500 ${fieldErrors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
               />
             </div>
             {fieldErrors.phone && (
@@ -128,7 +128,7 @@ export default function RegisterPage() {
                 value={formData.displayName}
                 onChange={handleChange}
                 placeholder="Tên hiển thị của bạn"
-                className={`w-full px-4 py-3.5 rounded-2xl border ${fieldErrors.displayName ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
+                className={`w-full px-4 py-3.5 rounded-2xl border text-black placeholder:text-gray-500 ${fieldErrors.displayName ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
               />
             </div>
             {fieldErrors.displayName && (
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Nhập mật khẩu"
-                className={`w-full px-4 py-3.5 rounded-2xl border ${fieldErrors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
+                className={`w-full px-4 py-3.5 rounded-2xl border text-black placeholder:text-gray-500 ${fieldErrors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
               />
             </div>
             {fieldErrors.password && (
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                 value={formData.confirm}
                 onChange={handleChange}
                 placeholder="Xác nhận mật khẩu"
-                className={`w-full px-4 py-3.5 rounded-2xl border ${fieldErrors.confirm ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
+                className={`w-full px-4 py-3.5 rounded-2xl border text-black placeholder:text-gray-500 ${fieldErrors.confirm ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:border-teal-500 focus:ring-teal-500/20'} bg-white/50 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200`}
               />
             </div>
             {fieldErrors.confirm && (
