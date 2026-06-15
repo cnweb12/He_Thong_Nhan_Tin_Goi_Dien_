@@ -1,51 +1,32 @@
-import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginApi, logoutApi, logoutAllApi, getMeApi, refreshApi } from '../services/authApi';
 
 export const AuthContext = createContext(null);
 
-/**
- * Bảo mật token:
- * - accessToken và refreshToken CHỈ được giữ trong memory (React state / ref),
- *   KHÔNG lưu vào localStorage hay sessionStorage.
- * - Ưu điểm: nếu có lỗ hổng XSS, mã độc chạy trên trang không thể đọc token
- *   từ storage của browser (localStorage/sessionStorage đều có thể bị đọc
- *   bởi bất kỳ script nào chạy trên cùng origin).
- * - Đánh đổi: khi người dùng tải lại trang (F5) hoặc mở tab mới, toàn bộ
- *   token trong memory sẽ mất, nên phiên đăng nhập KHÔNG được khôi phục —
- *   người dùng cần đăng nhập lại. Đây là hành vi chủ đích để đảm bảo an toàn,
- *   không phải lỗi.
- * - Thông tin hồ sơ (user) chỉ là dữ liệu hiển thị, không nhạy cảm như token,
- *   nhưng cũng được giữ trong memory để đồng bộ với trạng thái đăng nhập.
- */
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_KEY = 'user';
+
 export function AuthProvider({ children }) {
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [accessToken, setAccessToken] = useState(null); // kept in memory only
+    const [accessToken, setAccessToken] = useState(null); // kept in memory for safety
     const [loading, setLoading] = useState(false);
-    const [bootstrapping, setBootstrapping] = useState(false);
+    const [bootstrapping, setBootstrapping] = useState(true);
     const [error, setError] = useState(null);
 
-    // refreshToken chỉ tồn tại trong memory (ref để không gây re-render thừa
-    // và không bị log ra console qua state debugging).
-    const refreshTokenRef = useRef(null);
-
     const clearSession = useCallback(() => {
-        refreshTokenRef.current = null;
+        sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
         setUser(null);
         setAccessToken(null);
         setIsAuthenticated(false);
     }, []);
 
-    /**
-     * Khôi phục access token mới từ refresh token đang giữ trong memory.
-     * Nếu không có refresh token trong memory (ví dụ sau khi tải lại trang),
-     * trả về null — người dùng cần đăng nhập lại.
-     */
     const restoreSession = useCallback(async () => {
-        const refreshToken = refreshTokenRef.current;
+        const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
         if (!refreshToken) {
             clearSession();
             return null;
@@ -57,18 +38,53 @@ export function AuthProvider({ children }) {
         }
 
         setAccessToken(refreshed.accessToken);
-        // Một số backend trả về refresh token mới khi xoay vòng (rotation).
-        if (refreshed.refreshToken) {
-            refreshTokenRef.current = refreshed.refreshToken;
-        }
         return refreshed.accessToken;
     }, [clearSession]);
 
-    // Không còn bootstrap từ storage: vì token chỉ ở memory, mỗi lần app
-    // khởi tạo lại (load trang) đều bắt đầu ở trạng thái chưa đăng nhập.
     useEffect(() => {
-        setBootstrapping(false);
-    }, []);
+        let active = true;
+
+        const bootstrap = async () => {
+            setBootstrapping(true);
+            setError(null);
+
+            try {
+                const accessTokenValue = await restoreSession();
+                if (!active || !accessTokenValue) {
+                    return;
+                }
+
+                const profile = await getMeApi(accessTokenValue);
+                if (!active) {
+                    return;
+                }
+
+                if (profile) {
+                    setUser(profile);
+                    sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
+                }
+
+                setIsAuthenticated(true);
+            } catch (err) {
+                if (!active) {
+                    return;
+                }
+
+                clearSession();
+                setError(null);
+            } finally {
+                if (active) {
+                    setBootstrapping(false);
+                }
+            }
+        };
+
+        bootstrap();
+
+        return () => {
+            active = false;
+        };
+    }, [clearSession, restoreSession]);
 
     const login = useCallback(async (phone, password) => {
         setLoading(true);
@@ -81,9 +97,10 @@ export function AuthProvider({ children }) {
 
             setAccessToken(data.accessToken);
             if (data.refreshToken) {
-                refreshTokenRef.current = data.refreshToken;
+                sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
             }
             if (data.user) {
+                sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
                 setUser(data.user);
             }
 
@@ -133,6 +150,7 @@ export function AuthProvider({ children }) {
         }
 
         setUser(profile);
+        sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
     }, []);
 
     const fetchCurrentUser = useCallback(async () => {
@@ -149,6 +167,7 @@ export function AuthProvider({ children }) {
         const profile = await getMeApi(tokenToUse);
         if (profile) {
             setUser(profile);
+            sessionStorage.setItem(USER_KEY, JSON.stringify(profile));
         }
         return profile;
     }, [accessToken, restoreSession]);
