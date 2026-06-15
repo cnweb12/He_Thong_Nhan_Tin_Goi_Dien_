@@ -176,13 +176,40 @@ export default function EmojiPicker({ onSelect, onClose }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  // Lọc emoji khi tìm kiếm
-  const filteredEmojis = search.trim()
-    ? EMOJI_CATEGORIES.flatMap((c) => c.emojis).filter((e) => {
-        // Tìm theo tên category chứa emoji (không có tên cho từng emoji nên chỉ hiện tất cả)
-        return true;
-      }).slice(0, 100)
-    : EMOJI_CATEGORIES[activeCategory]?.emojis || [];
+  // Lọc emoji khi tìm kiếm: do không có dữ liệu tên cho từng emoji,
+  // tìm kiếm theo tên category (ví dụ gõ "động vật", "food", "cờ"...)
+  // sẽ thu hẹp về các category có tên khớp. Nếu không khớp category nào,
+  // hiển thị toàn bộ emoji để người dùng vẫn tìm được bằng cách lướt.
+  const normalize = (str) =>
+    str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const filteredEmojis = (() => {
+    const query = normalize(search);
+    if (!query) {
+      return EMOJI_CATEGORIES[activeCategory]?.emojis || [];
+    }
+
+    const matchingCategories = EMOJI_CATEGORIES.filter((c) =>
+      normalize(c.label).includes(query)
+    );
+
+    const source = matchingCategories.length > 0 ? matchingCategories : EMOJI_CATEGORIES;
+    const seen = new Set();
+    const result = [];
+    for (const cat of source) {
+      for (const emoji of cat.emojis) {
+        if (!seen.has(emoji)) {
+          seen.add(emoji);
+          result.push(emoji);
+        }
+      }
+    }
+    return result.slice(0, 100);
+  })();
 
   return (
     <div
