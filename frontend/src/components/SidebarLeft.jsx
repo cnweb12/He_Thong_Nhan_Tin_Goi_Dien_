@@ -24,7 +24,10 @@ const NAV_ITEMS = [
  *  - setIsChatListOpen : setter để toggle
  */
 export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen }) {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
+    const avatarUrl = user?.avatarUrl
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || user?.name || 'U')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`;
+
     const navigate   = useNavigate();
 
     const handleSelect = (id) => {
@@ -44,19 +47,6 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                 {/* ── Phần trên: toggle + avatar ── */}
                 <div className="flex flex-col items-center gap-4">
-                    {/* Nút ẩn/hiện danh sách chat */}
-                    {setIsChatListOpen && (
-                        <button
-                            type="button"
-                            onClick={() => setIsChatListOpen(!isChatListOpen)}
-                            aria-label={isChatListOpen ? 'Đóng danh sách' : 'Mở danh sách'}
-                            className="w-11 h-11 rounded-[1rem] bg-white/10 border border-white/20
-                                       flex items-center justify-center mb-2
-                                       hover:bg-white/20 transition-colors focus:outline-none cursor-pointer"
-                        >
-                            {isChatListOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-                        </button>
-                    )}
 
                     {/* Avatar / Tài khoản */}
                     <button
@@ -64,13 +54,18 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                         onClick={() => navigate('/profile')}
                         aria-label="Tài khoản"
                         className={[
-                            'h-12 w-12 rounded-[1.3rem] border flex items-center justify-center shadow-sm cursor-pointer transition-colors',
+                            // Thêm overflow-hidden và p-[2px] để ảnh nằm gọn bên trong viền bo góc
+                            'h-12 w-12 rounded-[1.3rem] border flex items-center justify-center shadow-sm cursor-pointer transition-colors overflow-hidden p-[2px]',
                             active === 'account'
-                                ? 'bg-white text-slate-900 border-white'
+                                ? 'bg-white border-white'
                                 : 'bg-white/10 border-white/10 hover:bg-white/20',
                         ].join(' ')}
                     >
-                        <CircleUserRound size={28} />
+                        <img
+                            src={avatarUrl}
+                            alt={user?.displayName || 'Avatar'}
+                            className="w-full h-full object-cover rounded-[1rem] bg-slate-800"
+                        />
                     </button>
 
                     <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/55">
