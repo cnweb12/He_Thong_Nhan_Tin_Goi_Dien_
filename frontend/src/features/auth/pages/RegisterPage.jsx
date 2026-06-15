@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { registerApi } from '../services/authApi';
 import { Phone, Lock, User, Loader2, AlertCircle, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ export default function RegisterPage() {
     confirm: ''
   });
   const [fieldErrors, setFieldErrors] = useState({});
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -66,7 +67,7 @@ export default function RegisterPage() {
     try {
       const res = await registerApi(formData.phone, formData.displayName, formData.password, formData.confirm);
       if (res) {
-        window.location.href = '/login';
+        navigate('/login');
       }
     } catch (err) {
       setError(err.message || 'Đăng ký thất bại');

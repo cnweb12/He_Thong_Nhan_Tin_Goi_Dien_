@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginApi, logoutApi, getMeApi, refreshApi } from '../services/authApi';
+import { loginApi, logoutApi, logoutAllApi, getMeApi, refreshApi } from '../services/authApi';
 
 export const AuthContext = createContext(null);
 
@@ -128,6 +128,17 @@ export function AuthProvider({ children }) {
     })();
     }, [accessToken, clearSession, navigate]);
 
+    const logoutAll = useCallback(async () => {
+        try {
+            await logoutAllApi(accessToken);
+        } catch (e) {
+            // ignore logout API errors
+        } finally {
+            clearSession();
+            navigate('/login');
+        }
+    }, [accessToken, clearSession, navigate]);
+
     const forceLogout = useCallback(() => {
         clearSession();
         navigate('/login');
@@ -169,11 +180,12 @@ export function AuthProvider({ children }) {
         error,
         login,
         logout,
+        logoutAll,
         forceLogout,
         syncCurrentUser,
         fetchCurrentUser,
         restoreSession,
-    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, forceLogout, syncCurrentUser, fetchCurrentUser, restoreSession]);
+    }), [user, isAuthenticated, accessToken, loading, bootstrapping, error, login, logout, logoutAll, forceLogout, syncCurrentUser, fetchCurrentUser, restoreSession]);
 
     return (
         <AuthContext.Provider value={contextValue}>

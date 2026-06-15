@@ -34,6 +34,12 @@ export const logoutApi = async (accessToken, deviceId = getDeviceId()) => {
   return res.data && res.data.data ? res.data.data : res.data;
 };
 
+export const logoutAllApi = async (accessToken) => {
+  const res = await post('/api/auth/logout-all', {}, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Đăng xuất tất cả thiết bị thất bại');
+  return res.data && res.data.data ? res.data.data : res.data;
+};
+
 export const refreshApi = async (refreshToken, deviceId = getDeviceId()) => {
   const res = await post('/api/auth/refresh', { refreshToken, deviceId });
   if (!res.ok) throw new Error(res.error || 'Refresh failed');

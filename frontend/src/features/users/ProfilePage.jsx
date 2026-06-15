@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, Cpu } from 'lucide-react';
+import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, LogOut, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, Cpu, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLeft from '../../components/SidebarLeft';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -53,7 +53,7 @@ const normalizeSettingsForm = (settings = {}) => ({
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { accessToken, user, forceLogout, syncCurrentUser, restoreSession } = useAuth();
+  const { accessToken, user, forceLogout, logoutAll, syncCurrentUser, restoreSession } = useAuth();
   const [profile, setProfile] = useState(user || null);
   const [profileForm, setProfileForm] = useState(() => normalizeProfileForm(user));
   const [settingsForm, setSettingsForm] = useState(() => normalizeSettingsForm(user?.settings));
@@ -67,6 +67,7 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [loggingOutAll, setLoggingOutAll] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
 
@@ -568,6 +569,38 @@ export default function ProfilePage() {
                         );
                       })
                     )}
+                  </div>
+
+                  <div className="mt-5 pt-5 border-t border-slate-100">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-500 flex-shrink-0">
+                        <ShieldAlert size={18} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-800">Đăng xuất khỏi tất cả thiết bị</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Thu hồi quyền truy cập của mọi thiết bị, bao gồm cả thiết bị bạn đang dùng. Dùng khi nghi ngờ tài khoản bị truy cập trái phép.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={loggingOutAll}
+                          onClick={async () => {
+                            if (!window.confirm('Đăng xuất khỏi tất cả thiết bị, bao gồm thiết bị này? Bạn sẽ cần đăng nhập lại.')) return;
+                            setLoggingOutAll(true);
+                            try {
+                              await logoutAll();
+                            } catch (err) {
+                              setLoggingOutAll(false);
+                              setError(err?.message || 'Đăng xuất tất cả thiết bị thất bại');
+                            }
+                          }}
+                          className="mt-3 inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {loggingOutAll ? <Loader2 className="animate-spin" size={16} /> : <LogOut size={16} />}
+                          Đăng xuất tất cả thiết bị
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

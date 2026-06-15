@@ -1,4 +1,4 @@
-import { get, patch } from '../../../services/apiClient';
+import { get, post, patch, del } from '../../../services/apiClient';
 
 const withAuth = (accessToken) => ({
   headers: {
