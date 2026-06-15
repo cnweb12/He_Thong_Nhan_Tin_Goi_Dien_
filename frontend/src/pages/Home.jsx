@@ -149,8 +149,10 @@ export default function Home() {
 
         setMessagesByConversation((prev) => ({ ...prev, [selectedId]: msgs }));
 
+        // Chỉ đánh dấu đã đọc khi bật read receipt
+        const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
         const lastSeq = msgs.length > 0 ? msgs[msgs.length - 1].seq : null;
-        if (lastSeq != null) {
+        if (lastSeq != null && readReceiptEnabled) {
           await markConversationReadApi(accessToken, selectedId, lastSeq);
         }
       } catch (err) {
@@ -162,7 +164,7 @@ export default function Home() {
 
     loadMessages();
     return () => { active = false; };
-  }, [selectedId, accessToken]);
+  }, [selectedId, accessToken, user]);
 
   // ── Join socket rooms khi có conversation mới ─────────────────────────────
   useEffect(() => {
@@ -232,8 +234,9 @@ export default function Home() {
         return updated;
       });
 
-      // Đánh dấu đã đọc nếu đang xem conversation này
-      if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null) {
+      // Đánh dấu đã đọc nếu đang xem conversation này và bật read receipt
+      const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
+      if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null && readReceiptEnabled) {
         markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => {});
       }
     };
@@ -372,6 +375,7 @@ export default function Home() {
         };
       });
 
+      // Mình là người gửi nên luôn "đọc" tin vừa gửi (kể cả khi tắt read receipt)
       if (normalized.seq != null) {
         await markConversationReadApi(accessToken, convId, normalized.seq);
       }

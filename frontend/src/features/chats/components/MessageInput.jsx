@@ -1,10 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { Paperclip, Send, Smile, X, Image as ImageIcon, FileText } from 'lucide-react';
+import { Paperclip, Send, Smile, X, FileText } from 'lucide-react';
+import EmojiPicker from './EmojiPicker';
 
 export default function MessageInput({ onSend, disabled = false, sending = false }) {
     const [text, setText] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const fileInputRef = useRef(null);
+    const textareaRef = useRef(null);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -34,6 +37,12 @@ export default function MessageInput({ onSend, disabled = false, sending = false
         // Optimistic UI: Xóa khung chat ngay lập tức
         setText('');
         setSelectedFile(null);
+        setShowEmojiPicker(false);
+
+        // Reset textarea height
+        if (textareaRef.current) {
+            textareaRef.current.style.height = '42px';
+        }
 
         if (currentFile) {
             const isImage = currentFile.mimeType.startsWith('image/');
@@ -58,6 +67,30 @@ export default function MessageInput({ onSend, disabled = false, sending = false
             event.preventDefault();
             send();
         }
+    };
+
+    /** Chèn emoji vào vị trí con trỏ trong textarea */
+    const handleEmojiSelect = (emoji) => {
+        const textarea = textareaRef.current;
+        if (!textarea) {
+            setText((prev) => prev + emoji);
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newText = text.slice(0, start) + emoji + text.slice(end);
+        setText(newText);
+
+        // Đặt lại vị trí con trỏ sau emoji
+        requestAnimationFrame(() => {
+            textarea.focus();
+            const newCursor = start + emoji.length;
+            textarea.setSelectionRange(newCursor, newCursor);
+            // Cập nhật chiều cao
+            textarea.style.height = 'auto';
+            textarea.style.height = `${Math.min(textarea.scrollHeight, 112)}px`;
+        });
     };
 
     return (
@@ -95,9 +128,33 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                     </div>
                 </div>
             )}
+
             <div className="p-3 sm:p-4 flex items-start sm:items-center gap-3">
-                <div className="flex items-center gap-1 text-slate-500">
-                    <button type="button" className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"><Smile size={20} /></button>
+                {/* Nút emoji + attach */}
+                <div className="flex items-center gap-1 text-slate-500 relative">
+                    {/* Nút emoji */}
+                    <div className="relative">
+                        {showEmojiPicker && (
+                            <EmojiPicker
+                                onSelect={handleEmojiSelect}
+                                onClose={() => setShowEmojiPicker(false)}
+                            />
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setShowEmojiPicker((v) => !v)}
+                            className={`p-2 rounded-full transition-colors cursor-pointer ${
+                                showEmojiPicker
+                                    ? 'bg-blue-100 text-blue-600'
+                                    : 'hover:bg-slate-100 text-slate-500'
+                            }`}
+                            title="Chèn emoji"
+                        >
+                            <Smile size={20} />
+                        </button>
+                    </div>
+
+                    {/* Nút đính kèm file */}
                     <button 
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -116,6 +173,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                 </div>
 
                 <textarea
+                    ref={textareaRef}
                     rows={1}
                     value={text}
                     onChange={(e) => {

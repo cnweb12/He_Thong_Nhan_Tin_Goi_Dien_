@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, LogOut, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, Cpu, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, LogOut, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, ShieldAlert, MessageSquareOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLeft from '../../components/SidebarLeft';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -10,6 +10,17 @@ import {
   updateCurrentUserSettingsApi,
 } from './services/userApi';
 import { getMyDevicesApi } from '../devices/services/deviceApi';
+
+/** Áp dụng theme lên toàn bộ document */
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+}
 
 const formatDateTime = (value) => {
   if (!value) return 'Chưa có dữ liệu';
@@ -102,6 +113,8 @@ export default function ProfilePage() {
         setSettingsForm(normalizeSettingsForm(loadedProfile?.settings));
         setDevices(Array.isArray(loadedDevices) ? loadedDevices : []);
         syncCurrentUser(loadedProfile);
+        // Áp dụng theme ngay khi tải xong
+        applyTheme(loadedProfile?.settings?.theme || 'light');
       } catch (err) {
         if (!active) return;
         setError(err?.message || 'Không tải được hồ sơ');
@@ -190,7 +203,9 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setSettingsForm(normalizeSettingsForm(updatedProfile?.settings));
       syncCurrentUser(updatedProfile);
-      setNotice('Đã lưu cài đặt.');
+      // Áp dụng theme ngay sau khi lưu thành công
+      applyTheme(updatedProfile?.settings?.theme || settingsForm.theme);
+      setNotice('Đã lưu cài đặt. Giao diện đã được cập nhật.');
     } catch (err) {
       setError(err?.message || 'Không lưu được cài đặt');
     } finally {
@@ -378,22 +393,28 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-slate-900">Cài đặt riêng tư</h2>
-                      <p className="text-sm text-slate-500">Đồng bộ với settings của tài khoản hiện tại.</p>
+                      <p className="text-sm text-slate-500">Kiểm soát quyền riêng tư và trải nghiệm của bạn.</p>
                     </div>
                   </div>
 
+                  {/* Giao diện & Ngôn ngữ */}
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="block">
                       <span className="text-sm font-semibold text-slate-700">Giao diện</span>
                       <select
                         name="theme"
                         value={settingsForm.theme}
-                        onChange={handleSettingsChange}
+                        onChange={(e) => {
+                          handleSettingsChange(e);
+                          // Preview theme ngay khi chọn
+                          applyTheme(e.target.value);
+                        }}
                         className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       >
-                        <option value="light">Sáng</option>
-                        <option value="dark">Tối</option>
+                        <option value="light">☀️ Sáng</option>
+                        <option value="dark">🌙 Tối</option>
                       </select>
+                      <p className="mt-1 text-xs text-slate-400">Thay đổi màu nền toàn bộ ứng dụng.</p>
                     </label>
                     <label className="block">
                       <span className="text-sm font-semibold text-slate-700">Ngôn ngữ</span>
@@ -403,31 +424,83 @@ export default function ProfilePage() {
                         onChange={handleSettingsChange}
                         className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                         maxLength={10}
+                        placeholder="vi, en, ..."
                       />
+                      <p className="mt-1 text-xs text-slate-400">Mã ngôn ngữ (ví dụ: vi, en).</p>
                     </label>
                   </div>
 
-                  <div className="mt-5 grid gap-3 md:grid-cols-2">
-                    <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3">
-                      <span className="text-sm font-semibold text-slate-700">Cho người lạ nhắn tin</span>
-                      <input
-                        type="checkbox"
-                        name="allowStrangerMessage"
-                        checked={settingsForm.allowStrangerMessage}
-                        onChange={handleSettingsChange}
-                        className="h-5 w-5 accent-blue-600"
-                      />
-                    </label>
-                    <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3">
-                      <span className="text-sm font-semibold text-slate-700">Bật xác nhận đã đọc</span>
-                      <input
-                        type="checkbox"
-                        name="readReceiptEnabled"
-                        checked={settingsForm.readReceiptEnabled}
-                        onChange={handleSettingsChange}
-                        className="h-5 w-5 accent-blue-600"
-                      />
-                    </label>
+                  {/* Toggle switches */}
+                  <div className="mt-5 space-y-3">
+                    {/* Cho người lạ nhắn tin */}
+                    <div
+                      className={`flex items-start gap-4 rounded-xl border px-4 py-3.5 transition-colors ${
+                        settingsForm.allowStrangerMessage
+                          ? 'border-slate-200 bg-white'
+                          : 'border-amber-200 bg-amber-50'
+                      }`}
+                    >
+                      <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 ${
+                        settingsForm.allowStrangerMessage ? 'bg-blue-50 text-blue-600' : 'bg-amber-100 text-amber-600'
+                      }`}>
+                        <MessageSquareOff size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-slate-700">Cho người lạ nhắn tin</span>
+                          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input
+                              type="checkbox"
+                              name="allowStrangerMessage"
+                              checked={settingsForm.allowStrangerMessage}
+                              onChange={handleSettingsChange}
+                              className="sr-only peer"
+                            />
+                            <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                          </label>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {settingsForm.allowStrangerMessage
+                            ? 'Đang bật — Người chưa kết bạn có thể gửi tin nhắn cho bạn.'
+                            : 'Đang tắt — Chỉ bạn bè mới có thể nhắn tin. Người lạ sẽ bị từ chối.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Xác nhận đã đọc */}
+                    <div
+                      className={`flex items-start gap-4 rounded-xl border px-4 py-3.5 transition-colors ${
+                        settingsForm.readReceiptEnabled
+                          ? 'border-slate-200 bg-white'
+                          : 'border-slate-200 bg-slate-50'
+                      }`}
+                    >
+                      <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 ${
+                        settingsForm.readReceiptEnabled ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        <CheckCheck size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-slate-700">Xác nhận đã đọc</span>
+                          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input
+                              type="checkbox"
+                              name="readReceiptEnabled"
+                              checked={settingsForm.readReceiptEnabled}
+                              onChange={handleSettingsChange}
+                              className="sr-only peer"
+                            />
+                            <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                          </label>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {settingsForm.readReceiptEnabled
+                            ? 'Đang bật — Người khác sẽ thấy bạn đã đọc tin nhắn của họ (dấu tick xanh).'
+                            : 'Đang tắt — Người khác sẽ không biết bạn đã đọc tin nhắn. Bạn cũng sẽ không thấy tick đọc của họ.'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-5 flex justify-end">
