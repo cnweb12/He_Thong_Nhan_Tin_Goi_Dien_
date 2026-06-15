@@ -36,6 +36,7 @@ const normalizeMessage = (message) => ({
     message?.clientMessageId ||
     `${message?.seq || 'msg'}-${message?.createdAt || ''}`,
   from: message?.senderId || message?.from || '',
+  sender: message?.sender || message?.user || message?.fromUser || null,
   text: message?.text || message?.content || '',
   time: formatTime(message?.createdAt),
   createdAt: message?.createdAt,
@@ -237,7 +238,7 @@ export default function Home() {
       // Đánh dấu đã đọc nếu đang xem conversation này và bật read receipt
       const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
       if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null && readReceiptEnabled) {
-        markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => {});
+        markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => { });
       }
     };
 
@@ -281,6 +282,12 @@ export default function Home() {
     if (selectedId === conversationId) return;
     setSelectedId(conversationId);
     setSidebarView('chat');
+    // On small screens, close the chat list to show the chat area full-screen
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+        setIsChatListOpen(false);
+      }
+    } catch (e) { /* noop */ }
   }, [selectedId]);
 
   const handleStartConversation = useCallback(async (peerUser) => {
@@ -291,6 +298,11 @@ export default function Home() {
       const id = resolveConversationId(direct);
       if (id) setSelectedId(id);
       setSidebarView('chat');
+      try {
+        if (typeof window !== 'undefined' && window.innerWidth < 640) {
+          setIsChatListOpen(false);
+        }
+      } catch (e) { /* noop */ }
     } catch (err) {
       setThreadError(err?.message || 'Không mở được cuộc trò chuyện mới');
     }
@@ -436,10 +448,10 @@ export default function Home() {
     sidebarView === 'chat'
       ? 'Tin nhắn'
       : sidebarView === 'contacts'
-      ? 'Danh bạ'
-      : sidebarView === 'cloud'
-      ? 'Cloud'
-      : 'Công việc';
+        ? 'Danh bạ'
+        : sidebarView === 'cloud'
+          ? 'Cloud'
+          : 'Công việc';
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
@@ -466,11 +478,10 @@ export default function Home() {
           <>
             {/* Cột danh sách cuộc trò chuyện */}
             <div
-              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${
-                !isChatListOpen
+              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${!isChatListOpen
                   ? 'w-0 opacity-0 border-none'
                   : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
-              }`}
+                }`}
             >
               <ChatSidebar
                 user={user}
@@ -497,6 +508,12 @@ export default function Home() {
                   onBack={() => {
                     setSelectedId(null);
                     setIsInfoOpen(false);
+                    // On mobile, when user goes back from chat, re-open chat list
+                    try {
+                      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                        setIsChatListOpen(true);
+                      }
+                    } catch (e) { /* noop */ }
                   }}
                 />
               ) : (
@@ -512,11 +529,10 @@ export default function Home() {
 
             {/* Panel thông tin bên phải */}
             <div
-              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${
-                isInfoOpen && selectedId
-                  ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${isInfoOpen && selectedId
+                  ? 'w-0 sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 opacity-0 border-none'
                   : 'w-0 opacity-0 border-none'
-              }`}
+                } hidden sm:flex`}
             >
               {isInfoOpen && selectedId && (
                 <ConversationInfo

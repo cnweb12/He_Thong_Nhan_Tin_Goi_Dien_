@@ -4,7 +4,7 @@ import { Clock, Check, AlertCircle, FileText, Download, Trash2, X, FileArchive, 
 
 /** Lấy chữ cái đầu từ displayName để làm fallback avatar */
 function getInitials(name) {
-    if (!name || name === '?') return '?';
+    if (!name) return '?';
     return name
         .split(' ')
         .map(w => w[0])
@@ -24,10 +24,56 @@ function getAvatarColor(name) {
     return colors[code % colors.length];
 }
 
+function resolveSenderInConversation(fromId, chat) {
+    if (!fromId || !chat) return null;
+
+    const candidates = [];
+    if (chat.peer) candidates.push(chat.peer);
+    if (chat.participant) candidates.push(chat.participant);
+    if (Array.isArray(chat.members)) candidates.push(...chat.members);
+    if (Array.isArray(chat.participants)) candidates.push(...chat.participants);
+    if (!chat.members && !chat.participants && (chat.displayName || chat.name || chat.phone || chat.username)) {
+        candidates.push(chat);
+    }
+
+    for (const item of candidates) {
+        if (!item) continue;
+        const user = item.user || item;
+        const ids = [
+            user?.userId,
+            user?.id,
+            user?._id,
+            item?.userId,
+            item?._id,
+            item?.id,
+        ]
+            .filter(Boolean)
+            .map((value) => value.toString());
+
+        if (ids.includes(fromId.toString())) {
+            return user;
+        }
+    }
+
+    return null;
+}
+
 function Avatar({ sender }) {
     const [imgError, setImgError] = useState(false);
-    const name = sender?.displayName || '';
-    const src  = sender?.avatarUrl;
+    const name = sender?.displayName || sender?.username || sender?.phone || sender?.name || '';
+    const src = sender?.avatarUrl || sender?.displayAvatarUrl;
+    const hasName = Boolean(name.trim());
+
+    // Debug log
+    if (!hasName) {
+        console.warn('[Avatar] No name found:', {
+            displayName: sender?.displayName,
+            username: sender?.username,
+            phone: sender?.phone,
+            name: sender?.name,
+            sender,
+        });
+    }
 
     if (src && !imgError) {
         return (
@@ -40,28 +86,61 @@ function Avatar({ sender }) {
         );
     }
 
-    // Fallback: vòng tròn màu + chữ cái đầu
+    if (hasName) {
+        return (
+            <span
+                className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold select-none"
+                style={{ backgroundColor: getAvatarColor(name) }}
+                title={name}
+            >
+                {getInitials(name)}
+            </span>
+        );
+    }
+
     return (
         <span
-            className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold select-none"
-            style={{ backgroundColor: getAvatarColor(name) }}
-            title={name}
+            className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-slate-300 text-slate-700 text-[10px] font-semibold select-none"
+            title="Người dùng"
         >
-            {getInitials(name)}
+            ?
         </span>
     );
 }
 
-export default function MessageBubble({ m, isMine }) {
+export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     const [previewImage, setPreviewImage] = useState(null);
+    const messageSender = m.sender || m.senderInfo || m.user || m.fromUser;
+    const resolvedSender = resolveSenderInConversation(m.from, chat);
+
+    // Merge: ưu tiên thông tin từ message, nhưng lấy avatar/displayName từ chat nếu message không có
+    const sender = messageSender
+        ? {
+            ...messageSender,
+            avatarUrl: messageSender?.avatarUrl || resolvedSender?.avatarUrl,
+            displayAvatarUrl: messageSender?.displayAvatarUrl || resolvedSender?.displayAvatarUrl,
+            displayName: messageSender?.displayName || resolvedSender?.displayName,
+            name: messageSender?.name || resolvedSender?.name,
+            username: messageSender?.username || resolvedSender?.username,
+            phone: messageSender?.phone || resolvedSender?.phone,
+        }
+        : resolvedSender;
+
+    console.log('[MessageBubble] Sender Resolution:', {
+        from: m.from,
+        messageSender,
+        resolvedSender,
+        finalSender: sender,
+        hasName: Boolean((sender?.displayName || sender?.username || sender?.phone || sender?.name || '').trim()),
+    });
 
     const getStatusIcon = () => {
         if (!isMine || !m.status) return null;
         switch (m.status) {
             case 'sending': return <Clock className="w-3 h-3 text-slate-400" />;
-            case 'sent':    return <Check className="w-3 h-3 text-blue-500" />;
-            case 'error':   return <AlertCircle className="w-3 h-3 text-red-500" />;
-            default:        return null;
+            case 'sent': return <Check className="w-3 h-3 text-blue-500" />;
+            case 'error': return <AlertCircle className="w-3 h-3 text-red-500" />;
+            default: return null;
         }
     };
 
@@ -72,16 +151,16 @@ export default function MessageBubble({ m, isMine }) {
             : [];
 
     const hasAttachments = attachments.length > 0;
-    const hasText        = Boolean(m.text && m.text.trim());
+    const hasText = Boolean(m.text && m.text.trim());
 
     const getFileIcon = (fileName) => {
         const ext = fileName?.split('.').pop()?.toLowerCase();
-        if (['zip','rar','7z','tar','gz'].includes(ext)) return <FileArchive size={22} />;
-        if (['pdf'].includes(ext))                        return <FileText size={22} className="text-red-500" />;
-        if (['doc','docx','txt'].includes(ext))           return <FileText size={22} className="text-blue-500" />;
-        if (['xls','xlsx','csv'].includes(ext))           return <FileCode size={22} className="text-emerald-500" />;
-        if (['mp3','wav','ogg'].includes(ext))            return <FileAudio size={20} />;
-        if (['mp4','webm','mov','avi'].includes(ext))     return <FileVideo size={20} />;
+        if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return <FileArchive size={22} />;
+        if (['pdf'].includes(ext)) return <FileText size={22} className="text-red-500" />;
+        if (['doc', 'docx', 'txt'].includes(ext)) return <FileText size={22} className="text-blue-500" />;
+        if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileCode size={22} className="text-emerald-500" />;
+        if (['mp3', 'wav', 'ogg'].includes(ext)) return <FileAudio size={20} />;
+        if (['mp4', 'webm', 'mov', 'avi'].includes(ext)) return <FileVideo size={20} />;
         return <File size={22} />;
     };
 
@@ -115,9 +194,9 @@ export default function MessageBubble({ m, isMine }) {
     return (
         <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
             {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
-            {!isMine && <Avatar sender={m.sender} />}
+            {!isMine && <Avatar sender={sender} />}
 
-            <div className={`flex flex-col max-w-[70%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
+            <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
                 {/* File / ảnh đính kèm */}
                 {hasAttachments && (
                     <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
@@ -201,7 +280,7 @@ export default function MessageBubble({ m, isMine }) {
                             onClick={(e) => e.stopPropagation()} />
                     </div>
                 </div>
-            , document.body)}
+                , document.body)}
         </div>
     );
 }

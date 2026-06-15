@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 
-export default function MessageList({ messages, currentUserId, loading, error }) {
+export default function MessageList({ messages, currentUserId, loading, error, chat }) {
     const bottomRef = useRef(null);
 
     useEffect(() => {
@@ -27,7 +27,7 @@ export default function MessageList({ messages, currentUserId, loading, error })
                     </div>
                 )}
                 {messages.map((m, idx) => (
-                    <MessageBubble key={m.id || idx} m={m} isMine={m.from === currentUserId} />
+                    <MessageBubble key={m.id || idx} m={m} isMine={m.from === currentUserId} chat={chat} />
                 ))}
                 <div ref={bottomRef} />
             </div>
