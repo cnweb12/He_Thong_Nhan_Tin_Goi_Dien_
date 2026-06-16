@@ -49,7 +49,6 @@ const UserTable = ({ users, loading }) => {
             <th className="py-3 px-4 pl-6">User</th>
             <th className="py-3 px-4">Phone</th>
             <th className="py-3 px-4">Role</th>
-            <th className="py-3 px-4">Last Seen</th>
             <th className="py-3 px-4 pr-6">Joined</th>
           </tr>
         </thead>
@@ -82,14 +81,6 @@ const UserTable = ({ users, loading }) => {
               </td>
               <td className="py-4 px-4">
                 {getRoleBadge(user.role)}
-              </td>
-              <td className="py-4 px-4 text-sm text-slate-500 dark:text-slate-400">
-                {user.lastSeenAt ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    {formatDate(user.lastSeenAt)}
-                  </span>
-                ) : 'Never'}
               </td>
               <td className="py-4 px-4 pr-6 text-sm text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1.5">
