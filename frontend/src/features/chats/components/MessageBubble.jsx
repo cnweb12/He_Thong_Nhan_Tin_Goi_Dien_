@@ -37,7 +37,7 @@ function resolveSenderInConversation(fromId, chat) {
     return null;
 }
 
-export default function MessageBubble({ m, isMine, currentUserId, chat }) {
+export default function MessageBubble({ m, isMine, currentUserId, chat, isReadWatermark }) {
     const [previewImage, setPreviewImage] = useState(null);
     const messageSender = m.sender || m.senderInfo || m.user || m.fromUser;
     const resolvedSender = resolveSenderInConversation(m.from, chat);
@@ -64,16 +64,14 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     });
 
     const getStatusIcon = () => {
+        // Nếu không phải tin của mình thì không hiển thị status icon (seen watermark sẽ được xử lý riêng ở ngoài)
         if (!isMine || !m.status) return null;
+
         switch (m.status) {
             case 'sending': return <Clock className="w-3 h-3 text-slate-400" />;
             case 'error': return <AlertCircle className="w-3 h-3 text-red-500" />;
             case 'sent': return <Check className="w-3 h-3 text-slate-400" />;
-            case 'read': {
-                const readAvatar = chat?.displayAvatarUrl || chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl;
-                if (readAvatar) return <img src={readAvatar} alt="read" className="w-3.5 h-3.5 rounded-full object-cover shadow-sm" />;
-                return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
-            }
+            case 'read': return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
             default: return null;
         }
     };
@@ -126,16 +124,17 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     };
 
     return (
-        <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
-            {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
-            {!isMine && <Avatar
-                src={sender?.avatarUrl || sender?.displayAvatarUrl}
-                name={sender?.displayName || sender?.username || sender?.phone || sender?.name || ''}
-                size="w-7 h-7"
-                textClass="text-[10px] font-bold"
-            />}
+        <div className="flex w-full items-end justify-between gap-1">
+            <div className={`flex-1 flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2 min-w-0`}>
+                {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
+                {!isMine && <Avatar
+                    src={sender?.avatarUrl || sender?.displayAvatarUrl}
+                    name={sender?.displayName || sender?.username || sender?.phone || sender?.name || ''}
+                    size="w-7 h-7"
+                    textClass="text-[10px] font-bold"
+                />}
 
-            <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
+                <div className={`flex flex-col max-w-[90%] sm:max-w-[70%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
                 {/* File / ảnh đính kèm */}
                 {hasAttachments && (
                     <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
@@ -196,8 +195,19 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
                     {getStatusIcon()}
                 </div>
             </div>
+            </div>
 
-            {isMine && <div className="w-7 h-7 shrink-0" />}
+            {/* Read Watermark hiển thị ở lề bên phải ngoài cùng của màn hình */}
+            <div className="w-4 h-4 shrink-0 flex items-end justify-center mb-1">
+                {isReadWatermark && (
+                    <Avatar 
+                        src={chat?.displayAvatarUrl || chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl} 
+                        name={chat?.displayName || chat?.peer?.displayName || chat?.peer?.username || chat?.name || 'User'} 
+                        size="w-4 h-4" 
+                        textClass="text-[8px] font-bold" 
+                    />
+                )}
+            </div>
 
             {/* Lightbox */}
             {previewImage && createPortal(
