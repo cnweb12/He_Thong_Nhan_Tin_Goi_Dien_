@@ -8,9 +8,10 @@ import CallOverlay from './features/calls/components/CallOverlay';
 import { ConversationProvider } from './features/conversations/context/ConversationProvider';
 import Home from './pages/Home';
 import ProfilePage from './features/users/ProfilePage';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
 
 function App() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   // SocketProvider luôn render — không được đặt bên trong điều kiện loading
   // vì nếu đặt trong if(loading) return ..., mỗi lần loading đổi thì socket bị
@@ -38,11 +39,19 @@ function App() {
               />
               <Route
                 path="/"
-                element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />}
+                element={
+                  isAuthenticated 
+                    ? (user?.role === 'super_admin' ? <Navigate to="/admin" replace /> : <Home />)
+                    : <Navigate to="/login" replace />
+                }
               />
               <Route
                 path="/profile"
                 element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/admin"
+                element={isAuthenticated && user?.role === 'super_admin' ? <AdminDashboard /> : <Navigate to="/" replace />}
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

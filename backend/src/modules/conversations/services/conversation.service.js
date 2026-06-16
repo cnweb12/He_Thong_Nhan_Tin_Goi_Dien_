@@ -230,6 +230,12 @@ function createConversationService(dependencies = {}) {
     }
 
     const [currentUser, peerUser] = await Promise.all([ensureUserExists(userId), ensureUserExists(peerUserId)]);
+    
+    // Prevent conversations involving super admins
+    if (["super_admin", "admin"].includes(currentUser.role) || ["super_admin", "admin"].includes(peerUser.role)) {
+      throw createHttpError(403, "Cannot create or engage in a conversation with an administrator.");
+    }
+
     const directKey = normalizeDirectKey(userId, peerUserId);
 
     if (!useTransactions) {

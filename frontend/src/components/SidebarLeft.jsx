@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Clock3, LayoutGrid,
-    MessageCircle, Settings, UserRound, LogOut,
+    MessageCircle, Settings, UserRound, LogOut, Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -101,6 +101,20 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                     {/* Phần dưới: settings, logout */}
                     <div className="flex flex-col items-center gap-3">
+                        {user?.role === 'super_admin' && (
+                            <button
+                                type="button"
+                                onClick={() => navigate('/admin')}
+                                aria-label="Admin Dashboard"
+                                className="w-11 h-11 rounded-[1rem] bg-blue-500/10 border border-blue-500/20
+                                           text-blue-400 flex items-center justify-center
+                                           hover:bg-blue-500/20 hover:text-blue-300 transition-colors
+                                           focus:outline-none cursor-pointer"
+                            >
+                                <Shield size={18} />
+                            </button>
+                        )}
+
                         <button
                             type="button"
                             onClick={() => navigate('/profile')}
@@ -193,6 +207,21 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                     </span>
                     <span className="text-[10px] font-medium leading-none text-white/50">Cài đặt</span>
                 </button>
+
+                {/* Admin Dashboard */}
+                {user?.role === 'super_admin' && (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/admin')}
+                        aria-label="Admin"
+                        className="flex flex-col items-center gap-1 flex-1 py-1 focus:outline-none"
+                    >
+                        <span className="w-10 h-10 rounded-[0.9rem] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                            <Shield size={18} />
+                        </span>
+                        <span className="text-[10px] font-medium leading-none text-blue-400/80">Admin</span>
+                    </button>
+                )}
 
                 {/* Avatar / Profile */}
                 <button
