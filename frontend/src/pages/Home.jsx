@@ -69,7 +69,7 @@ const normalizeConversationFromSocket = (conversation, currentUserId) => {
 // ─── component ──────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { user, accessToken, fetchCurrentUser } = useAuth();
+  const { user, accessToken, fetchCurrentUser, logout, restoreSession } = useAuth();
   const { socket, isConnected, isConnecting, error: socketError } = useAppSocket();
   const {
     conversations,
@@ -121,6 +121,7 @@ export default function Home() {
     setInitialError(null);
 
     (async () => {
+      let hasError = false;
       try {
         const [_, __, requests] = await Promise.all([
             fetchCurrentUser(), 
@@ -131,9 +132,26 @@ export default function Home() {
             setPendingRequestsCount(requests?.length || 0);
         }
       } catch (err) {
-        if (active) setInitialError(err?.message || 'Không tải được dữ liệu ban đầu');
+        if (!active) return;
+        hasError = true;
+        const errMsg = err?.message || '';
+        const isAuthError = errMsg.toLowerCase().includes('token') || errMsg.toLowerCase().includes('unauthorized');
+        
+        if (isAuthError) {
+            try {
+                const newToken = await restoreSession();
+                if (newToken) {
+                    // Cập nhật token thành công, huỷ loading và chờ useEffect re-run với token mới
+                    return; 
+                }
+            } catch (e) {
+                // Refresh thất bại
+            }
+        }
+        
+        setInitialError(errMsg || 'Không tải được dữ liệu ban đầu');
       } finally {
-        if (active) {
+        if (active && !hasError) {
           setIsBootstrapped(true);
           setInitialLoading(false);
         }
@@ -431,22 +449,34 @@ export default function Home() {
 
   // ── Render guards ─────────────────────────────────────────────────────────
   if (inboxError || initialError) {
+    const isAuthError = (inboxError || initialError)?.toLowerCase().includes('token') || (inboxError || initialError)?.toLowerCase().includes('unauthorized');
+
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="bg-white dark:bg-[#17212b] border border-slate-200 dark:border-[#1e2d3d] rounded-2xl px-6 py-5 text-center shadow max-w-md">
           <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu</p>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{inboxError || initialError}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setInitialError(null);
-              setIsBootstrapped(false);
-              setInitialLoading(true);
-            }}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
-          >
-            Thử lại
-          </button>
+          {isAuthError ? (
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Đăng nhập lại
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setInitialError(null);
+                setIsBootstrapped(false);
+                setInitialLoading(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Thử lại
+            </button>
+          )}
         </div>
       </div>
     );
