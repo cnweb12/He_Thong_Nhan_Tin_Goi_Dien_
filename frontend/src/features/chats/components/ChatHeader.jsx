@@ -130,6 +130,7 @@ export default function ChatHeader({
           title="Thông tin hội thoại"
         >
           <Info size={20} />
+        </button>
       </div>
     </div>
   );
