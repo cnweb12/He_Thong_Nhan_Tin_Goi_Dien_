@@ -41,4 +41,14 @@ export const put = (path, body, opts) => request("PUT", path, body, opts);
 export const patch = (path, body, opts) => request("PATCH", path, body, opts);
 export const del = (path, opts) => request("DELETE", path, null, opts);
 
-export default { get, post, put, patch, del, buildApiUrl };
+/**
+ * Helper tạo config header Authorization.
+ * Centralized tại đây — thay thế các bản duplicate ở mọi service file.
+ * @param {string} accessToken
+ * @returns {{ headers: { Authorization: string } }}
+ */
+export const withAuth = (accessToken) => ({
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
+
+export default { get, post, put, patch, del, buildApiUrl, withAuth };

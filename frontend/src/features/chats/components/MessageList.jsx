@@ -57,7 +57,7 @@ export default function MessageList({
       behavior: isFirstLoad.current ? "auto" : "smooth",
     });
     isFirstLoad.current = false;
-  }, [validMessages, typingUsers]);
+  }, [validMessages]);
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100 dark:bg-slate-900">

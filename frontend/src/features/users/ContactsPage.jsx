@@ -26,28 +26,31 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  // Load friends and pending requests
-  const loadContactsData = async () => {
-    if (!accessToken) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [friendsData, requestsData] = await Promise.all([
-        listFriendsApi(accessToken),
-        listPendingRequestsApi(accessToken)
-      ]);
-      setFriends(friendsData || []);
-      setRequests(requestsData || []);
-    } catch (err) {
-      setError(err?.message || 'Không tải được danh sách liên hệ');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadContactsData();
-  }, [accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!accessToken) return;
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [friendsData, requestsData] = await Promise.all([
+          listFriendsApi(accessToken),
+          listPendingRequestsApi(accessToken),
+        ]);
+        if (!active) return;
+        setFriends(friendsData || []);
+        setRequests(requestsData || []);
+      } catch (err) {
+        if (active) setError(err?.message || 'Không tải được danh sách liên hệ');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { active = false; };
+  }, [accessToken]);
 
   // Handle global search for users
   useEffect(() => {

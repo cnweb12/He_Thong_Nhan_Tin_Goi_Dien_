@@ -41,6 +41,7 @@ export function TwilioProvider({ children }) {
   const remoteAudioRef = useRef(null);
   const audioContextRef = useRef(null);
   const toneIntervalRef = useRef(null);
+  const pendingIceCandidatesRef = useRef([]);
 
   callStateRef.current = callState;
   callInfoRef.current = callInfo;
@@ -390,11 +391,11 @@ export function TwilioProvider({ children }) {
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         
         // Process queued ICE candidates
-        if (window.pendingIceCandidates) {
-          for (const candidate of window.pendingIceCandidates) {
+        if (pendingIceCandidatesRef.current.length > 0) {
+          for (const candidate of pendingIceCandidatesRef.current) {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           }
-          window.pendingIceCandidates = [];
+          pendingIceCandidatesRef.current = [];
         }
 
         const answer = await pc.createAnswer();
@@ -420,11 +421,11 @@ export function TwilioProvider({ children }) {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
         
         // Process queued ICE candidates
-        if (window.pendingIceCandidates) {
-          for (const candidate of window.pendingIceCandidates) {
+        if (pendingIceCandidatesRef.current.length > 0) {
+          for (const candidate of pendingIceCandidatesRef.current) {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           }
-          window.pendingIceCandidates = [];
+          pendingIceCandidatesRef.current = [];
         }
       } catch (err) {
         console.error('[WebRTC Call] Failed to handle answer:', err);
@@ -441,8 +442,7 @@ export function TwilioProvider({ children }) {
         if (pc.remoteDescription) {
           await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
         } else {
-          window.pendingIceCandidates = window.pendingIceCandidates || [];
-          window.pendingIceCandidates.push(data.candidate);
+          pendingIceCandidatesRef.current.push(data.candidate);
         }
       } catch (err) {
         console.warn('[WebRTC Call] Failed to add ICE candidate:', err);

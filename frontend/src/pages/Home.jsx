@@ -13,7 +13,7 @@ import {
   markConversationReadApi,
   sendMessageApi,
   recallMessageApi,
-  clearHistoryApi
+  clearHistoryApi,
 } from '../features/messages/services/messageApi';
 import { uploadFilesApi } from '../services/upload.service';
 import { listPendingRequestsApi } from '../features/users/services/userApi';
@@ -21,57 +21,17 @@ import ContactsPage from '../features/users/ContactsPage';
 import CloudPage from '../features/users/CloudPage';
 import TasksPage from '../features/users/TasksPage';
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// Custom socket hooks (tách ra khỏi Home để giảm độ phức tạp)
+import { useSocketMessages } from '../features/chats/hooks/useSocketMessages';
+import { useSocketTyping } from '../features/chats/hooks/useSocketTyping';
+import { useSocketReadReceipt } from '../features/chats/hooks/useSocketReadReceipt';
 
-const formatTime = (value) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  // Chỉ trả về giờ và phút, việc hiển thị ngày sẽ do Date Divider trong MessageList đảm nhiệm
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
-const resolveConversationId = (conversation) =>
-  conversation?.conversationId || conversation?.id || conversation?._id || null;
-
-const normalizeMessage = (message) => ({
-  id:
-    message?._id ||
-    message?.id ||
-    message?.clientMessageId ||
-    `${message?.seq || 'msg'}-${message?.createdAt || ''}`,
-  from: message?.senderId || message?.from || '',
-  sender: message?.sender || message?.user || message?.fromUser || null,
-  text: message?.text || message?.content || '',
-  time: formatTime(message?.createdAt),
-  createdAt: message?.createdAt,
-  type: message?.type || 'text',
-  seq: message?.seq,
-  clientMessageId: message?.clientMessageId,
-  attachments: message?.attachments || [],
-  deletedAt: message?.deletedAt,
-  // Giữ nguyên status nếu có (ví dụ: 'read', 'sent'), nếu không thì mặc định là 'sent'
-  status: message?.status || 'sent',
-});
-
-const normalizeConversationFromSocket = (conversation, currentUserId) => {
-  if (!conversation) return null;
-  const { members = [], type, _id, title, avatarUrl: groupAvatarUrl } = conversation;
-  const base = { ...conversation, conversationId: _id, id: _id };
-
-  if (type === 'direct') {
-    const peer = members.find((m) => m.userId !== currentUserId);
-    if (peer?.user) {
-      base.displayName = peer.user.displayName;
-      base.displayAvatarUrl = peer.user.avatarUrl;
-      base.peer = peer.user;
-    }
-  } else {
-    base.displayName = title;
-    base.displayAvatarUrl = groupAvatarUrl;
-  }
-  return base;
-};
+// Shared utils
+import {
+  resolveConversationId,
+  normalizeMessage,
+  formatTime,
+} from '../utils/conversationUtils';
 
 // ─── component ──────────────────────────────────────────────────────────────
 
@@ -99,27 +59,63 @@ export default function Home() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(true);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
-  const [typingUsers, setTypingUsers] = useState({});
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
   const joinedRoomsRef = useRef(new Set());
-  const processedMsgIdsRef = useRef(new Set());
 
-  // Lưu trữ giá trị bằng Ref để tránh việc re-bind Socket Event Listener liên tục khi state thay đổi
+  // Refs để tránh stale closure trong socket event listeners
   const selectedIdRef = useRef(selectedId);
   const accessTokenRef = useRef(accessToken);
-  const currentUserIdRef = useRef(currentUserId);
   const messagesByConversationRef = useRef(messagesByConversation);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
     accessTokenRef.current = accessToken;
-    currentUserIdRef.current = currentUserId;
-  }, [selectedId, accessToken, currentUserId, messagesByConversation]);
+  }, [selectedId, accessToken]);
 
   useEffect(() => {
     messagesByConversationRef.current = messagesByConversation;
   }, [messagesByConversation]);
+
+  // ── Socket hooks (đã tách ra riêng) ───────────────────────────────────────
+  useSocketMessages({
+    socket,
+    isConnected,
+    currentUserId,
+    selectedIdRef,
+    accessTokenRef,
+    messagesByConversationRef,
+    setMessagesByConversation,
+    setConversations,
+    userSettings: user?.settings,
+    markReadApi: markConversationReadApi,
+  });
+
+  useSocketReadReceipt({
+    socket,
+    isConnected,
+    currentUserId,
+    setConversations,
+    setMessagesByConversation,
+  });
+
+  const { typingUsers } = useSocketTyping({
+    socket,
+    isConnected,
+    currentUserId,
+  });
+
+  // ── Join socket rooms khi có conversation mới ─────────────────────────────
+  useEffect(() => {
+    if (!socket || !isConnected || !conversations.length) return;
+    conversations.forEach((c) => {
+      const id = resolveConversationId(c);
+      if (id && !joinedRoomsRef.current.has(id)) {
+        socket.emit('join_room', { conversationId: id });
+        joinedRoomsRef.current.add(id);
+      }
+    });
+  }, [socket, isConnected, conversations]);
 
   // ── Bootstrap: load user + inbox sau khi socket sẵn sàng ──────────────────
   useEffect(() => {
@@ -138,27 +134,31 @@ export default function Home() {
     (async () => {
       let hasError = false;
       try {
-        const [_, __, requests] = await Promise.all([
-            fetchCurrentUser(), 
-            fetchInbox(accessToken),
-            listPendingRequestsApi(accessToken).catch(() => [])
+        const [, , requests] = await Promise.all([
+          fetchCurrentUser(),
+          fetchInbox(accessToken),
+          listPendingRequestsApi(accessToken).catch(() => []),
         ]);
         if (active) {
-            setPendingRequestsCount(requests?.length || 0);
+          setPendingRequestsCount(requests?.length || 0);
         }
       } catch (err) {
         if (!active) return;
         hasError = true;
         const errMsg = err?.message || '';
-        const isAuthError = errMsg.toLowerCase().includes('token') || errMsg.toLowerCase().includes('unauthorized');
-        
+        const isAuthError =
+          errMsg.toLowerCase().includes('token') ||
+          errMsg.toLowerCase().includes('unauthorized');
+
         if (isAuthError) {
-            try {
-                const newToken = await restoreSession();
-                if (newToken) return; 
-            } catch (e) {}
+          try {
+            const newToken = await restoreSession();
+            if (newToken) return;
+          } catch (e) {
+            // session expired
+          }
         }
-        
+
         setInitialError(errMsg || 'Không tải được dữ liệu ban đầu');
       } finally {
         if (active && !hasError) {
@@ -169,7 +169,7 @@ export default function Home() {
     })();
 
     return () => { active = false; };
-  }, [isConnected, isConnecting, socketError, accessToken, isBootstrapped, fetchCurrentUser, fetchInbox]);
+  }, [isConnected, isConnecting, socketError, accessToken, isBootstrapped, fetchCurrentUser, fetchInbox, restoreSession]);
 
   // ── Load tin nhắn khi chọn conversation ───────────────────────────────────
   useEffect(() => {
@@ -187,7 +187,6 @@ export default function Home() {
 
         setMessagesByConversation((prev) => ({ ...prev, [selectedId]: msgs }));
 
-        // Chỉ đánh dấu đã đọc khi bật read receipt
         const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
         const lastSeq = msgs.length > 0 ? msgs[msgs.length - 1].seq : null;
         if (lastSeq != null && readReceiptEnabled) {
@@ -203,220 +202,6 @@ export default function Home() {
     loadMessages();
     return () => { active = false; };
   }, [selectedId, accessToken, user]);
-
-  // ── Join socket rooms khi có conversation mới ─────────────────────────────
-  useEffect(() => {
-    if (!socket || !isConnected || !conversations.length) return;
-    conversations.forEach((c) => {
-      const id = resolveConversationId(c);
-      if (id && !joinedRoomsRef.current.has(id)) {
-        socket.emit('join_room', { conversationId: id });
-        joinedRoomsRef.current.add(id);
-      }
-    });
-  }, [socket, isConnected, conversations]);
-
-  // ── Nhận tin nhắn mới từ socket ───────────────────────────────────────────
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleNewMessage = (data) => {
-      const { message: rawMessage, conversation: backendConv } = data;
-      if (!rawMessage || !backendConv) return;
-
-      const msg = normalizeMessage(rawMessage);
-      const convId = resolveConversationId(backendConv);
-      if (!convId || !msg.id) return;
-
-      // Loại bỏ duplicate event do backend gửi vào 2 room (room conversation và room cá nhân)
-      if (processedMsgIdsRef.current.has(msg.id)) return;
-      processedMsgIdsRef.current.add(msg.id);
-      if (processedMsgIdsRef.current.size > 200) {
-        const firstElement = processedMsgIdsRef.current.values().next().value;
-        processedMsgIdsRef.current.delete(firstElement);
-      }
-
-      // Cập nhật danh sách tin nhắn
-      setMessagesByConversation((prev) => {
-        const cur = prev[convId] || [];
-        const pendingIdx = cur.findIndex(
-          (m) => m.clientMessageId && m.clientMessageId === msg.clientMessageId
-        );
-        if (pendingIdx !== -1) {
-          const updated = [...cur];
-          updated[pendingIdx] = { ...msg, status: 'sent' };
-          return { ...prev, [convId]: updated };
-        }
-        if (cur.some((m) => m.id === msg.id)) return prev;
-        return { ...prev, [convId]: [...cur, msg] };
-      });
-
-      // Cập nhật sidebar
-      setConversations((prev) => {
-        const idx = prev.findIndex((c) => resolveConversationId(c) === convId);
-
-        if (idx === -1) {
-          // Conversation mới
-          const newConv = normalizeConversationFromSocket(backendConv, currentUserIdRef.current);
-          if (!newConv) return prev;
-          newConv.lastMessage = msg.text;
-          newConv.time = msg.time;
-          newConv.lastActivityAt = msg.createdAt;
-          newConv.unread = 1;
-
-          // Side Effect join_room đã được lược bỏ ở đây vì đã có useEffect chuyên dụng ở trên handle tự động
-          return [newConv, ...prev];
-        }
-
-        const updated = [...prev];
-        const conv = { ...updated[idx] };
-        conv.lastMessage = msg.text;
-        conv.time = msg.time;
-        conv.lastActivityAt = msg.createdAt;
-        if (selectedIdRef.current !== convId) conv.unread = (conv.unread || 0) + 1;
-
-        updated.splice(idx, 1);
-        updated.unshift(conv);
-        return updated;
-      });
-
-      // Đánh dấu đã đọc nếu đang xem conversation này và bật read receipt
-      const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
-      if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null && readReceiptEnabled) {
-        markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => { });
-      }
-    };
-
-    socket.on('new_message', handleNewMessage);
-    return () => socket.off('new_message', handleNewMessage);
-  }, [socket, isConnected, setConversations]);
-
-  // ── Người kia đã đọc tin ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleMessageRead = ({ conversationId, userId, lastSeenSeq }) => {
-      if (userId === currentUserIdRef.current) {
-        setConversations((prev) =>
-          prev.map((c) =>
-            resolveConversationId(c) === conversationId ? { ...c, unread: 0 } : c
-          )
-        );
-      } else if (lastSeenSeq != null) {
-        // Đối phương đã đọc -> Đánh dấu tin nhắn cuối cùng mình gửi (<= lastSeenSeq) là 'read'
-        setMessagesByConversation((prev) => {
-          const cur = prev[conversationId] || [];
-          if (cur.length === 0) return prev;
-          
-          let updated = cur.map(msg => {
-              if (msg.from === currentUserIdRef.current && msg.status === 'read') {
-                  return { ...msg, status: 'sent' }; // Xóa trạng thái read cũ
-              }
-              return msg;
-          });
-          
-          // Tìm tin nhắn cuối cùng của mình mà đối phương đã xem
-          for (let i = updated.length - 1; i >= 0; i--) {
-              if (updated[i].from === currentUserIdRef.current && updated[i].seq <= lastSeenSeq) {
-                  updated[i] = { ...updated[i], status: 'read' };
-                  break;
-              }
-          }
-          return { ...prev, [conversationId]: updated };
-        });
-      }
-    };
-
-    socket.on('message_read', handleMessageRead);
-    return () => socket.off('message_read', handleMessageRead);
-  }, [socket, isConnected, setConversations]);
-
-  // ── Thu hồi tin nhắn từ socket ───────────────────────────────────────────
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const getMessagePreviewText = (message) => {
-      if (!message) return 'Chưa có tin nhắn';
-      if (message.text) return message.text;
-      if (message.deletedAt) return 'Tin nhắn đã thu hồi';
-      if (message.attachments?.length > 0) {
-        const isImage =
-          message.type === 'image' || message.attachments[0].mimeType?.startsWith('image/');
-        return isImage ? '[Hình ảnh]' : '[Tệp đính kèm]';
-      }
-      return 'Chưa có tin nhắn';
-    };
-
-    const handleMessageRecalled = ({ messageId, conversationId, deletedAt }) => {
-      // Cập nhật danh sách tin nhắn trong khung chat
-      setMessagesByConversation((prev) => {
-        const currentMessages = prev[conversationId];
-        if (!currentMessages) return prev;
-        const updatedMessages = currentMessages.map((m) =>
-          m.id === messageId ? { ...m, deletedAt, text: 'Tin nhắn đã thu hồi' } : m
-        );
-        return { ...prev, [conversationId]: updatedMessages };
-      });
-
-      // Cập nhật tin nhắn cuối ở sidebar
-      setConversations((prevConvs) => {
-        const convIndex = prevConvs.findIndex((c) => resolveConversationId(c) === conversationId);
-        if (convIndex === -1) return prevConvs;
-
-        const allMessages = messagesByConversationRef.current[conversationId] || [];
-        const lastMessageInUI = allMessages.length > 0 ? allMessages[allMessages.length - 1] : null;
-
-        if (lastMessageInUI && lastMessageInUI.id === messageId) {
-          const newConversations = [...prevConvs];
-          const updatedConv = { ...newConversations[convIndex] };
-
-          const newLastMessage = allMessages.length > 1 ? allMessages[allMessages.length - 2] : null;
-
-          updatedConv.lastMessage = getMessagePreviewText(newLastMessage);
-          updatedConv.time = newLastMessage ? formatTime(newLastMessage.createdAt) : '';
-          updatedConv.lastActivityAt = newLastMessage ? newLastMessage.createdAt : updatedConv.createdAt;
-
-          newConversations[convIndex] = updatedConv;
-          return newConversations;
-        }
-
-        return prevConvs;
-      });
-    };
-
-    socket.on('message:recalled', handleMessageRecalled);
-    return () => socket.off('message:recalled', handleMessageRecalled);
-  }, [socket, isConnected, setConversations]);
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-    
-    const handleTypingStart = ({ conversationId, userId, displayName }) => {
-      if (userId === currentUserIdRef.current) return;
-      setTypingUsers(prev => {
-         const current = prev[conversationId] || [];
-         if (current.find(u => u.userId === userId)) return prev;
-         return { ...prev, [conversationId]: [...current, { userId, displayName }] };
-      });
-    };
-    
-    const handleTypingStop = ({ conversationId, userId }) => {
-      if (userId === currentUserIdRef.current) return;
-      setTypingUsers(prev => {
-         const current = prev[conversationId] || [];
-         const updated = current.filter(u => u.userId !== userId);
-         if (updated.length === current.length) return prev;
-         return { ...prev, [conversationId]: updated };
-      });
-    };
-
-    socket.on('typing_start', handleTypingStart);
-    socket.on('typing_stop', handleTypingStop);
-    
-    return () => {
-       socket.off('typing_start', handleTypingStart);
-       socket.off('typing_stop', handleTypingStop);
-    };
-  }, [socket, isConnected]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
@@ -436,7 +221,6 @@ export default function Home() {
     if (selectedId === conversationId) return;
     setSelectedId(conversationId);
     setSidebarView('chat');
-    // On small screens, close the chat list to show the chat area full-screen
     try {
       if (typeof window !== 'undefined' && window.innerWidth < 640) {
         setIsChatListOpen(false);
@@ -541,7 +325,7 @@ export default function Home() {
         };
       });
 
-      // Mình là người gửi nên luôn "đọc" tin vừa gửi (kể cả khi tắt read receipt)
+      // Mình là người gửi nên luôn "đọc" tin vừa gửi
       if (normalized.seq != null) {
         await markConversationReadApi(accessToken, convId, normalized.seq);
       }
@@ -577,29 +361,31 @@ export default function Home() {
         )
       );
     } catch (err) {
-      alert(err.message || 'Không thể xóa cuộc trò chuyện');
+      setThreadError(err?.message || 'Không thể xóa cuộc trò chuyện');
     }
   }, [selectedId, accessToken, setConversations]);
 
   const handleRecallMessage = useCallback(async (messageId) => {
     if (!accessToken) return;
-     try {
-       // Chỉ cần gọi API, backend sẽ phát socket event để cập nhật UI cho mọi client
-       await recallMessageApi(accessToken, messageId);
-     } catch (err) {
-       alert(err.message || 'Không thể thu hồi tin nhắn');
-     }
-   }, [accessToken]);
+    try {
+      await recallMessageApi(accessToken, messageId);
+    } catch (err) {
+      setThreadError(err?.message || 'Không thể thu hồi tin nhắn');
+    }
+  }, [accessToken]);
 
   // ── Render guards ─────────────────────────────────────────────────────────
   if (inboxError || initialError) {
-    const isAuthError = (inboxError || initialError)?.toLowerCase().includes('token') || (inboxError || initialError)?.toLowerCase().includes('unauthorized');
+    const errMsg = inboxError || initialError;
+    const isAuthError =
+      errMsg?.toLowerCase().includes('token') ||
+      errMsg?.toLowerCase().includes('unauthorized');
 
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5 text-center shadow max-w-md">
+        <div className="bg-white dark:bg-[#17212b] border border-slate-200 dark:border-[#1e2d3d] rounded-2xl px-6 py-5 text-center shadow max-w-md">
           <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu</p>
-          <p className="text-sm text-slate-600 mb-4">{inboxError || initialError}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{errMsg}</p>
           {isAuthError ? (
             <button
               type="button"
@@ -629,28 +415,19 @@ export default function Home() {
   if (!isBootstrapped || initialLoading || inboxLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5 text-center shadow">
-          <p className="text-slate-800 font-semibold mb-1">Đang tải dữ liệu...</p>
-          <p className="text-sm text-slate-500">Đồng bộ hồ sơ và inbox.</p>
+        <div className="bg-white dark:bg-[#17212b] border border-slate-200 dark:border-[#1e2d3d] rounded-2xl px-6 py-5 text-center shadow">
+          <p className="text-slate-800 dark:text-slate-100 font-semibold mb-1">Đang tải dữ liệu...</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Đồng bộ hồ sơ và inbox.</p>
         </div>
       </div>
     );
   }
 
-  const viewTitle =
-    sidebarView === 'chat'
-      ? 'Tin nhắn'
-      : sidebarView === 'contacts'
-        ? 'Danh bạ'
-        : sidebarView === 'cloud'
-          ? 'Cloud'
-          : 'Công việc';
-
   const isMobileNavVisible = !(sidebarView === 'chat' && !isChatListOpen);
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 ${
+    <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 dark:bg-[#0e1621] ${
       isMobileNavVisible
         ? 'h-[calc(100dvh-64px)] md:h-[100dvh]'
         : 'h-[100dvh]'
@@ -668,7 +445,7 @@ export default function Home() {
           onSelect={setSidebarView}
           isChatListOpen={isChatListOpen}
           setIsChatListOpen={setIsChatListOpen}
-          hasUnreadChat={conversations.some(c => (c.unreadCount || c.unread || 0) > 0)}
+          hasUnreadChat={conversations.some((c) => (c.unreadCount || c.unread || 0) > 0)}
           hasPendingRequests={pendingRequestsCount > 0}
         />
       </div>
@@ -677,12 +454,9 @@ export default function Home() {
       <div className="flex-1 min-w-0 h-full flex overflow-hidden">
         {sidebarView === 'chat' ? (
           <>
-            {/* Cột danh sách cuộc trò chuyện
-                - Desktop: luôn hiện (trừ khi bị thu bằng nút toggle)
-                - Mobile: chỉ hiện khi isChatListOpen = true (chưa chọn conv)
-            */}
+            {/* Cột danh sách cuộc trò chuyện */}
             <div
-              className={`z-10 h-full flex flex-col bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden
+              className={`z-10 h-full flex flex-col bg-white dark:bg-[#17212b] flex-shrink-0 border-r border-slate-200 dark:border-[#1e2d3d] overflow-hidden
                 ${!isChatListOpen
                   ? 'hidden sm:hidden'
                   : 'flex w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px]'
@@ -699,10 +473,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Vùng chat chính
-                - Desktop: luôn hiện (flex-1)
-                - Mobile: chỉ hiện khi đã chọn conversation (!isChatListOpen)
-            */}
+            {/* Vùng chat chính */}
             <div
               className={`min-w-0 h-full flex-col relative
                 ${isChatListOpen
@@ -724,7 +495,6 @@ export default function Home() {
                   onBack={() => {
                     setSelectedId(null);
                     setIsInfoOpen(false);
-                    // Trên mobile, quay lại danh sách khi nhấn back
                     try {
                       if (typeof window !== 'undefined' && window.innerWidth < 640) {
                         setIsChatListOpen(true);
@@ -735,20 +505,19 @@ export default function Home() {
                   onRecallMessage={handleRecallMessage}
                 />
               ) : (
-                // Placeholder chỉ hiện trên desktop khi chưa chọn conv
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                  <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-[#0e1621]">
+                  <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 dark:bg-[#1c2b38] flex items-center justify-center">
                     <span className="text-blue-300 text-3xl font-semibold">C</span>
                   </div>
-                  <p className="text-lg font-medium text-slate-600">Chưa chọn cuộc trò chuyện</p>
+                  <p className="text-lg font-medium text-slate-600 dark:text-slate-300">Chưa chọn cuộc trò chuyện</p>
                   <p className="text-sm mt-1">Hãy chọn một mục từ danh sách bên trái.</p>
                 </div>
               )}
             </div>
 
-            {/* Panel thông tin bên phải — chỉ hiện trên desktop */}
+            {/* Panel thông tin bên phải */}
             <div
-              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${isInfoOpen && selectedId
+              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white dark:bg-[#17212b] border-l border-slate-200 dark:border-[#1e2d3d] overflow-hidden ${isInfoOpen && selectedId
                 ? 'w-0 sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 opacity-0 border-none'
                 : 'w-0 opacity-0 border-none'
                 } hidden sm:flex`}

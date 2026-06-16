@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import Avatar from '../../../components/Avatar';
+import { resolveConversationId } from '../../../utils/conversationUtils';
 
-/** Lấy id hội thoại từ nhiều shape khác nhau của API */
-const resolveId = (c) => c?.conversationId || c?.id || c?._id || null;
-
+/** @deprecated Dùng resolveConversationId từ utils */
+const resolveId = resolveConversationId;
 /** Format giờ từ ISO string → "HH:MM" */
 const formatTime = (value) => {
     if (!value) return '';
@@ -26,7 +26,7 @@ const truncate = (text, max = 35) =>
  *  - active : boolean — đang được chọn
  *  - onClick: (conversationId: string) => void
  */
-export default function ChatItem({ chat, active, onClick, typingUsers = [] }) {
+function ChatItem({ chat, active, onClick, typingUsers = [] }) {
     const peer = chat?.peer || {};
     const title = chat?.displayName || peer.displayName || chat?.name || 'Cuộc trò chuyện';
     const avatar = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl;
@@ -102,3 +102,5 @@ export default function ChatItem({ chat, active, onClick, typingUsers = [] }) {
         </button>
     );
 }
+
+export default memo(ChatItem);
