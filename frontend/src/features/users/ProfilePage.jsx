@@ -236,7 +236,7 @@ export default function ProfilePage() {
   const avatarLabel = getInitials(profile?.displayName || profile?.phone);
 
   return (
-    <div className="relative flex flex-col md:flex-row w-full h-screen h-[100dvh] overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-none dark:bg-[#0e1621]">
+    <div className="fixed inset-0 flex flex-col md:flex-row overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-none dark:bg-[#0e1621]">
       <div className="z-20 flex-shrink-0 order-last md:order-first w-full md:w-auto h-auto md:h-full relative">
         <SidebarLeft active="account" onSelect={(id) => navigate('/', { state: { sidebarView: id } })} />
       </div>

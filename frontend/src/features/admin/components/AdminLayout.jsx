@@ -8,7 +8,7 @@ const AdminLayout = ({ activeTab, onTabChange, onLogout, children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0e1621] flex text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 bg-slate-50 dark:bg-[#0e1621] flex text-slate-900 dark:text-slate-100">
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-[#17212b] border-r border-slate-200 dark:border-[#1e2d3d] flex flex-col hidden md:flex">
         <div className="p-6 border-b border-slate-200 dark:border-[#1e2d3d]">
@@ -50,7 +50,7 @@ const AdminLayout = ({ activeTab, onTabChange, onLogout, children }) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        <div className="p-6 md:p-8 overflow-y-auto h-screen">
+        <div className="p-6 md:p-8 overflow-y-auto h-full">
           {children}
         </div>
       </main>

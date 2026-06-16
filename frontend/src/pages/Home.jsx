@@ -426,7 +426,7 @@ export default function Home() {
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className="relative flex flex-col md:flex-row w-full h-screen h-[100dvh] overflow-hidden text-slate-900 bg-slate-100 dark:bg-[#0e1621]">
+    <div className="fixed inset-0 flex flex-col md:flex-row overflow-hidden text-slate-900 bg-slate-100 dark:bg-[#0e1621]">
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
