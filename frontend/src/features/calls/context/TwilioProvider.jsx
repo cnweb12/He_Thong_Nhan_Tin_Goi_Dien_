@@ -5,7 +5,25 @@ import { useAppSocket } from '../../realtime/hooks/useAppSocket';
 export const TwilioContext = createContext(null);
 
 const rtcConfig = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    }
+  ],
 };
 
 export function TwilioProvider({ children }) {
@@ -191,9 +209,13 @@ export function TwilioProvider({ children }) {
         setCallState('connected');
       }
 
-      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)
-        && callStateRef.current === 'connected') {
-        handleCallEndedLocally();
+      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+        if (['connected', 'connecting', 'calling'].includes(callStateRef.current)) {
+          handleCallEndedLocally();
+          if (pc.connectionState === 'failed') {
+            alert('Mất kết nối mạng hoặc tường lửa đã chặn kết nối WebRTC.');
+          }
+        }
       }
     };
 
