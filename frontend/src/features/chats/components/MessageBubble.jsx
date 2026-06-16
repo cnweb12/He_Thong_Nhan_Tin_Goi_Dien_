@@ -135,7 +135,7 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
                 textClass="text-[10px] font-bold"
             />}
 
-            <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
+            <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5 min-w-0`}>
                 {/* File / ảnh đính kèm */}
                 {hasAttachments && (
                     <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
@@ -180,7 +180,7 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
 
                 {/* Text */}
                 {hasText && (
-                    <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words
+                    <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]
                         ${isMine
                             ? 'bg-[#2b5278] text-white rounded-2xl rounded-br-lg'
                             : 'bg-slate-200 dark:bg-[#182533] text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-lg'
