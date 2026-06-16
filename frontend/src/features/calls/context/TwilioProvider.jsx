@@ -5,7 +5,25 @@ import { useAppSocket } from '../../realtime/hooks/useAppSocket';
 export const TwilioContext = createContext(null);
 
 const rtcConfig = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    }
+  ],
 };
 
 export function TwilioProvider({ children }) {
@@ -139,10 +157,18 @@ export function TwilioProvider({ children }) {
   }, [cleanupMedia, playTone, stopTone]);
 
   const getLocalAudioStream = useCallback(async () => {
-    if (!localStreamRef.current) {
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    if (localStreamRef.current) return localStreamRef.current;
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Trình duyệt không hỗ trợ hoặc thiết bị đang dùng HTTP (cần HTTPS để cấp quyền Micro).');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStreamRef.current = stream;
+      return stream;
+    } catch (err) {
+      console.error('[WebRTC Call] Could not get local stream', err);
+      throw err;
     }
-    return localStreamRef.current;
   }, []);
 
   const getOrCreatePeerConnection = useCallback(async () => {
@@ -183,9 +209,13 @@ export function TwilioProvider({ children }) {
         setCallState('connected');
       }
 
-      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)
-        && callStateRef.current === 'connected') {
-        handleCallEndedLocally();
+      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+        if (['connected', 'connecting', 'calling'].includes(callStateRef.current)) {
+          handleCallEndedLocally();
+          if (pc.connectionState === 'failed') {
+            alert('Mất kết nối mạng hoặc tường lửa đã chặn kết nối WebRTC.');
+          }
+        }
       }
     };
 
@@ -236,6 +266,7 @@ export function TwilioProvider({ children }) {
 
     try {
       stopTone();
+      setCallState('connecting');
       await getOrCreatePeerConnection();
       socket.emit('call:accept', { callId: currentCall.callId }, (res) => {
         if (!res?.ok) {
@@ -247,9 +278,13 @@ export function TwilioProvider({ children }) {
       });
     } catch (err) {
       console.error('[WebRTC Call] Cannot access microphone:', err);
+      if (currentCall && socket) {
+        socket.emit('call:reject', { callId: currentCall.callId });
+      }
       cleanupMedia();
       setCallState('idle');
       setCallInfo(null);
+      alert('Không thể truy cập Micro (kiểm tra quyền thiết bị hoặc đảm bảo truy cập bằng HTTPS).');
     }
   }, [cleanupMedia, getOrCreatePeerConnection, socket, stopTone]);
 
@@ -280,7 +315,7 @@ export function TwilioProvider({ children }) {
 
   const endCall = useCallback((durationSec = 0) => {
     const currentCall = callInfoRef.current;
-    if (!['calling', 'ringing', 'connected'].includes(callStateRef.current) || !currentCall || !socket) return;
+    if (!['calling', 'ringing', 'connecting', 'connected'].includes(callStateRef.current) || !currentCall || !socket) return;
 
     socket.emit('call:end', {
       callId: currentCall.callId,
@@ -340,7 +375,9 @@ export function TwilioProvider({ children }) {
         });
       } catch (err) {
         console.error('[WebRTC Call] Failed to create offer:', err);
+        socket.emit('call:end', { callId: currentCall.callId, durationSec: 0 });
         handleCallEndedLocally();
+        alert('Không thể truy cập Micro để kết nối (kiểm tra quyền thiết bị hoặc đảm bảo truy cập bằng HTTPS).');
       }
     };
 
@@ -351,6 +388,15 @@ export function TwilioProvider({ children }) {
       try {
         const pc = await getOrCreatePeerConnection();
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        
+        // Process queued ICE candidates
+        if (window.pendingIceCandidates) {
+          for (const candidate of window.pendingIceCandidates) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          window.pendingIceCandidates = [];
+        }
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
@@ -372,6 +418,14 @@ export function TwilioProvider({ children }) {
 
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        
+        // Process queued ICE candidates
+        if (window.pendingIceCandidates) {
+          for (const candidate of window.pendingIceCandidates) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          window.pendingIceCandidates = [];
+        }
       } catch (err) {
         console.error('[WebRTC Call] Failed to handle answer:', err);
         handleCallEndedLocally();
@@ -384,7 +438,12 @@ export function TwilioProvider({ children }) {
       if (!currentCall || currentCall.callId !== data.callId || !pc || !data.candidate) return;
 
       try {
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (pc.remoteDescription) {
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } else {
+          window.pendingIceCandidates = window.pendingIceCandidates || [];
+          window.pendingIceCandidates.push(data.candidate);
+        }
       } catch (err) {
         console.warn('[WebRTC Call] Failed to add ICE candidate:', err);
       }

@@ -1,90 +1,146 @@
-import React from 'react';
-import { ArrowLeft, Info, MoreVertical, Phone, Search, Video, Trash2 } from 'lucide-react';
-import { useCall } from '../../calls/hooks/useCall';
+import React from "react";
+import {
+  ArrowLeft,
+  Info,
+  MoreVertical,
+  Phone,
+  Search,
+  Video,
+  Trash2,
+} from "lucide-react";
+import { useCall } from "../../calls/hooks/useCall";
+import Avatar from "../../../components/Avatar";
 
-const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
+const isPhoneLike = (value) =>
+  typeof value === "string" && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 const resolvePeerId = (peer) => peer?._id || peer?.id || peer?.userId || null;
 
-export default function ChatHeader({ chat, onToggleInfo, onBack, onClearHistory }) {
-    const { makeCall } = useCall();
-    const conversationId = chat?._id || chat?.id || chat?.conversationId;
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "vừa xong";
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return `${Math.floor(hours / 24)} ngày trước`;
+}
 
-    // Determine peer object: prefer explicit `chat.peer`, otherwise if `chat` looks
-    // like a user object (no members/participants) use `chat` as peer.
-    const inferredPeer = chat?.peer || chat?.participant || ((chat && !chat.members && !chat.participants && (chat.displayName || chat.name || chat.phone || chat.username)) ? chat : null);
-    const peer = inferredPeer || {};
+export default function ChatHeader({
+  chat,
+  onToggleInfo,
+  onBack,
+  onClearHistory,
+}) {
+  const { makeCall } = useCall();
+  const conversationId = chat?._id || chat?.id || chat?.conversationId;
 
-    const title = chat?.displayName || peer.displayName || chat?.name || 'Chọn hội thoại';
-    const subtitle = (chat?.phone || (isPhoneLike(chat?.username) ? chat.username : ''))
-        || (peer?.phone || (isPhoneLike(peer?.username) ? peer.username : '')) || '';
-    const avatarUrl = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
-    const peerId = resolvePeerId(peer);
+  // Determine peer object: prefer explicit `chat.peer`, otherwise if `chat` looks
+  // like a user object (no members/participants) use `chat` as peer.
+  const inferredPeer =
+    chat?.peer ||
+    chat?.participant ||
+    (chat &&
+    !chat.members &&
+    !chat.participants &&
+    (chat.displayName || chat.name || chat.phone || chat.username)
+      ? chat
+      : null);
+  const peer = inferredPeer || {};
 
-    const handleCallClick = (type = 'audio') => {
-        if (peerId && conversationId) {
-            makeCall(peer, conversationId, type);
-        } else {
-            console.warn('[ChatHeader] Cannot initiate call: missing peer info or conversation ID', chat);
-        }
-    };
+  const title =
+    chat?.displayName || peer.displayName || chat?.name || "Chọn hội thoại";
+  const subtitle =
+    chat?.phone ||
+    (isPhoneLike(chat?.username) ? chat.username : "") ||
+    peer?.phone ||
+    (isPhoneLike(peer?.username) ? peer.username : "") ||
+    "";
+  const avatarUrl =
+    chat?.displayAvatarUrl ||
+    chat?.avatarUrl ||
+    peer.avatarUrl ||
+    peer.displayAvatarUrl ||
+    "";
+  const peerId = resolvePeerId(peer);
 
-    const handleClearHistoryClick = () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này?')) {
-            onClearHistory?.();
-        }
-    };
+  const handleCallClick = (type = "audio") => {
+    if (peerId && conversationId) {
+      makeCall(peer, conversationId, type);
+    } else {
+      console.warn(
+        "[ChatHeader] Cannot initiate call: missing peer info or conversation ID",
+        chat,
+      );
+    }
+  };
 
-    return (
-        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
-            <div className="flex items-center gap-3">
-                <button 
-                    onClick={onBack}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 sm:hidden text-slate-600"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                
-                <div className="relative">
-                    <img 
-                        src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&background=random&color=fff&rounded=true&font-size=0.45`}
-                        alt={title}
-                        className="w-10 h-10 rounded-full object-cover bg-slate-200"
-                    />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                </div>
+  const handleClearHistoryClick = () => {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này?",
+      )
+    ) {
+      onClearHistory?.();
+    }
+  };
 
-                <div>
-                    <div className="font-semibold text-slate-800 text-sm">{title}</div>
-                    <div className="text-xs text-slate-500">
-                        Đang hoạt động
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-[#1e2d3d] bg-white dark:bg-[#17212b]">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] sm:hidden text-slate-600 dark:text-slate-300"
+        >
+          <ArrowLeft size={20} />
+        </button>
 
-            <div className="flex items-center gap-1 text-slate-500">
-                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-emerald-600" title="Gọi thoại">
-                    <Phone size={20} />
-                </button>
-                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-blue-600" title="Gọi video">
-                    <Video size={20} />
-                </button>
-                <button 
-                    onClick={onToggleInfo} 
-                    className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-                    title="Thông tin hội thoại"
-                >
-                    <Info size={20} />
-                </button>
-                {onClearHistory && (
-                    <button 
-                        onClick={handleClearHistoryClick} 
-                        className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-red-500"
-                        title="Xóa lịch sử trò chuyện"
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                )}
-            </div>
+        <div className="relative">
+          <Avatar src={avatarUrl} name={title} size="w-10 h-10" />
+          {peer.isOnline && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-[#17212b] rounded-full" />
+          )}
         </div>
-    );
+
+        <div>
+          <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+            {title}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            {peer.isOnline
+              ? "Đang hoạt động"
+              : peer.lastActiveAt
+                ? `Hoạt động ${formatRelativeTime(peer.lastActiveAt)}`
+                : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+        <button
+          onClick={() => handleCallClick("audio")}
+          className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400"
+          title="Gọi thoại"
+        >
+          <Phone size={20} />
+        </button>
+        <button
+          onClick={onToggleInfo}
+          className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer"
+          title="Thông tin hội thoại"
+        >
+          <Info size={20} />
+        </button>
+        {onClearHistory && (
+          <button
+            onClick={handleClearHistoryClick}
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-red-500"
+            title="Xóa lịch sử trò chuyện"
+          >
+            <Trash2 size={20} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
@@ -15,6 +16,7 @@ import {
   clearHistoryApi
 } from '../features/messages/services/messageApi';
 import { uploadFilesApi } from '../services/upload.service';
+import { listPendingRequestsApi } from '../features/users/services/userApi';
 import ContactsPage from '../features/users/ContactsPage';
 import CloudPage from '../features/users/CloudPage';
 import TasksPage from '../features/users/TasksPage';
@@ -38,6 +40,7 @@ const normalizeMessage = (message) => ({
     message?.clientMessageId ||
     `${message?.seq || 'msg'}-${message?.createdAt || ''}`,
   from: message?.senderId || message?.from || '',
+  sender: message?.sender || message?.user || message?.fromUser || null,
   text: message?.text || message?.content || '',
   time: formatTime(message?.createdAt),
   createdAt: message?.createdAt,
@@ -46,6 +49,8 @@ const normalizeMessage = (message) => ({
   clientMessageId: message?.clientMessageId,
   attachments: message?.attachments || [],
   deletedAt: message?.deletedAt,
+  // Giữ nguyên status nếu có (ví dụ: 'read', 'sent'), nếu không thì mặc định là 'sent'
+  status: message?.status || 'sent',
 });
 
 const normalizeConversationFromSocket = (conversation, currentUserId) => {
@@ -70,7 +75,7 @@ const normalizeConversationFromSocket = (conversation, currentUserId) => {
 // ─── component ──────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { user, accessToken, fetchCurrentUser } = useAuth();
+  const { user, accessToken, fetchCurrentUser, logout, restoreSession } = useAuth();
   const { socket, isConnected, isConnecting, error: socketError } = useAppSocket();
   const {
     conversations,
@@ -80,7 +85,8 @@ export default function Home() {
     error: inboxError,
   } = useConversations();
 
-  const [sidebarView, setSidebarView] = useState('chat');
+  const location = useLocation();
+  const [sidebarView, setSidebarView] = useState(location.state?.sidebarView || 'chat');
   const [selectedId, setSelectedId] = useState(null);
   const [messagesByConversation, setMessagesByConversation] = useState({});
   const [messagesLoadingId, setMessagesLoadingId] = useState(null);
@@ -91,9 +97,12 @@ export default function Home() {
   const [threadError, setThreadError] = useState(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(true);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [typingUsers, setTypingUsers] = useState({});
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
   const joinedRoomsRef = useRef(new Set());
+  const processedMsgIdsRef = useRef(new Set());
 
   // Lưu trữ giá trị bằng Ref để tránh việc re-bind Socket Event Listener liên tục khi state thay đổi
   const selectedIdRef = useRef(selectedId);
@@ -126,12 +135,32 @@ export default function Home() {
     setInitialError(null);
 
     (async () => {
+      let hasError = false;
       try {
-        await Promise.all([fetchCurrentUser(), fetchInbox(accessToken)]);
-      } catch (err) {
-        if (active) setInitialError(err?.message || 'Không tải được dữ liệu ban đầu');
-      } finally {
+        const [_, __, requests] = await Promise.all([
+            fetchCurrentUser(), 
+            fetchInbox(accessToken),
+            listPendingRequestsApi(accessToken).catch(() => [])
+        ]);
         if (active) {
+            setPendingRequestsCount(requests?.length || 0);
+        }
+      } catch (err) {
+        if (!active) return;
+        hasError = true;
+        const errMsg = err?.message || '';
+        const isAuthError = errMsg.toLowerCase().includes('token') || errMsg.toLowerCase().includes('unauthorized');
+        
+        if (isAuthError) {
+            try {
+                const newToken = await restoreSession();
+                if (newToken) return; 
+            } catch (e) {}
+        }
+        
+        setInitialError(errMsg || 'Không tải được dữ liệu ban đầu');
+      } finally {
+        if (active && !hasError) {
           setIsBootstrapped(true);
           setInitialLoading(false);
         }
@@ -157,8 +186,10 @@ export default function Home() {
 
         setMessagesByConversation((prev) => ({ ...prev, [selectedId]: msgs }));
 
+        // Chỉ đánh dấu đã đọc khi bật read receipt
+        const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
         const lastSeq = msgs.length > 0 ? msgs[msgs.length - 1].seq : null;
-        if (lastSeq != null) {
+        if (lastSeq != null && readReceiptEnabled) {
           await markConversationReadApi(accessToken, selectedId, lastSeq);
         }
       } catch (err) {
@@ -170,7 +201,7 @@ export default function Home() {
 
     loadMessages();
     return () => { active = false; };
-  }, [selectedId, accessToken]);
+  }, [selectedId, accessToken, user]);
 
   // ── Join socket rooms khi có conversation mới ─────────────────────────────
   useEffect(() => {
@@ -194,7 +225,15 @@ export default function Home() {
 
       const msg = normalizeMessage(rawMessage);
       const convId = resolveConversationId(backendConv);
-      if (!convId) return;
+      if (!convId || !msg.id) return;
+
+      // Loại bỏ duplicate event do backend gửi vào 2 room (room conversation và room cá nhân)
+      if (processedMsgIdsRef.current.has(msg.id)) return;
+      processedMsgIdsRef.current.add(msg.id);
+      if (processedMsgIdsRef.current.size > 200) {
+        const firstElement = processedMsgIdsRef.current.values().next().value;
+        processedMsgIdsRef.current.delete(firstElement);
+      }
 
       // Cập nhật danh sách tin nhắn
       setMessagesByConversation((prev) => {
@@ -240,9 +279,10 @@ export default function Home() {
         return updated;
       });
 
-      // Đánh dấu đã đọc nếu đang xem conversation này
-      if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null) {
-        markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => {});
+      // Đánh dấu đã đọc nếu đang xem conversation này và bật read receipt
+      const readReceiptEnabled = user?.settings?.readReceiptEnabled !== false;
+      if (selectedIdRef.current === convId && msg.from !== currentUserIdRef.current && msg.seq != null && readReceiptEnabled) {
+        markConversationReadApi(accessTokenRef.current, convId, msg.seq).catch(() => { });
       }
     };
 
@@ -254,13 +294,35 @@ export default function Home() {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleMessageRead = ({ conversationId, userId }) => {
-      if (userId !== currentUserIdRef.current) {
+    const handleMessageRead = ({ conversationId, userId, lastSeenSeq }) => {
+      if (userId === currentUserIdRef.current) {
         setConversations((prev) =>
           prev.map((c) =>
             resolveConversationId(c) === conversationId ? { ...c, unread: 0 } : c
           )
         );
+      } else if (lastSeenSeq != null) {
+        // Đối phương đã đọc -> Đánh dấu tin nhắn cuối cùng mình gửi (<= lastSeenSeq) là 'read'
+        setMessagesByConversation((prev) => {
+          const cur = prev[conversationId] || [];
+          if (cur.length === 0) return prev;
+          
+          let updated = cur.map(msg => {
+              if (msg.from === currentUserIdRef.current && msg.status === 'read') {
+                  return { ...msg, status: 'sent' }; // Xóa trạng thái read cũ
+              }
+              return msg;
+          });
+          
+          // Tìm tin nhắn cuối cùng của mình mà đối phương đã xem
+          for (let i = updated.length - 1; i >= 0; i--) {
+              if (updated[i].from === currentUserIdRef.current && updated[i].seq <= lastSeenSeq) {
+                  updated[i] = { ...updated[i], status: 'read' };
+                  break;
+              }
+          }
+          return { ...prev, [conversationId]: updated };
+        });
       }
     };
 
@@ -324,6 +386,36 @@ export default function Home() {
     socket.on('message:recalled', handleMessageRecalled);
     return () => socket.off('message:recalled', handleMessageRecalled);
   }, [socket, isConnected, setConversations]);
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    
+    const handleTypingStart = ({ conversationId, userId, displayName }) => {
+      if (userId === currentUserIdRef.current) return;
+      setTypingUsers(prev => {
+         const current = prev[conversationId] || [];
+         if (current.find(u => u.userId === userId)) return prev;
+         return { ...prev, [conversationId]: [...current, { userId, displayName }] };
+      });
+    };
+    
+    const handleTypingStop = ({ conversationId, userId }) => {
+      if (userId === currentUserIdRef.current) return;
+      setTypingUsers(prev => {
+         const current = prev[conversationId] || [];
+         const updated = current.filter(u => u.userId !== userId);
+         if (updated.length === current.length) return prev;
+         return { ...prev, [conversationId]: updated };
+      });
+    };
+
+    socket.on('typing_start', handleTypingStart);
+    socket.on('typing_stop', handleTypingStop);
+    
+    return () => {
+       socket.off('typing_start', handleTypingStart);
+       socket.off('typing_stop', handleTypingStop);
+    };
+  }, [socket, isConnected]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
@@ -343,6 +435,12 @@ export default function Home() {
     if (selectedId === conversationId) return;
     setSelectedId(conversationId);
     setSidebarView('chat');
+    // On small screens, close the chat list to show the chat area full-screen
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+        setIsChatListOpen(false);
+      }
+    } catch (e) { /* noop */ }
   }, [selectedId]);
 
   const handleStartConversation = useCallback(async (peerUser) => {
@@ -353,6 +451,11 @@ export default function Home() {
       const id = resolveConversationId(direct);
       if (id) setSelectedId(id);
       setSidebarView('chat');
+      try {
+        if (typeof window !== 'undefined' && window.innerWidth < 640) {
+          setIsChatListOpen(false);
+        }
+      } catch (e) { /* noop */ }
     } catch (err) {
       setThreadError(err?.message || 'Không mở được cuộc trò chuyện mới');
     }
@@ -437,6 +540,7 @@ export default function Home() {
         };
       });
 
+      // Mình là người gửi nên luôn "đọc" tin vừa gửi (kể cả khi tắt read receipt)
       if (normalized.seq != null) {
         await markConversationReadApi(accessToken, convId, normalized.seq);
       }
@@ -488,22 +592,34 @@ export default function Home() {
 
   // ── Render guards ─────────────────────────────────────────────────────────
   if (inboxError || initialError) {
+    const isAuthError = (inboxError || initialError)?.toLowerCase().includes('token') || (inboxError || initialError)?.toLowerCase().includes('unauthorized');
+
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5 text-center shadow max-w-md">
           <p className="text-red-600 font-semibold mb-2">Không thể tải dữ liệu</p>
           <p className="text-sm text-slate-600 mb-4">{inboxError || initialError}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setInitialError(null);
-              setIsBootstrapped(false);
-              setInitialLoading(true);
-            }}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
-          >
-            Thử lại
-          </button>
+          {isAuthError ? (
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Đăng nhập lại
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setInitialError(null);
+                setIsBootstrapped(false);
+                setInitialLoading(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Thử lại
+            </button>
+          )}
         </div>
       </div>
     );
@@ -524,14 +640,20 @@ export default function Home() {
     sidebarView === 'chat'
       ? 'Tin nhắn'
       : sidebarView === 'contacts'
-      ? 'Danh bạ'
-      : sidebarView === 'cloud'
-      ? 'Cloud'
-      : 'Công việc';
+        ? 'Danh bạ'
+        : sidebarView === 'cloud'
+          ? 'Cloud'
+          : 'Công việc';
+
+  const isMobileNavVisible = !(sidebarView === 'chat' && !isChatListOpen);
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100">
+    <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 ${
+      isMobileNavVisible
+        ? 'h-[calc(100dvh-64px)] md:h-[100dvh]'
+        : 'h-[100dvh]'
+    }`}>
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
@@ -545,6 +667,8 @@ export default function Home() {
           onSelect={setSidebarView}
           isChatListOpen={isChatListOpen}
           setIsChatListOpen={setIsChatListOpen}
+          hasUnreadChat={conversations.some(c => (c.unreadCount || c.unread || 0) > 0)}
+          hasPendingRequests={pendingRequestsCount > 0}
         />
       </div>
 
@@ -552,13 +676,16 @@ export default function Home() {
       <div className="flex-1 min-w-0 h-full flex overflow-hidden">
         {sidebarView === 'chat' ? (
           <>
-            {/* Cột danh sách cuộc trò chuyện */}
+            {/* Cột danh sách cuộc trò chuyện
+                - Desktop: luôn hiện (trừ khi bị thu bằng nút toggle)
+                - Mobile: chỉ hiện khi isChatListOpen = true (chưa chọn conv)
+            */}
             <div
-              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${
-                !isChatListOpen
-                  ? 'w-0 opacity-0 border-none'
-                  : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
-              }`}
+              className={`z-10 h-full flex flex-col bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden
+                ${!isChatListOpen
+                  ? 'hidden sm:hidden'
+                  : 'flex w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px]'
+                }`}
             >
               <ChatSidebar
                 user={user}
@@ -567,11 +694,21 @@ export default function Home() {
                 selectedId={selectedId}
                 onSelect={handleSelectConversation}
                 onStartConversation={handleStartConversation}
+                typingUsers={typingUsers}
               />
             </div>
 
-            {/* Vùng chat chính */}
-            <div className="flex-1 min-w-0 h-full flex flex-col relative">
+            {/* Vùng chat chính
+                - Desktop: luôn hiện (flex-1)
+                - Mobile: chỉ hiện khi đã chọn conversation (!isChatListOpen)
+            */}
+            <div
+              className={`min-w-0 h-full flex-col relative
+                ${isChatListOpen
+                  ? 'hidden sm:flex sm:flex-1'
+                  : 'flex flex-1'
+                }`}
+            >
               {selectedId ? (
                 <ChatArea
                   chat={selected}
@@ -581,15 +718,23 @@ export default function Home() {
                   error={threadError}
                   onSend={handleSend}
                   sending={sendingMessage}
+                  typingUsers={typingUsers[selectedId] || []}
                   onToggleInfo={() => setIsInfoOpen((v) => !v)}
                   onBack={() => {
                     setSelectedId(null);
                     setIsInfoOpen(false);
+                    // Trên mobile, quay lại danh sách khi nhấn back
+                    try {
+                      if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                        setIsChatListOpen(true);
+                      }
+                    } catch (e) { /* noop */ }
                   }}
                   onClearHistory={handleClearHistory}
                   onRecallMessage={handleRecallMessage}
                 />
               ) : (
+                // Placeholder chỉ hiện trên desktop khi chưa chọn conv
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
                   <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
                     <span className="text-blue-300 text-3xl font-semibold">C</span>
@@ -600,13 +745,12 @@ export default function Home() {
               )}
             </div>
 
-            {/* Panel thông tin bên phải */}
+            {/* Panel thông tin bên phải — chỉ hiện trên desktop */}
             <div
-              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${
-                isInfoOpen && selectedId
-                  ? 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
-                  : 'w-0 opacity-0 border-none'
-              }`}
+              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${isInfoOpen && selectedId
+                ? 'w-0 sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 opacity-0 border-none'
+                : 'w-0 opacity-0 border-none'
+                } hidden sm:flex`}
             >
               {isInfoOpen && selectedId && (
                 <ConversationInfo

@@ -30,11 +30,11 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
     }, []);
 
     return (
-        <div className="w-full h-full flex-shrink-0 bg-white p-6 overflow-y-auto flex flex-col relative z-10">
+        <div className="w-full h-full flex-shrink-0 bg-white dark:bg-[#17212b] p-6 overflow-y-auto flex flex-col relative z-10">
             {onClose && (
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors z-20 cursor-pointer"
+                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] text-slate-500 dark:text-slate-400 transition-colors z-20 cursor-pointer"
                     aria-label="Đóng thông tin"
                 >
                     <X size={20} />
@@ -57,26 +57,26 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
                         </div>
                     </div>
 
-                    <div className="mb-6 bg-slate-50/50 border border-slate-200 p-4 rounded-[1.25rem] shadow-sm">
-                        <h4 className="font-semibold mb-3 text-slate-800 text-sm tracking-wide">THÔNG TIN NHANH</h4>
-                        <div className="text-sm text-slate-600 space-y-2.5">
+                    <div className="mb-6 bg-slate-50/50 dark:bg-[#1c2b38] border border-slate-200 dark:border-[#1e2d3d] p-4 rounded-[1.25rem] shadow-sm">
+                        <h4 className="font-semibold mb-3 text-slate-800 dark:text-slate-200 text-sm tracking-wide">THÔNG TIN NHANH</h4>
+                        <div className="text-sm text-slate-600 dark:text-slate-300 space-y-2.5">
                             <div className="flex justify-between items-center">
                                 <span>Tổng tin nhắn</span>
-                                <span className="font-medium text-slate-900">{totalMessages}</span>
+                                <span className="font-medium text-slate-900 dark:text-slate-100">{totalMessages}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span>Tin của tôi</span>
-                                <span className="font-medium text-slate-900">{myMessages}</span>
+                                <span className="font-medium text-slate-900 dark:text-slate-100">{myMessages}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span>Tin chưa đọc</span>
-                                <span className="font-medium text-blue-600">{unread}</span>
+                                <span className="font-medium text-blue-600 dark:text-blue-400">{unread}</span>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-3 text-slate-800 text-sm tracking-wide">TỆP ĐÍNH KÈM ({allAttachments.length})</h4>
+                        <h4 className="font-semibold mb-3 text-slate-800 dark:text-slate-200 text-sm tracking-wide">TỆP ĐÍNH KÈM ({allAttachments.length})</h4>
                         <div className="grid grid-cols-3 gap-2">
                             {allAttachments.length > 0 ? (
                                 allAttachments.map((att, idx) => {

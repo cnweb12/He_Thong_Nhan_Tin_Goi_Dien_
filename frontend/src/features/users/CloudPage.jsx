@@ -147,18 +147,18 @@ export default function CloudPage({ accessToken, currentUser }) {
   });
 
   return (
-    <div className="w-full h-full flex overflow-hidden bg-slate-50">
+    <div className="w-full h-full flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột trái phụ: Cloud Stats & Search */}
-      <div className="w-[280px] h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+      <div className="hidden md:flex w-[280px] h-full bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
+        <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
             <Cloud className="text-blue-500" size={20} />
             Cloud của tôi
           </h2>
-          <p className="text-xs text-slate-500">Bộ nhớ truyền tin cá nhân</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Bộ nhớ truyền tin cá nhân</p>
         </div>
 
-        <div className="p-3 border-b border-slate-200">
+        <div className="p-3 border-b border-slate-200 dark:border-[#1e2d3d]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
             <input
@@ -166,7 +166,7 @@ export default function CloudPage({ accessToken, currentUser }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm tin nhắn, tệp..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white text-xs transition"
+              className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:bg-white text-xs transition dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-100 dark:placeholder-slate-500"
             />
           </div>
         </div>
@@ -175,26 +175,26 @@ export default function CloudPage({ accessToken, currentUser }) {
           <div className="space-y-4">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái bộ nhớ</p>
-              <div className="mt-2 p-3 bg-blue-50/50 border border-blue-100 rounded-xl">
-                <p className="text-xs font-bold text-slate-700">Tổng số tệp/ghi chú</p>
+              <div className="mt-2 p-3 bg-blue-50/50 border border-blue-100 rounded-xl dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Tổng số tệp/ghi chú</p>
                 <p className="text-lg font-extrabold text-blue-600 mt-1">{messages.length}</p>
-                <p className="text-[10px] text-slate-400 mt-1">Dữ liệu được lưu an toàn trên trình duyệt này.</p>
+                <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 font-medium">⚠ Lưu trên trình duyệt này, chưa đồng bộ đa thiết bị.</p>
               </div>
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mẹo sử dụng</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lưu ý</p>
               <ul className="mt-2 text-xs text-slate-500 space-y-2 list-disc pl-4">
-                <li>Kéo thả hoặc dán hình ảnh để gửi nhanh.</li>
-                <li>Hỗ trợ tải lên mọi định dạng tệp (PDF, Word, Excel).</li>
-                <li>Dữ liệu đồng bộ với server qua link tải an toàn.</li>
+                <li>File đính kèm được tải lên server (URL cố định).</li>
+                <li>Ghi chú và danh sách chỉ lưu trên trình duyệt hiện tại.</li>
+                <li>Xóa cache trình duyệt sẽ mất dữ liệu ghi chú.</li>
               </ul>
             </div>
           </div>
 
           <button
             onClick={handleClearAll}
-            className="w-full py-2.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full py-2.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer dark:border-red-900/40 dark:hover:bg-red-900/20"
           >
             <Trash2 size={13} />
             Xóa toàn bộ bộ nhớ Cloud
@@ -203,15 +203,15 @@ export default function CloudPage({ accessToken, currentUser }) {
       </div>
 
       {/* Cột phải: Chat Area */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100">
+      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header */}
-        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-md">
               <Cloud size={22} />
             </div>
             <div>
-              <h1 className="font-bold text-slate-800 text-sm">Cloud của tôi</h1>
+              <h1 className="font-bold text-slate-800 text-sm dark:text-slate-100">Cloud của tôi</h1>
               <p className="text-xs text-green-500 font-medium">Không gian cá nhân riêng tư</p>
             </div>
           </div>
@@ -314,7 +314,7 @@ export default function CloudPage({ accessToken, currentUser }) {
         </div>
 
         {/* Khung soạn thảo */}
-        <div className="flex flex-col bg-white border-t border-slate-200 shrink-0">
+        <div className="flex flex-col bg-white border-t border-slate-200 shrink-0 dark:bg-[#17212b] dark:border-[#1e2d3d]">
           {selectedFile && (
             <div className="px-4 pt-3 pb-1">
               <div className="relative inline-block group">
@@ -348,7 +348,7 @@ export default function CloudPage({ accessToken, currentUser }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex-shrink-0 cursor-pointer disabled:opacity-50"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex-shrink-0 cursor-pointer disabled:opacity-50 dark:bg-[#1c2b38] dark:hover:bg-[#223044] dark:text-slate-300"
               title="Đính kèm tài liệu hoặc ảnh"
             >
               <Paperclip size={18} />
@@ -369,7 +369,7 @@ export default function CloudPage({ accessToken, currentUser }) {
               }}
               placeholder="Nhập ghi chú nhanh hoặc tin nhắn..."
               disabled={uploading}
-              className="flex-1 px-4 py-2.5 bg-slate-150 border-transparent rounded-2xl outline-none focus:bg-slate-100 focus:ring-2 focus:ring-blue-500 transition text-sm disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 bg-slate-150 border-transparent rounded-2xl outline-none focus:bg-slate-100 focus:ring-2 focus:ring-blue-500 transition text-sm disabled:opacity-50 dark:bg-[#1c2b38] dark:text-slate-100 dark:placeholder-slate-500"
             />
 
             <button

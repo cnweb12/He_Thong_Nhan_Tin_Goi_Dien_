@@ -66,10 +66,10 @@ export default function SearchBar({
                     placeholder={placeholder}
                     className="
                         w-full pl-10 pr-8 py-2.5 rounded-[1.25rem]
-                        bg-[#f2f7ff] text-sm text-slate-700
-                        placeholder-slate-400 border border-transparent
-                        focus:bg-white focus:border-[#b8d4ff]
-                        focus:outline-none focus:ring-4 focus:ring-[#dbeafe]
+                        bg-[#f2f7ff] dark:bg-[#1c2b38] text-sm text-slate-700 dark:text-slate-200
+                        placeholder-slate-400 dark:placeholder-slate-500 border border-transparent
+                        focus:bg-white dark:focus:bg-[#223044] focus:border-[#b8d4ff] dark:focus:border-[#2b5278]
+                        focus:outline-none focus:ring-4 focus:ring-[#dbeafe] dark:focus:ring-[#2b5278]/20
                         transition-all duration-150
                     "
                 />
