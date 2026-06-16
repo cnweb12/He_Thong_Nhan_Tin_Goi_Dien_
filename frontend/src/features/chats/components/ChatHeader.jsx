@@ -130,16 +130,6 @@ export default function ChatHeader({
           title="Thông tin hội thoại"
         >
           <Info size={20} />
-        </button>
-        {onClearHistory && (
-          <button
-            onClick={handleClearHistoryClick}
-            className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-red-500"
-            title="Xóa lịch sử trò chuyện"
-          >
-            <Trash2 size={20} />
-          </button>
-        )}
       </div>
     </div>
   );

@@ -26,30 +26,29 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
+  const loadContactsData = async (isActive = { current: true }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [friendsData, requestsData] = await Promise.all([
+        listFriendsApi(accessToken),
+        listPendingRequestsApi(accessToken),
+      ]);
+      if (!isActive.current) return;
+      setFriends(friendsData || []);
+      setRequests(requestsData || []);
+    } catch (err) {
+      if (isActive.current) setError(err?.message || 'Không tải được danh sách liên hệ');
+    } finally {
+      if (isActive.current) setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!accessToken) return;
-    let active = true;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [friendsData, requestsData] = await Promise.all([
-          listFriendsApi(accessToken),
-          listPendingRequestsApi(accessToken),
-        ]);
-        if (!active) return;
-        setFriends(friendsData || []);
-        setRequests(requestsData || []);
-      } catch (err) {
-        if (active) setError(err?.message || 'Không tải được danh sách liên hệ');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    load();
-    return () => { active = false; };
+    const isActive = { current: true };
+    loadContactsData(isActive);
+    return () => { isActive.current = false; };
   }, [accessToken]);
 
   // Handle global search for users
