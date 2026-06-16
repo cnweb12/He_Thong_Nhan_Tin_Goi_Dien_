@@ -22,6 +22,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [sentRequests, setSentRequests] = useState(new Set());
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
@@ -86,10 +87,29 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
     try {
       await sendFriendRequestApi(accessToken, userId);
       showNotification(`Đã gửi lời mời kết bạn tới ${name}`);
+      
+      // Thêm vào danh sách đã gửi trong phiên làm việc này
+      setSentRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(userId);
+        return newSet;
+      });
+
       // Refresh
       loadContactsData();
     } catch (err) {
-      setError(err?.message || 'Không gửi được lời mời kết bạn');
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('already sent') || msg.toLowerCase().includes('friend request already')) {
+        setSentRequests((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(userId);
+          return newSet;
+        });
+        showNotification(`Bạn đã gửi lời mời kết bạn tới ${name} trước đó rồi.`);
+        setError(null);
+      } else {
+        setError(msg || 'Không gửi được lời mời kết bạn');
+      }
     } finally {
       setActionLoadingId(null);
     }
@@ -400,6 +420,13 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                       <MessageSquare size={16} />
                                     </button>
                                   </>
+                                ) : sentRequests.has(item.userId) ? (
+                                  <button
+                                    disabled
+                                    className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 transition text-xs font-semibold cursor-not-allowed dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-400"
+                                  >
+                                    Đã gửi lời mời kết bạn
+                                  </button>
                                 ) : isPending ? (
                                   <button
                                     onClick={() => handleAcceptRequest(item.userId, item.displayName)}
