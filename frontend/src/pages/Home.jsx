@@ -1071,9 +1071,11 @@ export default function Home() {
           ? 'Cloud'
           : 'Công việc';
 
+  const isMobileNavVisible = !(sidebarView === 'chat' && !isChatListOpen);
+
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100">
+    <div className={`relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100 ${isMobileNavVisible ? 'pb-[64px] md:pb-0' : ''}`}>
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.

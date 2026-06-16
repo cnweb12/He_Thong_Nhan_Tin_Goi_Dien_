@@ -136,18 +136,18 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   };
 
   return (
-    <div className="w-full h-full flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột phụ bên trái: Danh mục */}
-      <div className="w-[280px] h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
-        <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
+      <div className="w-full md:w-[280px] h-auto md:h-full bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
+        <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d] hidden md:block">
           <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Danh bạ</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">Quản lý bạn bè và kết nối</p>
         </div>
         
-        <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
+        <nav className="p-2 flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-y-auto shrink-0 hide-scrollbar">
           <button
             onClick={() => setActiveTab('friends')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+            className={`flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 py-2 md:py-2.5 rounded-xl text-sm font-semibold transition shrink-0 whitespace-nowrap ${
               activeTab === 'friends' 
                 ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
                 : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
@@ -164,7 +164,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
 
           <button
             onClick={() => setActiveTab('requests')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+            className={`flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 py-2 md:py-2.5 rounded-xl text-sm font-semibold transition shrink-0 whitespace-nowrap ${
               activeTab === 'requests' 
                 ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
                 : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
@@ -181,7 +181,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
 
           <button
             onClick={() => setActiveTab('search')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
+            className={`flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 py-2 md:py-2.5 rounded-xl text-sm font-semibold transition shrink-0 whitespace-nowrap ${
               activeTab === 'search' 
                 ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
                 : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
@@ -194,9 +194,9 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
       </div>
 
       {/* Cột chính bên phải: Danh sách chi tiết */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
+      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header chi tiết */}
-        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
+        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-4 md:px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div>
             <h1 className="font-bold text-slate-800 dark:text-slate-100">
               {activeTab === 'friends' && 'Danh sách bạn bè'}
