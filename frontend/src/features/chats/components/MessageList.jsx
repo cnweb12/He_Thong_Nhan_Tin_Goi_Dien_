@@ -3,11 +3,19 @@ import MessageBubble from './MessageBubble';
 
 export default function MessageList({ messages, currentUserId, loading, error, chat, typingUsers = [] }) {
     const bottomRef = useRef(null);
+    const isFirstLoad = useRef(true);
+
+    // Reset về "lần đầu load" mỗi khi chuyển sang conversation khác
+    useEffect(() => {
+        isFirstLoad.current = true;
+    }, [chat]);
 
     useEffect(() => {
-        if (bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (!bottomRef.current) return;
+        // Lần đầu load: scroll tức thì (không animation) để tránh header bị đẩy lên trên
+        // Các lần sau (tin nhắn mới): scroll mượt
+        bottomRef.current.scrollIntoView({ behavior: isFirstLoad.current ? 'auto' : 'smooth' });
+        isFirstLoad.current = false;
     }, [messages, typingUsers]);
 
     return (

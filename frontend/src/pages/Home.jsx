@@ -559,7 +559,11 @@ export default function Home() {
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100 ${isMobileNavVisible ? 'pb-[64px] md:pb-0' : ''}`}>
+    <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 ${
+      isMobileNavVisible
+        ? 'h-[calc(100svh-64px)] md:h-screen'
+        : 'h-screen'
+    }`}>
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
@@ -587,10 +591,10 @@ export default function Home() {
                 - Mobile: chỉ hiện khi isChatListOpen = true (chưa chọn conv)
             */}
             <div
-              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden
+              className={`z-10 h-full flex flex-col bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden
                 ${!isChatListOpen
-                  ? 'w-0 opacity-0 border-none'
-                  : 'w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] opacity-100'
+                  ? 'hidden sm:hidden'
+                  : 'flex w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px]'
                 }`}
             >
               <ChatSidebar
@@ -609,7 +613,7 @@ export default function Home() {
                 - Mobile: chỉ hiện khi đã chọn conversation (!isChatListOpen)
             */}
             <div
-              className={`min-w-0 h-full flex-col relative transition-all duration-300
+              className={`min-w-0 h-full flex-col relative
                 ${isChatListOpen
                   ? 'hidden sm:flex sm:flex-1'
                   : 'flex flex-1'

@@ -178,16 +178,16 @@ export default function CloudPage({ accessToken, currentUser }) {
               <div className="mt-2 p-3 bg-blue-50/50 border border-blue-100 rounded-xl dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Tổng số tệp/ghi chú</p>
                 <p className="text-lg font-extrabold text-blue-600 mt-1">{messages.length}</p>
-                <p className="text-[10px] text-slate-400 mt-1">Dữ liệu được lưu an toàn trên trình duyệt này.</p>
+                <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 font-medium">⚠ Lưu trên trình duyệt này, chưa đồng bộ đa thiết bị.</p>
               </div>
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mẹo sử dụng</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lưu ý</p>
               <ul className="mt-2 text-xs text-slate-500 space-y-2 list-disc pl-4">
-                <li>Kéo thả hoặc dán hình ảnh để gửi nhanh.</li>
-                <li>Hỗ trợ tải lên mọi định dạng tệp (PDF, Word, Excel).</li>
-                <li>Dữ liệu đồng bộ với server qua link tải an toàn.</li>
+                <li>File đính kèm được tải lên server (URL cố định).</li>
+                <li>Ghi chú và danh sách chỉ lưu trên trình duyệt hiện tại.</li>
+                <li>Xóa cache trình duyệt sẽ mất dữ liệu ghi chú.</li>
               </ul>
             </div>
           </div>
