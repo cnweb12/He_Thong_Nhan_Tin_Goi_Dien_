@@ -196,6 +196,19 @@ Webhook doc:
 
 Neu co `To`, controller tra ve TwiML `Dial -> Client(To)`. Neu thieu `To`, controller tra ve voice message bao thieu destination.
 
+## Luong client/backend de xuat
+
+Mot flow goi co ban giua frontend va backend:
+
+1. Frontend goi `GET /api/twilio/token` de lay Twilio Voice token cho user hien tai.
+2. Frontend khoi tao Twilio Device bang token vua nhan.
+3. Khi bat dau cuoc goi, frontend tao call log bang `POST /api/calls`.
+4. Trong luc user join/leave, frontend cap nhat participant bang `PATCH /api/calls/:callId/participants`.
+5. Khi cuoc goi ket thuc, frontend cap nhat status bang `PATCH /api/calls/:callId/status`.
+6. Man hinh chat/conversation doc lich su bang `GET /api/calls/conversations/:conversationId`.
+
+Phan Twilio webhook `POST /api/twilio/voice` chi tra ve TwiML de Twilio route cuoc goi. Call log van nen duoc ghi qua `/api/calls` de giu authorization va data model nam trong backend.
+
 ## Bien moi truong
 
 Can cau hinh cac bien sau de tao Twilio token:
