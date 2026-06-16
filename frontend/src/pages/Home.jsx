@@ -27,6 +27,7 @@ const formatTime = (value) => {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
+  // Chỉ trả về giờ và phút, việc hiển thị ngày sẽ do Date Divider trong MessageList đảm nhiệm
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
