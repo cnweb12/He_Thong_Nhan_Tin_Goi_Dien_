@@ -190,6 +190,12 @@ Response item:
 }
 ```
 
+Ghi chu cho frontend:
+
+- `userId` la id cua nguoi gui request.
+- List nay chi gom request co `status = pending`.
+- Khi accept thanh cong, frontend nen reload ca friends list va pending requests.
+
 ### `DELETE /api/users/:userId/friends`
 
 Xoa quan he ban be/request giua user hien tai va `:userId` theo ca hai chieu.
