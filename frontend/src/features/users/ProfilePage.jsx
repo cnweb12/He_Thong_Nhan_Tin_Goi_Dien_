@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, LogOut, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Check, Eye, EyeOff, Loader2, LockKeyhole, LogOut, Save, ShieldCheck, UserRound, Smartphone, Laptop, Globe, ShieldAlert, MessageSquareOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarLeft from '../../components/SidebarLeft';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -55,9 +55,11 @@ const normalizeProfileForm = (profile) => ({
   avatarUrl: profile?.avatarUrl || '',
 });
 
-// Đã gỡ bỏ language, allowStrangerMessage và readReceiptEnabled
 const normalizeSettingsForm = (settings = {}) => ({
   theme: settings.theme || 'light',
+  language: settings.language || 'vi',
+  allowStrangerMessage: settings.allowStrangerMessage !== false,
+  readReceiptEnabled: settings.readReceiptEnabled !== false,
 });
 
 export default function ProfilePage() {
@@ -168,6 +170,10 @@ export default function ProfilePage() {
         displayName: profileForm.displayName.trim(),
       };
 
+      if (profileForm.username.trim()) {
+        payload.username = profileForm.username.trim();
+      }
+
       if (profileForm.avatarUrl.trim()) {
         payload.avatarUrl = profileForm.avatarUrl.trim();
       }
@@ -239,7 +245,7 @@ export default function ProfilePage() {
   const avatarLabel = getInitials(profile?.displayName || profile?.phone);
 
   return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_45%,_#0b1120_100%)]">
+    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)]">
       <div className="z-20 h-full flex-shrink-0 relative">
         <SidebarLeft active="account" onSelect={() => navigate('/')} />
       </div>
@@ -250,14 +256,14 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none"
             >
               <ArrowLeft size={17} />
               Quay lại chat
             </button>
             <div className="text-right">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Tài khoản</p>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Hồ sơ cá nhân</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Hồ sơ cá nhân</h1>
             </div>
           </div>
 
@@ -276,14 +282,14 @@ export default function ProfilePage() {
 
           {loading ? (
             <div className="flex flex-1 items-center justify-center">
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 text-slate-600 shadow-sm">
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-slate-600 shadow-sm">
                 <Loader2 className="animate-spin" size={20} />
                 Đang tải hồ sơ...
               </div>
             </div>
           ) : (
             <div className="grid gap-5 lg:grid-cols-[minmax(280px,360px)_1fr]">
-              <aside className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+              <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-col items-center text-center">
                   <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-3xl font-bold text-white">
                     {profile?.avatarUrl ? (
@@ -292,8 +298,8 @@ export default function ProfilePage() {
                       avatarLabel
                     )}
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{profile?.displayName || 'Người dùng'}</h2>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{profile?.phone || 'Chưa có số điện thoại'}</p>
+                  <h2 className="text-xl font-bold text-slate-900">{profile?.displayName || 'Người dùng'}</h2>
+                  <p className="mt-1 text-sm text-slate-500">{profile?.phone || 'Chưa có số điện thoại'}</p>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                     <ShieldCheck size={15} />
                     {profile?.role || 'user'}
@@ -302,69 +308,68 @@ export default function ProfilePage() {
 
                 <dl className="mt-6 space-y-3 text-sm">
                   <div>
-                    <dt className="text-slate-400 dark:text-slate-500">User ID</dt>
-                    <dd className="break-all font-medium text-slate-700 dark:text-slate-300">{profile?.userId || profile?._id || profile?.id || 'Chưa có dữ liệu'}</dd>
+                    <dt className="text-slate-400">User ID</dt>
+                    <dd className="break-all font-medium text-slate-700">{profile?.userId || profile?._id || profile?.id || 'Chưa có dữ liệu'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-400 dark:text-slate-500">Username</dt>
-                    <dd className="font-medium text-slate-700 dark:text-slate-300">{profile?.username || 'Chưa thiết lập'}</dd>
+                    <dt className="text-slate-400">Username</dt>
+                    <dd className="font-medium text-slate-700">{profile?.username || 'Chưa thiết lập'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-400 dark:text-slate-500">Ngày tạo</dt>
-                    <dd className="font-medium text-slate-700 dark:text-slate-300">{formatDateTime(profile?.createdAt)}</dd>
+                    <dt className="text-slate-400">Ngày tạo</dt>
+                    <dd className="font-medium text-slate-700">{formatDateTime(profile?.createdAt)}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-400 dark:text-slate-500">Cập nhật</dt>
-                    <dd className="font-medium text-slate-700 dark:text-slate-300">{formatDateTime(profile?.updatedAt)}</dd>
+                    <dt className="text-slate-400">Cập nhật</dt>
+                    <dd className="font-medium text-slate-700">{formatDateTime(profile?.updatedAt)}</dd>
                   </div>
                 </dl>
               </aside>
 
               <div className="space-y-5">
-                <form onSubmit={saveProfile} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                <form onSubmit={saveProfile} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                       <UserRound size={20} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Thông tin hiển thị</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Cập nhật tên, username và ảnh đại diện.</p>
+                      <h2 className="text-lg font-bold text-slate-900">Thông tin hiển thị</h2>
+                      <p className="text-sm text-slate-500">Cập nhật tên, username và ảnh đại diện.</p>
                     </div>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tên hiển thị</span>
+                      <span className="text-sm font-semibold text-slate-700">Tên hiển thị</span>
                       <input
                         name="displayName"
                         value={profileForm.displayName}
                         onChange={handleProfileChange}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                        className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                         minLength={2}
                         maxLength={100}
                         required
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Username</span>
+                      <span className="text-sm font-semibold text-slate-700">Username</span>
                       <input
-                        value={profileForm.username || profile?.username || '—'}
-                        readOnly
-                        disabled
-                        className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-400 cursor-not-allowed select-none"
-                        title="Username không thể thay đổi"
+                        name="username"
+                        value={profileForm.username}
+                        onChange={handleProfileChange}
+                        className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                        placeholder="username"
                       />
-                      <p className="mt-1 text-xs text-slate-400">Username không thể thay đổi sau khi đăng ký.</p>
                     </label>
                   </div>
 
                   <label className="mt-4 block">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Avatar URL</span>
+                    <span className="text-sm font-semibold text-slate-700">Avatar URL</span>
                     <input
                       name="avatarUrl"
                       value={profileForm.avatarUrl}
                       onChange={handleProfileChange}
-                      className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       placeholder="https://..."
                     />
                   </label>
@@ -381,49 +386,92 @@ export default function ProfilePage() {
                   </div>
                 </form>
 
-                <form onSubmit={changePassword} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                <form onSubmit={saveSettings} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-5 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                      <Eye size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">Cài đặt riêng tư</h2>
+                      <p className="text-sm text-slate-500">Kiểm soát quyền riêng tư và trải nghiệm của bạn.</p>
+                    </div>
+                  </div>
+
+                  {/* Giao diện & Ngôn ngữ */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="block">
+                      <span className="text-sm font-semibold text-slate-700">Giao diện</span>
+                      <select
+                        name="theme"
+                        value={settingsForm.theme}
+                        onChange={(e) => {
+                          handleSettingsChange(e);
+                          // Preview theme ngay khi chọn
+                          applyTheme(e.target.value);
+                        }}
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      >
+                        <option value="light">☀️ Sáng</option>
+                        <option value="dark">🌙 Tối</option>
+                      </select>
+                      <p className="mt-1 text-xs text-slate-400">Thay đổi màu nền toàn bộ ứng dụng.</p>
+                    </label>
+                  </div>
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={savingSettings}
+                      className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    >
+                      {savingSettings ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+                      Lưu cài đặt
+                    </button>
+                  </div>
+                </form>
+
+                <form onSubmit={changePassword} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                       <LockKeyhole size={20} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Bảo mật</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Đổi mật khẩu sẽ đăng xuất khỏi các phiên hiện tại.</p>
+                      <h2 className="text-lg font-bold text-slate-900">Bảo mật</h2>
+                      <p className="text-sm text-slate-500">Đổi mật khẩu sẽ đăng xuất khỏi các phiên hiện tại.</p>
                     </div>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mật khẩu hiện tại</span>
+                      <span className="text-sm font-semibold text-slate-700">Mật khẩu hiện tại</span>
                       <input
                         type="password"
                         name="currentPassword"
                         value={passwordForm.currentPassword}
                         onChange={handlePasswordChange}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                        className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                         required
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mật khẩu mới</span>
+                      <span className="text-sm font-semibold text-slate-700">Mật khẩu mới</span>
                       <input
                         type="password"
                         name="newPassword"
                         value={passwordForm.newPassword}
                         onChange={handlePasswordChange}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                        className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                         minLength={6}
                         required
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Xác nhận</span>
+                      <span className="text-sm font-semibold text-slate-700">Xác nhận</span>
                       <input
                         type="password"
                         name="confirmPassword"
                         value={passwordForm.confirmPassword}
                         onChange={handlePasswordChange}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                        className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                         minLength={6}
                         required
                       />
@@ -443,20 +491,20 @@ export default function ProfilePage() {
                 </form>
 
                 {/* ── Thiết bị đang hoạt động ── */}
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
                       <Smartphone size={20} />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Thiết bị hoạt động</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Các thiết bị đã từng đăng nhập và kết nối vào hệ thống này.</p>
+                      <h2 className="text-lg font-bold text-slate-900">Thiết bị hoạt động</h2>
+                      <p className="text-sm text-slate-500">Các thiết bị đã từng đăng nhập và kết nối vào hệ thống này.</p>
                     </div>
                   </div>
 
-                  <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  <div className="divide-y divide-slate-100">
                     {devices.length === 0 ? (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 py-3">Chưa có thông tin thiết bị nào.</p>
+                      <p className="text-sm text-slate-500 py-3">Chưa có thông tin thiết bị nào.</p>
                     ) : (
                       devices.map((dev) => {
                         const isCurrent = dev.deviceId === localStorage.getItem('deviceId') || (devices.length === 1);
