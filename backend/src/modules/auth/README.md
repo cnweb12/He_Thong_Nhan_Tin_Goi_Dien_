@@ -215,6 +215,13 @@ Body:
 - Doi mat khau se revoke toan bo refresh token.
 - Role cua JWT mac dinh la `user` neu document user khong co role.
 
+## Token lifecycle
+
+- Login tao access token moi va refresh token moi cho `deviceId`.
+- Refresh chi tao access token moi, khong rotate refresh token hien tai.
+- Logout tung thiet bi revoke refresh token theo cap `userId` va `deviceId`.
+- Logout all va change password revoke toan bo refresh token cua user.
+
 ## Loi thuong gap
 
 - `400 Validation failed`: thieu field hoac sai format.
