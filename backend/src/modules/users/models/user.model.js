@@ -29,10 +29,12 @@ const UserSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["user", "super_admin"],
+      enum: ["user", "admin", "super_admin"],
       default: "user",
       required: true,
     },
+    isLocked: { type: Boolean, default: false },
+    lockedAt: { type: Date },
     lastSeenAt: { type: Date },
   },
   { timestamps: true, versionKey: false },

@@ -34,7 +34,7 @@ function requireRole(...allowedRoles) {
  * @returns {Function} Express middleware
  */
 function requireAdmin() {
-  return requireRole("super_admin");
+  return requireRole("admin", "super_admin");
 }
 
 /**

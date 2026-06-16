@@ -93,6 +93,13 @@ async function login(req, res, next) {
       return next(error);
     }
 
+    // Check if account is locked
+    if (user.isLocked) {
+      const error = new Error("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+      error.statusCode = 403;
+      return next(error);
+    }
+
     // Create or update device
     await UserDeviceModel.updateOne(
       { userId: user._id, deviceId },
@@ -182,6 +189,13 @@ async function refreshAccessToken(req, res, next) {
     if (!user) {
       const error = new Error("User not found");
       error.statusCode = 404;
+      return next(error);
+    }
+
+    // Check if account is locked
+    if (user.isLocked) {
+      const error = new Error("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+      error.statusCode = 403;
       return next(error);
     }
 

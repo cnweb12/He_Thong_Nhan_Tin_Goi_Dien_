@@ -43,7 +43,7 @@ function App() {
                   path="/"
                   element={
                     isAuthenticated 
-                      ? (user?.role === 'super_admin' ? <Navigate to="/admin" replace /> : <Home />)
+                      ? (['admin', 'super_admin'].includes(user?.role) ? <Navigate to="/admin" replace /> : <Home />)
                       : <Navigate to="/login" replace />
                   }
                 />
@@ -53,7 +53,7 @@ function App() {
                 />
                 <Route
                   path="/admin"
-                  element={isAuthenticated && user?.role === 'super_admin' ? <AdminDashboard /> : <Navigate to="/" replace />}
+                  element={isAuthenticated && ['admin', 'super_admin'].includes(user?.role) ? <AdminDashboard /> : <Navigate to="/" replace />}
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
