@@ -202,6 +202,12 @@ Neu khong co record nao bi xoa thi tra `404 Friend relationship not found`.
 - Friend routes co them `requireUserRole()`, mac dinh chi cho role user thuong.
 - Controller luon lay current user tu `req.user.userId`, khong lay tu body.
 
+## Route guard notes
+
+- `router.use(authMiddleware)` duoc gan truoc tat ca users routes.
+- Friend endpoints nam sau middleware JWT nen khong can lap lai auth trong controller.
+- `requireUserRole()` duoc dat truc tiep tren tung friend route de giu user profile APIs va friend APIs tach rule ro rang.
+
 ## Loi thuong gap
 
 - `400 Validation failed`: request sai format.
