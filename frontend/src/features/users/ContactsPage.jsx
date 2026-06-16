@@ -285,18 +285,18 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             <button
                               onClick={() => onStartConversation({ userId: friend.userId, displayName: friend.displayName })}
-                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
+                              className="px-2.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1 text-[11px] font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
                             >
-                              <MessageSquare size={14} />
+                              <MessageSquare size={13} />
                               Nhắn tin
                             </button>
                             <button
                               onClick={() => handleRemoveFriend(friend.userId, friend.displayName)}
                               disabled={actionLoadingId === friend.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
+                              className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-[11px] font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
                             >
                               Hủy kết bạn
                             </button>
@@ -333,18 +333,18 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             <button
                               onClick={() => handleAcceptRequest(req.userId, req.displayName)}
                               disabled={actionLoadingId === req.userId}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-[11px] font-semibold shadow-sm cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                             >
                               Đồng ý
                             </button>
                             <button
                               onClick={() => handleDeclineRequest(req.userId, req.displayName)}
                               disabled={actionLoadingId === req.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
+                              className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-[11px] font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
                             >
                               Từ chối
                             </button>
@@ -408,10 +408,10 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0 ml-3">
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                 {isFriend ? (
                                   <>
-                                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100 whitespace-nowrap shrink-0">
+                                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100 whitespace-nowrap shrink-0">
                                       Bạn bè
                                     </span>
                                     <button
@@ -419,13 +419,13 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                       className="p-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer shrink-0"
                                       title="Nhắn tin"
                                     >
-                                      <MessageSquare size={16} />
+                                      <MessageSquare size={14} />
                                     </button>
                                   </>
                                 ) : sentRequests.has(item.userId) ? (
                                   <button
                                     disabled
-                                    className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 transition text-xs font-semibold cursor-not-allowed dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-400 whitespace-nowrap shrink-0"
+                                    className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 transition text-[11px] font-semibold cursor-not-allowed dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-400 whitespace-nowrap shrink-0"
                                   >
                                     Đã gửi lời mời
                                   </button>
@@ -433,7 +433,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                   <button
                                     onClick={() => handleAcceptRequest(item.userId, item.displayName)}
                                     disabled={actionLoadingId === item.userId}
-                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
+                                    className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-[11px] font-semibold cursor-pointer whitespace-nowrap shrink-0"
                                   >
                                     Đồng ý
                                   </button>
@@ -441,10 +441,10 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                   <button
                                     onClick={() => handleSendRequest(item.userId, item.displayName)}
                                     disabled={actionLoadingId === item.userId}
-                                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-xs font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
+                                    className="px-2.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-[11px] font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
                                   >
                                     {actionLoadingId === item.userId ? (
-                                      <Loader2 className="animate-spin" size={14} />
+                                      <Loader2 className="animate-spin" size={12} />
                                     ) : (
                                       'Kết bạn'
                                     )}
