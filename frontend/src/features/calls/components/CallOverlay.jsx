@@ -33,6 +33,8 @@ export default function CallOverlay() {
     switch (callState) {
       case 'calling':
         return 'Đang kết nối...';
+      case 'connecting':
+        return 'Đang thiết lập WebRTC...';
       case 'ringing':
         return 'Cuộc gọi đến...';
       case 'connected':
@@ -108,13 +110,13 @@ export default function CallOverlay() {
             </>
           )}
 
-          {/* Giao diện đang gọi đi */}
-          {callState === 'calling' && (
+          {/* Giao diện đang gọi đi hoặc đang kết nối */}
+          {(callState === 'calling' || callState === 'connecting') && (
             <button
-              onClick={cancelCall}
+              onClick={callState === 'connecting' ? () => endCall(0) : cancelCall}
               className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg text-white active:scale-95 transition-transform cursor-pointer"
               style={{ backgroundColor: '#ef4444', boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.39)' }}
-              title="Hủy cuộc gọi"
+              title={callState === 'connecting' ? "Hủy kết nối" : "Hủy cuộc gọi"}
             >
               <PhoneOff className="w-7 h-7" />
             </button>

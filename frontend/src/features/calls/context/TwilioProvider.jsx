@@ -244,6 +244,7 @@ export function TwilioProvider({ children }) {
 
     try {
       stopTone();
+      setCallState('connecting');
       await getOrCreatePeerConnection();
       socket.emit('call:accept', { callId: currentCall.callId }, (res) => {
         if (!res?.ok) {
@@ -292,7 +293,7 @@ export function TwilioProvider({ children }) {
 
   const endCall = useCallback((durationSec = 0) => {
     const currentCall = callInfoRef.current;
-    if (!['calling', 'ringing', 'connected'].includes(callStateRef.current) || !currentCall || !socket) return;
+    if (!['calling', 'ringing', 'connecting', 'connected'].includes(callStateRef.current) || !currentCall || !socket) return;
 
     socket.emit('call:end', {
       callId: currentCall.callId,
