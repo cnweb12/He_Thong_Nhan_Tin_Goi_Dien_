@@ -47,7 +47,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
 
   useEffect(() => {
     loadContactsData();
-  }, [accessToken, activeTab]);
+  }, [accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle global search for users
   useEffect(() => {

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import Avatar from './Avatar';
 
 const NAV_ITEMS = [
     { id: 'chat', icon: MessageCircle, label: 'Tin nhắn' },
@@ -24,9 +25,6 @@ const NAV_ITEMS = [
  */
 export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen, hasUnreadChat, hasPendingRequests }) {
     const { logout, user } = useAuth();
-    const avatarUrl = user?.avatarUrl
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || user?.name || 'U')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45&length=1`;
-
     const navigate = useNavigate();
 
     const handleSelect = (id) => {
@@ -61,10 +59,11 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                                     : 'bg-white/10 border-white/10 hover:bg-white/20',
                             ].join(' ')}
                         >
-                            <img
-                                src={avatarUrl}
-                                alt={user?.displayName || 'Avatar'}
-                                className="w-full h-full object-cover rounded-[1rem] bg-slate-800"
+                            <Avatar
+                                src={user?.avatarUrl}
+                                name={user?.displayName || user?.name || 'U'}
+                                size="w-full h-full"
+                                textClass="text-base font-bold"
                             />
                         </button>
 
@@ -202,11 +201,12 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                     aria-label="Tài khoản"
                     className="flex flex-col items-center gap-1 flex-1 py-1 focus:outline-none"
                 >
-                    <span className="w-10 h-10 rounded-[0.9rem] overflow-hidden border border-white/20 flex items-center justify-center p-[2px]">
-                        <img
-                            src={avatarUrl}
-                            alt={user?.displayName || 'Avatar'}
-                            className="w-full h-full object-cover rounded-[0.7rem] bg-slate-800"
+                    <span className="w-10 h-10 rounded-[0.9rem] overflow-hidden border border-white/20 flex items-center justify-center">
+                        <Avatar
+                            src={user?.avatarUrl}
+                            name={user?.displayName || user?.name || 'U'}
+                            size="w-full h-full"
+                            textClass="text-sm font-bold"
                         />
                     </span>
                     <span className="text-[10px] font-medium leading-none text-white/50">Tôi</span>

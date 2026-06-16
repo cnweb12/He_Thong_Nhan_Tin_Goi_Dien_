@@ -55,13 +55,6 @@ export default function MessageBubble({ m, isMine, currentUserId, chat, isReadWa
         }
         : resolvedSender;
 
-    console.log('[MessageBubble] Sender Resolution:', {
-        from: m.from,
-        messageSender,
-        resolvedSender,
-        finalSender: sender,
-        hasName: Boolean((sender?.displayName || sender?.username || sender?.phone || sender?.name || '').trim()),
-    });
 
     const getStatusIcon = () => {
         // Nếu không phải tin của mình thì không hiển thị status icon (seen watermark sẽ được xử lý riêng ở ngoài)

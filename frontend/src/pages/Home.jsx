@@ -46,6 +46,8 @@ const normalizeMessage = (message) => ({
   seq: message?.seq,
   clientMessageId: message?.clientMessageId,
   attachments: message?.attachments || [],
+  // Giữ nguyên status nếu có (ví dụ: 'read', 'sent'), nếu không thì mặc định là 'sent'
+  status: message?.status || 'sent',
 });
 
 const normalizeConversationFromSocket = (conversation, currentUserId) => {
