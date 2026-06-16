@@ -5,6 +5,17 @@ import { useCall } from '../../calls/hooks/useCall';
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 const resolvePeerId = (peer) => peer?._id || peer?.id || peer?.userId || null;
 
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'vừa xong';
+    if (mins < 60) return `${mins} phút trước`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    return `${Math.floor(hours / 24)} ngày trước`;
+}
+
 /** Lấy chữ cái đầu từ tên */
 function getInitials(name) {
     if (!name) return '?';
@@ -76,11 +87,11 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
     };
 
     return (
-        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
+        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div className="flex items-center gap-3">
                 <button
                     onClick={onBack}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 sm:hidden text-slate-600"
+                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 sm:hidden text-slate-600 dark:text-slate-300"
                 >
                     <ArrowLeft size={20} />
                 </button>
@@ -89,29 +100,35 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
                     <img
                         src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&background=random&color=fff&rounded=true&font-size=0.45`}
                         alt={title}
-                        className="w-10 h-10 rounded-full object-cover bg-slate-200"
+                        className="w-10 h-10 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                    {peer.isOnline && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full" />
+                    )}
                 </div>
 
                 <div>
-                    <div className="font-semibold text-slate-800 text-sm">{title}</div>
-                    <div className="text-xs text-slate-500">
-                        Đang hoạt động
+                    <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{title}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {peer.isOnline
+                            ? 'Đang hoạt động'
+                            : peer.lastActiveAt
+                                ? `Hoạt động ${formatRelativeTime(peer.lastActiveAt)}`
+                                : 'Không hoạt động'}
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-1 text-slate-500">
-                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-emerald-600" title="Gọi thoại">
+            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400" title="Gọi thoại">
                     <Phone size={20} />
                 </button>
-                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-blue-600" title="Gọi video">
+                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer text-blue-600 dark:text-blue-400" title="Gọi video">
                     <Video size={20} />
                 </button>
                 <button
                     onClick={onToggleInfo}
-                    className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                     title="Thông tin hội thoại"
                 >
                     <Info size={20} />

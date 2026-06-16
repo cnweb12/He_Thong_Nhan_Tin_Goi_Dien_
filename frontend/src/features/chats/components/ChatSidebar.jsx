@@ -73,24 +73,24 @@ export default function ChatSidebar({
     const isSearching = query.trim().length >= 2;
 
     return (
-        <div className="w-full h-full flex flex-col bg-slate-50">
+        <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-slate-800">
 
             {/* ── Header: thông tin user đang đăng nhập ── */}
-            <header className="p-4 border-b border-slate-200">
+            <header className="p-4 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                         <img
                             src={avatarUrl}
                             alt="Avatar"
-                            className="w-9 h-9 rounded-full bg-slate-200 object-cover"
+                            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 object-cover"
                         />
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-800 text-sm truncate">
+                        <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">
                             {user?.displayName || user?.name || 'Khách'}
                         </p>
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                             {user?.phone || 'Online'}
                         </p>
                     </div>
@@ -98,7 +98,7 @@ export default function ChatSidebar({
             </header>
 
             {/* ── Ô tìm kiếm ── */}
-            <div className="border-b border-slate-200">
+            <div className="border-b border-slate-200 dark:border-slate-700">
                 <SearchBar
                     value={query}
                     onChange={setQuery}
@@ -111,8 +111,8 @@ export default function ChatSidebar({
             {/* ── Kết quả tìm kiếm user (dropdown) ── */}
             {isSearching && (
                 <div className="px-3 pb-3">
-                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                        <div className="px-3 py-2 text-xs font-semibold text-slate-500 border-b border-slate-100">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                        <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
                             {searchLoading ? 'Đang tìm kiếm...' : 'Gợi ý liên hệ'}
                         </div>
 
@@ -140,7 +140,7 @@ export default function ChatSidebar({
                                         type="button"
                                         onClick={() => onStartConversation?.(item)}
                                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left
-                                                   hover:bg-sky-50 transition cursor-pointer"
+                                                   hover:bg-sky-50 dark:hover:bg-slate-800 transition cursor-pointer"
                                     >
                                         <img
                                             src={itemAvatar}
@@ -148,12 +148,12 @@ export default function ChatSidebar({
                                             className="w-8 h-8 rounded-full bg-slate-200 object-cover shrink-0"
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-slate-800 text-sm truncate">{name}</p>
+                                            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{name}</p>
                                             {phone && (
-                                                <p className="text-xs text-slate-500 truncate">{phone}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{phone}</p>
                                             )}
                                         </div>
-                                        <span className="text-xs text-sky-600 font-medium shrink-0">
+                                        <span className="text-xs text-sky-600 dark:text-sky-400 font-medium shrink-0">
                                             Nhắn tin
                                         </span>
                                     </button>
@@ -167,7 +167,7 @@ export default function ChatSidebar({
             {/* ── Danh sách hội thoại ── */}
             <div className="flex-1 overflow-y-auto">
                 {filteredConversations.length === 0 && !isSearching && (
-                    <p className="px-4 py-6 text-sm text-slate-400 text-center">
+                    <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">
                         Chưa có cuộc trò chuyện nào.
                     </p>
                 )}

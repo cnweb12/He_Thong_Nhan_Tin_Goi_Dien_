@@ -11,10 +11,10 @@ export default function MessageList({ messages, currentUserId, loading, error, c
     }, [messages]);
 
     return (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100 dark:bg-slate-900">
             <div className="max-w-3xl mx-auto space-y-2 pb-4">
                 {loading && (
-                    <div className="text-center text-sm text-slate-500 py-6">Đang tải tin nhắn...</div>
+                    <div className="text-center text-sm text-slate-500 dark:text-slate-400 py-6">Đang tải tin nhắn...</div>
                 )}
                 {error && (
                     <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800 shadow-sm">
@@ -22,7 +22,7 @@ export default function MessageList({ messages, currentUserId, loading, error, c
                     </div>
                 )}
                 {!loading && !error && messages.length === 0 && (
-                    <div className="text-center text-sm text-slate-500 py-6">
+                    <div className="text-center text-sm text-slate-500 dark:text-slate-400 py-6">
                         Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.
                     </div>
                 )}

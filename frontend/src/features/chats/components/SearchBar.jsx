@@ -66,9 +66,9 @@ export default function SearchBar({
                     placeholder={placeholder}
                     className="
                         w-full pl-10 pr-8 py-2.5 rounded-[1.25rem]
-                        bg-[#f2f7ff] text-sm text-slate-700
-                        placeholder-slate-400 border border-transparent
-                        focus:bg-white focus:border-[#b8d4ff]
+                        bg-[#f2f7ff] dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-200
+                        placeholder-slate-400 dark:placeholder-slate-500 border border-transparent
+                        focus:bg-white dark:focus:bg-slate-900 focus:border-[#b8d4ff] dark:focus:border-blue-500/40
                         focus:outline-none focus:ring-4 focus:ring-[#dbeafe]
                         transition-all duration-150
                     "

@@ -94,7 +94,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
     };
 
     return (
-        <div className="flex flex-col bg-white border-t border-slate-200 shrink-0">
+        <div className="flex flex-col bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shrink-0">
             {selectedFile && (
                 <div className="px-4 pt-3 pb-1">
                     <div className="relative inline-block group">
@@ -146,7 +146,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                             className={`p-2 rounded-full transition-colors cursor-pointer ${
                                 showEmojiPicker
                                     ? 'bg-blue-100 text-blue-600'
-                                    : 'hover:bg-slate-100 text-slate-500'
+                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400'
                             }`}
                             title="Chèn emoji"
                         >
@@ -183,7 +183,7 @@ export default function MessageInput({ onSend, disabled = false, sending = false
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder="Nhập tin nhắn..."
-                    className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition overflow-y-auto"
+                    className="flex-1 px-4 py-2.5 max-h-28 resize-none bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition overflow-y-auto"
                     style={{ height: '42px' }}
                 />
                 <button

@@ -93,7 +93,7 @@ export default function ChatItem({ chat, active, onClick }) {
             className={[
                 'w-full flex items-center gap-3 px-4 py-3 text-left',
                 'transition-colors duration-150 cursor-pointer border-b border-slate-100',
-                active ? 'bg-blue-50/80' : 'hover:bg-slate-100',
+                active ? 'bg-blue-50/80 dark:bg-blue-500/10' : 'hover:bg-slate-100 dark:hover:bg-slate-700/60',
             ].join(' ')}
         >
             {/* ── Avatar ── */}
@@ -114,13 +114,13 @@ export default function ChatItem({ chat, active, onClick }) {
             <div className="flex-1 min-w-0">
                 <p className={[
                     'text-sm truncate',
-                    hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-700',
+                    hasUnread ? 'font-bold text-slate-900 dark:text-slate-50' : 'font-semibold text-slate-700 dark:text-slate-200',
                 ].join(' ')}>
                     {title}
                 </p>
                 <p className={[
                     'text-xs truncate mt-0.5',
-                    hasUnread ? 'text-blue-600 font-semibold' : 'text-slate-500',
+                    hasUnread ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-500 dark:text-slate-400',
                 ].join(' ')}>
                     {lastMsg}
                 </p>
@@ -128,7 +128,7 @@ export default function ChatItem({ chat, active, onClick }) {
 
             {/* ── Giờ + badge unread ── */}
             <div className="flex flex-col items-end self-start shrink-0 min-w-[40px]">
-                <span className="text-[11px] text-slate-400">{time}</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">{time}</span>
                 {hasUnread && (
                     <span className="mt-1.5 min-w-[20px] h-5 px-1 flex items-center justify-center
                                      rounded-full bg-blue-500 text-white text-[10px] font-bold shadow">

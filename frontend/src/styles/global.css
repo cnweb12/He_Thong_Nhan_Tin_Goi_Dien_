@@ -175,6 +175,9 @@ button {
 } */
 @import "tailwindcss";
 
+/* Dark mode theo class: applyTheme() thêm class="dark" vào <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 * {
     box-sizing: border-box;
 }
@@ -227,6 +230,10 @@ button {
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
 }
 
 ::-webkit-scrollbar-track {
