@@ -1,28 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, Check, CheckCheck, AlertCircle, FileText, Download, Trash2, X, FileArchive, FileCode, FileAudio, FileVideo, File } from 'lucide-react';
-
-/** Lấy chữ cái đầu từ displayName để làm fallback avatar */
-function getInitials(name) {
-    if (!name) return '?';
-    return name
-        .split(' ')
-        .map(w => w[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-}
-
-/** Màu nền avatar từ tên — nhất quán, không random mỗi lần render */
-function getAvatarColor(name) {
-    const colors = [
-        '#4f8ef7', '#f75c5c', '#f7a825', '#34c77b',
-        '#a855f7', '#0ea5e9', '#ec4899', '#f97316',
-    ];
-    if (!name) return colors[0];
-    const code = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    return colors[code % colors.length];
-}
+import Avatar from '../../../components/Avatar';
 
 function resolveSenderInConversation(fromId, chat) {
     if (!fromId || !chat) return null;
@@ -56,56 +35,6 @@ function resolveSenderInConversation(fromId, chat) {
     }
 
     return null;
-}
-
-function Avatar({ sender }) {
-    const [imgError, setImgError] = useState(false);
-    const name = sender?.displayName || sender?.username || sender?.phone || sender?.name || '';
-    const src = sender?.avatarUrl || sender?.displayAvatarUrl;
-    const hasName = Boolean(name.trim());
-
-    // Debug log
-    if (!hasName) {
-        console.warn('[Avatar] No name found:', {
-            displayName: sender?.displayName,
-            username: sender?.username,
-            phone: sender?.phone,
-            name: sender?.name,
-            sender,
-        });
-    }
-
-    if (src && !imgError) {
-        return (
-            <img
-                src={src}
-                alt={name || 'Avatar'}
-                onError={() => setImgError(true)}
-                className="w-7 h-7 rounded-full bg-slate-200 flex-shrink-0 object-cover"
-            />
-        );
-    }
-
-    if (hasName) {
-        return (
-            <span
-                className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold select-none"
-                style={{ backgroundColor: getAvatarColor(name) }}
-                title={name}
-            >
-                {getInitials(name)}
-            </span>
-        );
-    }
-
-    return (
-        <span
-            className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-slate-300 text-slate-700 text-[10px] font-semibold select-none"
-            title="Người dùng"
-        >
-            ?
-        </span>
-    );
 }
 
 export default function MessageBubble({ m, isMine, currentUserId, chat }) {
@@ -193,7 +122,12 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     return (
         <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
             {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
-            {!isMine && <Avatar sender={sender} />}
+            {!isMine && <Avatar
+                src={sender?.avatarUrl || sender?.displayAvatarUrl}
+                name={sender?.displayName || sender?.username || sender?.phone || sender?.name || ''}
+                size="w-7 h-7"
+                textClass="text-[10px] font-bold"
+            />}
 
             <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
                 {/* File / ảnh đính kèm */}

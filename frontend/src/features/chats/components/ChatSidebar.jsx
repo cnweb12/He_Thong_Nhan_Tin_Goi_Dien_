@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import SearchBar from './SearchBar';
 import ChatItem from './ChatItem';
 import { searchUsersApi } from '../../users/services/userApi';
+import Avatar from '../../../components/Avatar';
 
 /** Lấy id hội thoại từ nhiều shape khác nhau */
 const resolveConversationId = (c) => c?.conversationId || c?.id || c?._id || null;
@@ -67,9 +68,6 @@ export default function ChatSidebar({
 
     const filteredConversations = useMemo(() => conversations || [], [conversations]);
 
-    const avatarUrl = user?.avatarUrl
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || 'K')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`;
-
     const isSearching = query.trim().length >= 2;
 
     return (
@@ -79,11 +77,7 @@ export default function ChatSidebar({
             <header className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
                 <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
-                        <img
-                            src={avatarUrl}
-                            alt="Avatar"
-                            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 object-cover"
-                        />
+                        <Avatar src={user?.avatarUrl} name={user?.displayName || user?.name || 'Khách'} size="w-9 h-9" />
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-[#232e3c] rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -131,8 +125,6 @@ export default function ChatSidebar({
                                 const uid         = item.userId || item._id || item.id;
                                 const name        = item.displayName || item.username || '?';
                                 const phone       = item.phone || (isPhoneLike(item.username) ? item.username : '');
-                                const itemAvatar  = item.avatarUrl
-                                    || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&rounded=true&font-size=0.45`;
 
                                 return (
                                     <button
@@ -142,11 +134,7 @@ export default function ChatSidebar({
                                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left
                                                    hover:bg-sky-50 dark:hover:bg-[#1c2b38] transition cursor-pointer"
                                     >
-                                        <img
-                                            src={itemAvatar}
-                                            alt={name}
-                                            className="w-8 h-8 rounded-full bg-slate-200 object-cover shrink-0"
-                                        />
+                                        <Avatar src={item.avatarUrl} name={name} size="w-8 h-8" />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{name}</p>
                                             {phone && (
