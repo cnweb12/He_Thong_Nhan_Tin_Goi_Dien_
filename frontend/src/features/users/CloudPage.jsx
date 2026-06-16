@@ -176,7 +176,7 @@ export default function CloudPage({ accessToken, currentUser }) {
   });
 
   return (
-    <div className="w-full flex-1 flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full flex-1 min-h-0 flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột trái phụ: Cloud Stats & Search */}
       <div className="hidden md:flex w-[280px] bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
         <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">

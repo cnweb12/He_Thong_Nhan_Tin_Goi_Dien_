@@ -446,12 +446,12 @@ export default function Home() {
       </div>
 
       {/* Vùng nội dung chính */}
-      <div className="flex-1 min-w-0 flex flex-row overflow-hidden">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-row overflow-hidden">
         {sidebarView === 'chat' ? (
           <>
             {/* Cột danh sách cuộc trò chuyện */}
             <div
-              className={`z-10 h-full flex flex-col bg-white dark:bg-[#17212b] flex-shrink-0 border-r border-slate-200 dark:border-[#1e2d3d] overflow-hidden
+              className={`z-10 min-h-0 flex flex-col bg-white dark:bg-[#17212b] flex-shrink-0 border-r border-slate-200 dark:border-[#1e2d3d] overflow-hidden
                 ${!isChatListOpen
                   ? 'hidden sm:hidden'
                   : 'flex w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px]'
@@ -470,7 +470,7 @@ export default function Home() {
 
             {/* Vùng chat chính */}
             <div
-              className={`min-w-0 h-full flex-col relative
+              className={`min-w-0 min-h-0 overflow-hidden flex-col relative
                 ${isChatListOpen
                   ? 'hidden sm:flex sm:flex-1'
                   : 'flex flex-1'
@@ -512,7 +512,7 @@ export default function Home() {
 
             {/* Panel thông tin bên phải */}
             <div
-              className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white dark:bg-[#17212b] border-l border-slate-200 dark:border-[#1e2d3d] overflow-hidden ${isInfoOpen && selectedId
+              className={`z-30 min-h-0 flex-shrink-0 transition-all duration-300 bg-white dark:bg-[#17212b] border-l border-slate-200 dark:border-[#1e2d3d] overflow-hidden ${isInfoOpen && selectedId
                 ? 'w-0 sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 opacity-0 border-none'
                 : 'w-0 opacity-0 border-none'
                 } hidden sm:flex`}

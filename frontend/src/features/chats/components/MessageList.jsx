@@ -60,7 +60,7 @@ export default function MessageList({
   }, [validMessages]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100 dark:bg-slate-900">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100 dark:bg-slate-900">
       <div className="max-w-3xl mx-auto space-y-2 pb-4">
         {loading && (
           <div className="text-center text-sm text-slate-500 dark:text-slate-400 py-6">

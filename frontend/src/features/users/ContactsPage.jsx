@@ -158,7 +158,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột phụ bên trái: Danh mục */}
       <div className="w-full md:w-[280px] h-auto md:h-full bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
         <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d] hidden md:block">
