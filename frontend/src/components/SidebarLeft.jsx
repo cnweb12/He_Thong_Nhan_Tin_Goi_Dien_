@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Clock3, LayoutGrid,
+    LayoutGrid,
     MessageCircle, Settings, UserRound, LogOut, Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,6 @@ const NAV_ITEMS = [
     { id: 'chat', icon: MessageCircle, label: 'Tin nhắn' },
     { id: 'contacts', icon: UserRound, label: 'Danh bạ' },
     { id: 'cloud', icon: LayoutGrid, label: 'Cloud' },
-    { id: 'task', icon: Clock3, label: 'Công việc' },
 ];
 
 /**

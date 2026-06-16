@@ -19,7 +19,6 @@ import { uploadFilesApi } from '../services/upload.service';
 import { listPendingRequestsApi } from '../features/users/services/userApi';
 import ContactsPage from '../features/users/ContactsPage';
 import CloudPage from '../features/users/CloudPage';
-import TasksPage from '../features/users/TasksPage';
 
 // Custom socket hooks (tách ra khỏi Home để giảm độ phức tạp)
 import { useSocketMessages } from '../features/chats/hooks/useSocketMessages';
@@ -536,10 +535,6 @@ export default function Home() {
         ) : sidebarView === 'cloud' ? (
           <CloudPage
             accessToken={accessToken}
-            currentUser={user}
-          />
-        ) : sidebarView === 'task' ? (
-          <TasksPage
             currentUser={user}
           />
         ) : null}
