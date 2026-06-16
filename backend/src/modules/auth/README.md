@@ -44,6 +44,19 @@ Protected routes, can header `Authorization: Bearer <accessToken>`:
 - `PATCH /api/auth/profile`
 - `POST /api/auth/change-password`
 
+## Response format
+
+Controller auth tra JSON theo pattern chung:
+
+```json
+{
+  "ok": true,
+  "data": {}
+}
+```
+
+Voi mot so action nhu logout hoac change password, response co them `message` de frontend hien thi thong bao thanh cong.
+
 ## API chi tiet
 
 ### `POST /api/auth/register`
