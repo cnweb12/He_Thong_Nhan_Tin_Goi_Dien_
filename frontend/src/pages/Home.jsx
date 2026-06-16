@@ -544,16 +544,18 @@ export default function Home() {
           ? 'Cloud'
           : 'Công việc';
 
+  const isMobileNavVisible = !(sidebarView === 'chat' && !isChatListOpen);
+
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100 pb-[64px] md:pb-0">
+    <div className={`relative h-screen flex w-full overflow-hidden text-slate-900 bg-slate-100 ${isMobileNavVisible ? 'pb-[64px] md:pb-0' : ''}`}>
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
         </div>
       )}
 
-      {/* Sidebar icon trái — desktop: cột dọc; mobile: bottom bar (tự render trong SidebarLeft) */}
+      {/* Sidebar icon trái */}
       <div className="z-20 h-full flex-shrink-0">
         <SidebarLeft
           active={sidebarView}
@@ -569,11 +571,15 @@ export default function Home() {
       <div className="flex-1 min-w-0 h-full flex overflow-hidden">
         {sidebarView === 'chat' ? (
           <>
-            {/* Cột danh sách cuộc trò chuyện */}
+            {/* Cột danh sách cuộc trò chuyện
+                - Desktop: luôn hiện (trừ khi bị thu bằng nút toggle)
+                - Mobile: chỉ hiện khi isChatListOpen = true (chưa chọn conv)
+            */}
             <div
-              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden ${!isChatListOpen
-                ? 'w-0 opacity-0 border-none'
-                : 'w-[25%] min-w-[280px] max-w-[400px] opacity-100'
+              className={`z-10 h-full flex flex-col transition-all duration-300 bg-white flex-shrink-0 border-r border-slate-200 overflow-hidden
+                ${!isChatListOpen
+                  ? 'w-0 opacity-0 border-none'
+                  : 'w-full sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] opacity-100'
                 }`}
             >
               <ChatSidebar
@@ -587,8 +593,17 @@ export default function Home() {
               />
             </div>
 
-            {/* Vùng chat chính */}
-            <div className="flex-1 min-w-0 h-full flex flex-col relative">
+            {/* Vùng chat chính
+                - Desktop: luôn hiện (flex-1)
+                - Mobile: chỉ hiện khi đã chọn conversation (!isChatListOpen)
+            */}
+            <div
+              className={`min-w-0 h-full flex-col relative transition-all duration-300
+                ${isChatListOpen
+                  ? 'hidden sm:flex sm:flex-1'
+                  : 'flex flex-1'
+                }`}
+            >
               {selectedId ? (
                 <ChatArea
                   chat={selected}
@@ -603,7 +618,7 @@ export default function Home() {
                   onBack={() => {
                     setSelectedId(null);
                     setIsInfoOpen(false);
-                    // On mobile, when user goes back from chat, re-open chat list
+                    // Trên mobile, quay lại danh sách khi nhấn back
                     try {
                       if (typeof window !== 'undefined' && window.innerWidth < 640) {
                         setIsChatListOpen(true);
@@ -612,6 +627,7 @@ export default function Home() {
                   }}
                 />
               ) : (
+                // Placeholder chỉ hiện trên desktop khi chưa chọn conv
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
                   <div className="w-20 h-20 mb-4 rounded-full bg-blue-50 flex items-center justify-center">
                     <span className="text-blue-300 text-3xl font-semibold">C</span>
@@ -622,7 +638,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Panel thông tin bên phải */}
+            {/* Panel thông tin bên phải — chỉ hiện trên desktop */}
             <div
               className={`z-30 h-full flex-shrink-0 transition-all duration-300 bg-white border-l border-slate-200 overflow-hidden ${isInfoOpen && selectedId
                 ? 'w-0 sm:w-[25%] sm:min-w-[280px] sm:max-w-[400px] sm:opacity-100 opacity-0 border-none'

@@ -133,12 +133,12 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                 MOBILE — thanh ngang cuối màn hình (< md)
             ════════════════════════════════════════ */}
             <nav
-                className="md:hidden fixed bottom-0 left-0 right-0 z-50
-                           bg-[#0f172a] text-white
-                           flex items-center justify-around
-                           px-2 py-2
-                           shadow-[0_-4px_24px_rgba(15,23,42,0.25)]
-                           border-t border-white/10"
+                className={[
+                    'md:hidden fixed bottom-0 left-0 right-0 z-50',
+                    'bg-[#0f172a] text-white px-2 py-2',
+                    'shadow-[0_-4px_24px_rgba(15,23,42,0.25)] border-t border-white/10',
+                    active === 'chat' && !isChatListOpen ? 'hidden' : 'flex items-center justify-around'
+                ].join(' ')}
                 aria-label="Thanh điều hướng"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
             >
