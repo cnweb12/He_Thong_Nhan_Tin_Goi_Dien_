@@ -347,10 +347,11 @@ export default function ProfilePage() {
                       <input
                         name="username"
                         value={profileForm.username}
-                        onChange={handleProfileChange}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-[#1e2d3d] bg-white dark:bg-[#1c2b38] text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30"
-                        placeholder="username"
+                        readOnly
+                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-[#1e2d3d] bg-slate-50 dark:bg-[#15202b] text-slate-500 dark:text-slate-400 px-3 py-2.5 text-sm cursor-not-allowed outline-none"
+                        placeholder="Chưa thiết lập"
                       />
+                      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Username không thể thay đổi.</p>
                     </label>
                   </div>
 
