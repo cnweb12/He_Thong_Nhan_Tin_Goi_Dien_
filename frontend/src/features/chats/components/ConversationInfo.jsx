@@ -5,10 +5,10 @@ const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,
 
 export default function ConversationInfo({ chat, messages, currentUserId, onClose }) {
     const peer = chat?.peer || {};
-    const title = chat?.displayName || peer.displayName || chat?.name || 'Chưa chọn hội thoại';
-    const subtitle = chat?.phone || (isPhoneLike(chat?.username) ? chat.username : '')
-        || peer.phone || (isPhoneLike(peer.username) ? peer.username : '');
-    const avatarUrl = chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl || '';
+    const title = peer.displayName || chat?.displayName || chat?.name || 'Chưa chọn hội thoại';
+    const subtitle = peer.phone || (isPhoneLike(peer.username) ? peer.username : '')
+        || chat?.phone || (isPhoneLike(chat?.username) ? chat.username : '');
+    const avatarUrl = peer.avatarUrl || peer.displayAvatarUrl || chat?.avatarUrl || chat?.displayAvatarUrl || '';
     const unread = chat?.unread || 0;
     const totalMessages = messages?.length || 0;
     const myMessages = Array.isArray(messages) ? messages.filter((message) => message.from === currentUserId).length : 0;

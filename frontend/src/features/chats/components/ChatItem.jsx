@@ -28,8 +28,8 @@ const truncate = (text, max = 35) =>
  */
 function ChatItem({ chat, active, onClick, typingUsers = [] }) {
     const peer = chat?.peer || {};
-    const title = chat?.displayName || peer.displayName || chat?.name || 'Cuộc trò chuyện';
-    const avatar = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl;
+    const title = peer.displayName || chat?.displayName || chat?.name || 'Cuộc trò chuyện';
+    const avatar = peer.avatarUrl || peer.displayAvatarUrl || chat?.displayAvatarUrl || chat?.avatarUrl;
     const convId = resolveId(chat);
     const time = chat?.lastActivityAt
         ? formatTime(chat.lastActivityAt)
