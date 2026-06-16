@@ -97,6 +97,7 @@ export default function Home() {
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
   const joinedRoomsRef = useRef(new Set());
+  const processedMsgIdsRef = useRef(new Set());
 
   // Lưu trữ giá trị bằng Ref để tránh việc re-bind Socket Event Listener liên tục khi state thay đổi
   const selectedIdRef = useRef(selectedId);
@@ -214,7 +215,15 @@ export default function Home() {
 
       const msg = normalizeMessage(rawMessage);
       const convId = resolveConversationId(backendConv);
-      if (!convId) return;
+      if (!convId || !msg.id) return;
+
+      // Loại bỏ duplicate event do backend gửi vào 2 room (room conversation và room cá nhân)
+      if (processedMsgIdsRef.current.has(msg.id)) return;
+      processedMsgIdsRef.current.add(msg.id);
+      if (processedMsgIdsRef.current.size > 200) {
+        const firstElement = processedMsgIdsRef.current.values().next().value;
+        processedMsgIdsRef.current.delete(firstElement);
+      }
 
       // Cập nhật danh sách tin nhắn
       setMessagesByConversation((prev) => {
