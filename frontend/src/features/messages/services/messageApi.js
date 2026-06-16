@@ -1,4 +1,4 @@
-import { get, patch, post } from '../../../services/apiClient';
+import { get, patch, post, del } from '../../../services/apiClient';
 
 const withAuth = (accessToken) => ({
   headers: {
@@ -32,8 +32,22 @@ export const markConversationReadApi = async (accessToken, conversationId, lastS
   return unwrapData(res.data);
 };
 
+export const recallMessageApi = async (accessToken, messageId) => {
+  const res = await del(`/api/messages/${messageId}`, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Thu hồi tin nhắn thất bại');
+  return unwrapData(res.data);
+};
+
+export const clearHistoryApi = async (accessToken, conversationId) => {
+  const res = await del(`/api/messages/conversations/${conversationId}`, withAuth(accessToken));
+  if (!res.ok) throw new Error(res.error || 'Xóa lịch sử trò chuyện thất bại');
+  return unwrapData(res.data);
+};
+
 export default {
   getConversationMessagesApi,
   sendMessageApi,
   markConversationReadApi,
+  recallMessageApi,
+  clearHistoryApi,
 };

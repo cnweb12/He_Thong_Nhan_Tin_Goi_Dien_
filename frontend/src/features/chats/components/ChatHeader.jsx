@@ -1,11 +1,11 @@
 import React from 'react';
-import { ArrowLeft, Info, MoreVertical, Phone, Search, Video } from 'lucide-react';
+import { ArrowLeft, Info, MoreVertical, Phone, Search, Video, Trash2 } from 'lucide-react';
 import { useCall } from '../../calls/hooks/useCall';
 
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 const resolvePeerId = (peer) => peer?._id || peer?.id || peer?.userId || null;
 
-export default function ChatHeader({ chat, onToggleInfo, onBack }) {
+export default function ChatHeader({ chat, onToggleInfo, onBack, onClearHistory }) {
     const { makeCall } = useCall();
     const conversationId = chat?._id || chat?.id || chat?.conversationId;
 
@@ -25,6 +25,12 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
             makeCall(peer, conversationId, type);
         } else {
             console.warn('[ChatHeader] Cannot initiate call: missing peer info or conversation ID', chat);
+        }
+    };
+
+    const handleClearHistoryClick = () => {
+        if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này?')) {
+            onClearHistory?.();
         }
     };
 
@@ -69,6 +75,15 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
                 >
                     <Info size={20} />
                 </button>
+                {onClearHistory && (
+                    <button 
+                        onClick={handleClearHistoryClick} 
+                        className="p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer text-red-500"
+                        title="Xóa lịch sử trò chuyện"
+                    >
+                        <Trash2 size={20} />
+                    </button>
+                )}
             </div>
         </div>
     );

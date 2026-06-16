@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, Check, AlertCircle, FileText, Download, Trash2, X, FileArchive, FileCode, FileAudio, FileVideo, File } from 'lucide-react';
 
-export default function MessageBubble({ m, isMine }) {
+export default function MessageBubble({ m, isMine, onRecall }) {
     const [previewImage, setPreviewImage] = useState(null);
 
     const getStatusIcon = () => {
@@ -19,6 +19,22 @@ export default function MessageBubble({ m, isMine }) {
                 return null;
         }
     };
+
+    const isDeleted = !!m.deletedAt;
+
+    if (isDeleted) {
+        return (
+            <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2 mb-2`}>
+                {!isMine && (
+                    <div className="w-7 h-7 rounded-full bg-slate-200 shrink-0" />
+                )}
+                <div className={`px-4 py-2 text-sm italic border ${isMine ? 'border-slate-200 bg-slate-50 text-slate-400 rounded-2xl rounded-br-lg' : 'border-slate-200 bg-slate-50 text-slate-400 rounded-2xl rounded-bl-lg'}`}>
+                    Tin nhắn đã bị thu hồi
+                </div>
+                {isMine && <div className="w-7 h-7 shrink-0" />}
+            </div>
+        );
+    }
 
     const attachments = Array.isArray(m.attachments) && m.attachments.length > 0
         ? m.attachments
@@ -94,14 +110,30 @@ export default function MessageBubble({ m, isMine }) {
         }
     };
 
+    const handleRecallClick = () => {
+        if (window.confirm("Thu hồi tin nhắn này?")) {
+            onRecall?.();
+        }
+    };
+
     return (
-        <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
+        <div className={`group flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2 mb-2`}>
             {!isMine && (
                 <img 
                     src={m.sender?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender?.displayName || '?')}&background=random&color=fff&rounded=true&font-size=0.45`}
                     alt={m.sender?.displayName || 'Avatar'}
                     className="w-7 h-7 rounded-full bg-slate-200 flex-shrink-0"
                 />
+            )}
+
+            {isMine && !isDeleted && m.id && m.status !== 'sending' && (
+                <button 
+                    onClick={handleRecallClick}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-100 transition-all cursor-pointer flex-shrink-0"
+                    title="Thu hồi tin nhắn"
+                >
+                    <Trash2 size={16} />
+                </button>
             )}
 
             <div className={`flex flex-col max-w-[70%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>

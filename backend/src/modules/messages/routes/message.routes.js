@@ -15,6 +15,7 @@ function createMessageRouter(dependencies = {}) {
   router.use(authMiddleware);
   router.post("/", messageLimiter, controller.sendMessage);
   router.get("/conversations/:conversationId", controller.getConversationMessages);
+  router.delete("/:messageId", controller.recallMessage);
 
   return router;
 }

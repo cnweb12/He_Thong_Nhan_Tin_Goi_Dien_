@@ -313,19 +313,67 @@ function createMessageService(dependencies = {}) {
 
   async function getConversationMessages({ conversationId, userId, limit = 20, beforeSeq }) {
     try {
-      await ensureActiveMembership(conversationId, userId);
+      const membership = await ensureActiveMembership(conversationId, userId);
 
       const filter = {
         conversationId,
-        deletedAt: null,
       };
+
+      if (membership.clearedAt) {
+        filter.createdAt = { $gt: membership.clearedAt };
+      }
 
       if (beforeSeq !== undefined && beforeSeq !== null) {
         filter.seq = { $lt: beforeSeq };
       }
 
       const messages = await messageModel.find(filter).sort({ seq: -1 }).limit(limit).lean();
-      return messages.reverse().map(sanitizeMessage);
+      return messages.reverse().map((msg) => {
+        const sanitized = sanitizeMessage(msg);
+        if (sanitized.deletedAt) {
+          sanitized.text = "";
+          sanitized.attachments = [];
+          sanitized.type = "system"; // Optional: Can change to 'system' or leave it and let frontend handle it
+        }
+        return sanitized;
+      });
+    } catch (error) {
+      if (!error.statusCode) {
+        const mapped = mongoErrorMapper(error);
+        error.statusCode = mapped.statusCode;
+        error.details = mapped.details;
+        error.message = mapped.message;
+      }
+
+      throw error;
+    }
+  }
+
+  async function recallMessage({ messageId, userId }) {
+    try {
+      const message = await messageModel.findById(messageId);
+      if (!message) {
+        throw createHttpError(404, "Message not found");
+      }
+
+      // Check if user is the sender
+      if (message.senderId.toString() !== userId) {
+        // Option: we could also check if user is admin of conversation.
+        // For now, strict check: only sender can recall.
+        throw createHttpError(403, "You do not have permission to recall this message");
+      }
+
+      if (message.deletedAt) {
+        throw createHttpError(400, "Message is already recalled");
+      }
+
+      const updatedMessage = await messageModel.findOneAndUpdate(
+        { _id: messageId },
+        { $set: { deletedAt: new Date() } },
+        { new: true }
+      );
+
+      return sanitizeMessage(updatedMessage);
     } catch (error) {
       if (!error.statusCode) {
         const mapped = mongoErrorMapper(error);
@@ -341,6 +389,7 @@ function createMessageService(dependencies = {}) {
   return {
     sendMessage,
     getConversationMessages,
+    recallMessage,
     sanitizeMessage,
   };
 }

@@ -91,10 +91,43 @@ function createConversationController(dependencies = {}) {
     }
   }
 
+  async function clearHistory(req, res, next) {
+    try {
+      const validation = conversationValidators.validateClearHistoryRequest(req);
+      if (!validation.isValid) {
+        return next(createValidationError(validation.errors));
+      }
+
+      const result = await service.clearHistory({
+        conversationId: req.params.conversationId,
+        userId: req.user.userId,
+      });
+
+      // Emit conversation:cleared event to the user's personal room
+      try {
+        const io = getIO();
+        io.to(req.user.userId.toString()).emit("conversation:cleared", {
+          conversationId: result.conversationId,
+          clearedAt: result.clearedAt,
+        });
+      } catch (socketError) {
+        console.error("[conversation] Failed to emit conversation:cleared event:", socketError);
+      }
+
+      res.json({
+        ok: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   return {
     createDirect,
     markAsRead,
     getInbox,
+    clearHistory,
   };
 }
 

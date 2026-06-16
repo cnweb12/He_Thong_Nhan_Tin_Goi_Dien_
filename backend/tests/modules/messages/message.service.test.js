@@ -60,6 +60,9 @@ test("sendMessage creates message and updates related conversation state", async
       updateOne: async (filter, update) => {
         calls.conversationUpdate = { filter, update };
       },
+      aggregate: () => ({
+        session: async () => [{ _id: "conv-1", members: [] }],
+      }),
     },
     MessageModel: {
       create: async (docs) => [
@@ -153,7 +156,6 @@ test("getConversationMessages requires active membership and returns ascending s
 
   assert.deepEqual(receivedFilter, {
     conversationId: "conv-1",
-    deletedAt: null,
     seq: { $lt: 10 },
   });
   assert.deepEqual(

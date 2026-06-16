@@ -85,9 +85,46 @@ function createMessageController(dependencies = {}) {
     }
   }
 
+  async function recallMessage(req, res, next) {
+    try {
+      const validation = messageValidators.validateRecallMessageRequest(req);
+      if (!validation.isValid) {
+        return next(createValidationError(validation.errors));
+      }
+
+      const messageId = req.params.messageId;
+      const userId = req.user.userId;
+
+      const recalledMessage = await service.recallMessage({ messageId, userId });
+
+      // Emit message:recalled event to the conversation room
+      try {
+        const io = getIO();
+        const payload = {
+          messageId: recalledMessage._id,
+          conversationId: recalledMessage.conversationId,
+          seq: recalledMessage.seq,
+          deletedAt: recalledMessage.deletedAt,
+        };
+
+        io.to(recalledMessage.conversationId.toString()).emit("message:recalled", payload);
+      } catch (socketError) {
+        console.error("🔴 [DEBUG SERVER] [message] Failed to emit message:recalled event:", socketError);
+      }
+
+      res.json({
+        ok: true,
+        data: recalledMessage,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   return {
     sendMessage,
     getConversationMessages,
+    recallMessage,
   };
 }
 

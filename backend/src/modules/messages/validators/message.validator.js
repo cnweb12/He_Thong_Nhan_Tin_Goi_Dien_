@@ -86,7 +86,22 @@ function validateGetConversationMessagesRequest(req) {
   };
 }
 
+function validateRecallMessageRequest(req) {
+  const errors = [];
+  const { messageId } = req.params || {};
+
+  if (!messageId || typeof messageId !== "string" || messageId.trim().length === 0) {
+    errors.push({ field: "messageId", message: "Message ID is required" });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
 module.exports = {
   validateSendMessageRequest,
   validateGetConversationMessagesRequest,
+  validateRecallMessageRequest,
 };

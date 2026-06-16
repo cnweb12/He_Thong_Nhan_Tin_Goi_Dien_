@@ -1082,11 +1082,21 @@ Client sử dụng phương thức `socket.on("ten_su_kien", callback)` để nh
 | Tên Sự kiện | Payload nhận được | Mô tả |
 | :--- | :--- | :--- |
 | `new_message` | `Message Object` (Giống kết quả trả về của GET /messages) | Server gửi sự kiện này cho mọi người trong `conversationId` **khi có một ai đó vừa gọi API HTTP `POST /api/messages` thành công**. |
+| `message:recalled` | `{ messageId, conversationId, seq, deletedAt }` | Server gửi sự kiện này cho mọi người trong `conversationId` khi một tin nhắn bị thu hồi thành công qua API `DELETE /api/messages/:messageId`. |
 | `message_read` | `{ conversationId, userId, lastSeenSeq }` | Ai đó vừa gọi API HTTP `PATCH /read` để đánh dấu đã đọc. Server thông báo để các client khác cập nhật UI ("Đã xem"). |
 | `typing_start` | `{ conversationId, userId, displayName }` | Một người trong phòng vừa emit `typing_start`. Dùng để hiển thị "... đang gõ". |
 | `typing_stop` | `{ conversationId, userId }` | Một người trong phòng vừa emit `typing_stop`. Dùng để ẩn "... đang gõ". |
 
 ### 8.4. Quy trình Tích hợp Điển hình (Gửi tin nhắn)
+
+Để đảm bảo dữ liệu luôn được lưu vào CSDL một cách an toàn, tính năng gửi tin nhắn/đọc tin nhắn sử dụng mô hình kết hợp HTTP + Socket:
+
+1. Client A tham gia phòng: `socket.emit('join_room', { conversationId: 'abc' })`.
+2. Client A gửi tin nhắn qua REST API: `POST /api/messages` kèm dữ liệu tin nhắn.
+3. Server lưu tin nhắn vào MongoDB.
+4. Server dùng Socket.IO báo tin cho Client B (người cũng đang join room `abc`): `io.to('abc').emit('new_message', savedMessage)`.
+5. Client B lắng nghe `socket.on('new_message')` và append tin nhắn mới vào màn hình ngay lập tức.
+iển hình (Gửi tin nhắn)
 
 Để đảm bảo dữ liệu luôn được lưu vào CSDL một cách an toàn, tính năng gửi tin nhắn/đọc tin nhắn sử dụng mô hình kết hợp HTTP + Socket:
 

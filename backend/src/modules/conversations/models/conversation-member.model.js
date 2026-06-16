@@ -11,6 +11,7 @@ const ConversationMemberSchema = new Schema(
     isActive: { type: Boolean, default: true },
     lastReadSeq: { type: Number, default: 0, min: 0 },
     unreadCount: { type: Number, default: 0, min: 0 },
+    clearedAt: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false }
 );

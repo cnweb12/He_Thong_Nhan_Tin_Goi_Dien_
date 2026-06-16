@@ -555,10 +555,50 @@ function createConversationService(dependencies = {}) {
     return inbox.map(sanitizeInboxEntry);
   }
 
+  async function clearHistory({ conversationId, userId }) {
+    try {
+      await ensureActiveMembership(conversationId, userId);
+
+      const clearedAt = new Date();
+
+      // Update the member's clearedAt timestamp
+      await conversationMemberModel.updateOne(
+        { conversationId, userId },
+        { $set: { clearedAt } }
+      );
+
+      // Optionally: reset inbox unreadCount
+      await inboxModel.updateOne(
+        { conversationId, userId },
+        {
+          $set: {
+            unreadCount: 0,
+          },
+        }
+      );
+
+      return {
+        conversationId,
+        userId,
+        clearedAt,
+      };
+    } catch (error) {
+      if (!error.statusCode) {
+        const mapped = mongoErrorMapper(error);
+        error.statusCode = mapped.statusCode;
+        error.details = mapped.details;
+        error.message = mapped.message;
+      }
+
+      throw error;
+    }
+  }
+
   return {
     createDirectConversation,
     markAsRead,
     getInbox,
+    clearHistory,
     sanitizeConversation,
     sanitizeInboxEntry,
   };

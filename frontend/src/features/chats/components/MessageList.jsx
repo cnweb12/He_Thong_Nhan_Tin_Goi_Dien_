@@ -1,36 +1,51 @@
-import React, { useEffect, useRef } from 'react';
-import MessageBubble from './MessageBubble';
+import React, { useEffect, useRef } from "react";
+import MessageBubble from "./MessageBubble";
 
-export default function MessageList({ messages, currentUserId, loading, error }) {
-    const bottomRef = useRef(null);
+export default function MessageList({
+  messages,
+  currentUserId,
+  loading,
+  error,
+  onRecallMessage,
+}) {
+  // Đảm bảo messages luôn là một mảng để tránh lỗi "Cannot read properties of undefined"
+  const validMessages = Array.isArray(messages) ? messages : [];
+  const bottomRef = useRef(null);
 
-    useEffect(() => {
-        if (bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages]);
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [validMessages]);
 
-    return (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100">
-            <div className="max-w-3xl mx-auto space-y-2 pb-4">
-                {loading && (
-                    <div className="text-center text-sm text-slate-500 py-6">Đang tải tin nhắn...</div>
-                )}
-                {error && (
-                    <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800 shadow-sm">
-                        {error}
-                    </div>
-                )}
-                {!loading && !error && messages.length === 0 && (
-                    <div className="text-center text-sm text-slate-500 py-6">
-                        Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.
-                    </div>
-                )}
-                {messages.map((m, idx) => (
-                    <MessageBubble key={m.id || idx} m={m} isMine={m.from === currentUserId} />
-                ))}
-                <div ref={bottomRef} />
-            </div>
-        </div>
-    );
+  return (
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-slate-100">
+      <div className="max-w-3xl mx-auto space-y-2 pb-4">
+        {loading && (
+          <div className="text-center text-sm text-slate-500 py-6">
+            Đang tải tin nhắn...
+          </div>
+        )}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800 shadow-sm">
+            {error}
+          </div>
+        )}
+        {!loading && !error && validMessages.length === 0 && (
+          <div className="text-center text-sm text-slate-500 py-6">
+            Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.
+          </div>
+        )}
+        {validMessages.map((m, idx) => (
+          <MessageBubble
+            key={m.id || idx}
+            m={m}
+            isMine={m.from === currentUserId}
+            onRecall={() => onRecallMessage?.(m.id)}
+          />
+        ))}
+        <div ref={bottomRef} />
+      </div>
+    </div>
+  );
 }

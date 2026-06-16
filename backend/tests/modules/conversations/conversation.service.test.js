@@ -69,6 +69,9 @@ test("createDirectConversation creates member and inbox records", async () => {
           },
         },
       ],
+      aggregate: () => ({
+        session: async () => [{ _id: "conv-1", members: [] }]
+      }),
     },
     ConversationMemberModel: {
       insertMany: async (docs) => {

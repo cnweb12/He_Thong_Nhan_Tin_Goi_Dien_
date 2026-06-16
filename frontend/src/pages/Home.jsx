@@ -11,6 +11,8 @@ import {
   getConversationMessagesApi,
   markConversationReadApi,
   sendMessageApi,
+  recallMessageApi,
+  clearHistoryApi
 } from '../features/messages/services/messageApi';
 import { uploadFilesApi } from '../services/upload.service';
 import ContactsPage from '../features/users/ContactsPage';
@@ -43,6 +45,7 @@ const normalizeMessage = (message) => ({
   seq: message?.seq,
   clientMessageId: message?.clientMessageId,
   attachments: message?.attachments || [],
+  deletedAt: message?.deletedAt,
 });
 
 const normalizeConversationFromSocket = (conversation, currentUserId) => {
@@ -96,12 +99,17 @@ export default function Home() {
   const selectedIdRef = useRef(selectedId);
   const accessTokenRef = useRef(accessToken);
   const currentUserIdRef = useRef(currentUserId);
+  const messagesByConversationRef = useRef(messagesByConversation);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
     accessTokenRef.current = accessToken;
     currentUserIdRef.current = currentUserId;
-  }, [selectedId, accessToken, currentUserId]);
+  }, [selectedId, accessToken, currentUserId, messagesByConversation]);
+
+  useEffect(() => {
+    messagesByConversationRef.current = messagesByConversation;
+  }, [messagesByConversation]);
 
   // ── Bootstrap: load user + inbox sau khi socket sẵn sàng ──────────────────
   useEffect(() => {
@@ -260,6 +268,63 @@ export default function Home() {
     return () => socket.off('message_read', handleMessageRead);
   }, [socket, isConnected, setConversations]);
 
+  // ── Thu hồi tin nhắn từ socket ───────────────────────────────────────────
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const getMessagePreviewText = (message) => {
+      if (!message) return 'Chưa có tin nhắn';
+      if (message.text) return message.text;
+      if (message.deletedAt) return 'Tin nhắn đã thu hồi';
+      if (message.attachments?.length > 0) {
+        const isImage =
+          message.type === 'image' || message.attachments[0].mimeType?.startsWith('image/');
+        return isImage ? '[Hình ảnh]' : '[Tệp đính kèm]';
+      }
+      return 'Chưa có tin nhắn';
+    };
+
+    const handleMessageRecalled = ({ messageId, conversationId, deletedAt }) => {
+      // Cập nhật danh sách tin nhắn trong khung chat
+      setMessagesByConversation((prev) => {
+        const currentMessages = prev[conversationId];
+        if (!currentMessages) return prev;
+        const updatedMessages = currentMessages.map((m) =>
+          m.id === messageId ? { ...m, deletedAt, text: 'Tin nhắn đã thu hồi' } : m
+        );
+        return { ...prev, [conversationId]: updatedMessages };
+      });
+
+      // Cập nhật tin nhắn cuối ở sidebar
+      setConversations((prevConvs) => {
+        const convIndex = prevConvs.findIndex((c) => resolveConversationId(c) === conversationId);
+        if (convIndex === -1) return prevConvs;
+
+        const allMessages = messagesByConversationRef.current[conversationId] || [];
+        const lastMessageInUI = allMessages.length > 0 ? allMessages[allMessages.length - 1] : null;
+
+        if (lastMessageInUI && lastMessageInUI.id === messageId) {
+          const newConversations = [...prevConvs];
+          const updatedConv = { ...newConversations[convIndex] };
+
+          const newLastMessage = allMessages.length > 1 ? allMessages[allMessages.length - 2] : null;
+
+          updatedConv.lastMessage = getMessagePreviewText(newLastMessage);
+          updatedConv.time = newLastMessage ? formatTime(newLastMessage.createdAt) : '';
+          updatedConv.lastActivityAt = newLastMessage ? newLastMessage.createdAt : updatedConv.createdAt;
+
+          newConversations[convIndex] = updatedConv;
+          return newConversations;
+        }
+
+        return prevConvs;
+      });
+    };
+
+    socket.on('message:recalled', handleMessageRecalled);
+    return () => socket.off('message:recalled', handleMessageRecalled);
+  }, [socket, isConnected, setConversations]);
+
   // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
     () => conversations.find((c) => resolveConversationId(c) === selectedId) || null,
@@ -394,6 +459,33 @@ export default function Home() {
     }
   }, [selected, accessToken, currentUserId, setConversations]);
 
+  const handleClearHistory = useCallback(async () => {
+    if (!selectedId || !accessToken) return;
+    try {
+      await clearHistoryApi(accessToken, selectedId);
+      setMessagesByConversation((prev) => ({ ...prev, [selectedId]: [] }));
+      setConversations((prev) =>
+        prev.map((c) =>
+          resolveConversationId(c) === selectedId
+            ? { ...c, lastMessage: '', time: '' }
+            : c
+        )
+      );
+    } catch (err) {
+      alert(err.message || 'Không thể xóa cuộc trò chuyện');
+    }
+  }, [selectedId, accessToken, setConversations]);
+
+  const handleRecallMessage = useCallback(async (messageId) => {
+    if (!accessToken) return;
+     try {
+       // Chỉ cần gọi API, backend sẽ phát socket event để cập nhật UI cho mọi client
+       await recallMessageApi(accessToken, messageId);
+     } catch (err) {
+       alert(err.message || 'Không thể thu hồi tin nhắn');
+     }
+   }, [accessToken]);
+
   // ── Render guards ─────────────────────────────────────────────────────────
   if (inboxError || initialError) {
     return (
@@ -494,6 +586,8 @@ export default function Home() {
                     setSelectedId(null);
                     setIsInfoOpen(false);
                   }}
+                  onClearHistory={handleClearHistory}
+                  onRecallMessage={handleRecallMessage}
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">

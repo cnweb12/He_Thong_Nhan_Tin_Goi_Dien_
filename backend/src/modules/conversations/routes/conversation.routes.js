@@ -15,6 +15,7 @@ function createConversationRouter(dependencies = {}) {
   router.post("/direct", controller.createDirect);
   router.get("/inbox", controller.getInbox);
   router.patch("/:conversationId/read", controller.markAsRead);
+  router.delete("/:conversationId", controller.clearHistory);
 
   return router;
 }

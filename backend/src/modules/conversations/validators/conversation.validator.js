@@ -67,8 +67,23 @@ function validateGetInboxRequest(req) {
   };
 }
 
+function validateClearHistoryRequest(req) {
+  const errors = [];
+  const { conversationId } = req.params || {};
+
+  if (!conversationId || typeof conversationId !== "string" || conversationId.trim().length === 0) {
+    errors.push({ field: "conversationId", message: "Conversation ID is required" });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
 module.exports = {
   validateCreateDirectConversationRequest,
   validateMarkConversationAsReadRequest,
   validateGetInboxRequest,
+  validateClearHistoryRequest,
 };
