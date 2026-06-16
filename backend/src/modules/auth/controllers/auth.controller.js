@@ -137,6 +137,7 @@ async function login(req, res, next) {
           phone: user.phone,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
+          settings: user.settings,
         },
       },
     });

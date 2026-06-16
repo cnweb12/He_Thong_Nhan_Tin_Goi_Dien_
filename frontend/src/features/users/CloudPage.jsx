@@ -176,9 +176,9 @@ export default function CloudPage({ accessToken, currentUser }) {
   });
 
   return (
-    <div className="w-full h-full flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full flex-1 flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột trái phụ: Cloud Stats & Search */}
-      <div className="hidden md:flex w-[280px] h-full bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
+      <div className="hidden md:flex w-[280px] bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
         <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
             <Cloud className="text-blue-500" size={20} />
@@ -233,7 +233,7 @@ export default function CloudPage({ accessToken, currentUser }) {
       </div>
 
       {/* Cột phải: Chat Area */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header */}
         <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div className="flex items-center gap-3">

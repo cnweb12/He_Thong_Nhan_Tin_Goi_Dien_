@@ -447,7 +447,7 @@ export default function Home() {
       </div>
 
       {/* Vùng nội dung chính */}
-      <div className="flex-1 min-w-0 h-full flex overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-row overflow-hidden">
         {sidebarView === 'chat' ? (
           <>
             {/* Cột danh sách cuộc trò chuyện */}

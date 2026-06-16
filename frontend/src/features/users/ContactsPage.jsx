@@ -158,7 +158,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột phụ bên trái: Danh mục */}
       <div className="w-full md:w-[280px] h-auto md:h-full bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
         <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d] hidden md:block">
@@ -216,7 +216,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
       </div>
 
       {/* Cột chính bên phải: Danh sách chi tiết */}
-      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header chi tiết */}
         <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-4 md:px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div>

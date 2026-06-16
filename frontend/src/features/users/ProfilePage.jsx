@@ -241,7 +241,7 @@ export default function ProfilePage() {
         <SidebarLeft active="account" onSelect={(id) => navigate('/', { state: { sidebarView: id } })} />
       </div>
 
-      <main className="flex-1 min-w-0 h-full overflow-y-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 py-6 lg:px-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button
