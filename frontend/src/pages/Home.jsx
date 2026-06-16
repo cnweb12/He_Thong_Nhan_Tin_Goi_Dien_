@@ -427,19 +427,15 @@ export default function Home() {
 
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 dark:bg-[#0e1621] ${
-      isMobileNavVisible
-        ? 'h-[calc(100dvh-64px)] md:h-[100dvh]'
-        : 'h-[100dvh]'
-    }`}>
+    <div className="relative flex flex-col md:flex-row w-full h-screen h-[100dvh] overflow-hidden text-slate-900 bg-slate-100 dark:bg-[#0e1621]">
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">
           Realtime tạm gián đoạn. Ứng dụng vẫn chạy bình thường.
         </div>
       )}
 
-      {/* Sidebar icon trái */}
-      <div className="z-20 h-full flex-shrink-0">
+      {/* Sidebar icon trái (Desktop) / dưới cùng (Mobile) */}
+      <div className="z-20 flex-shrink-0 order-last md:order-first w-full md:w-auto h-auto md:h-full">
         <SidebarLeft
           active={sidebarView}
           onSelect={setSidebarView}
