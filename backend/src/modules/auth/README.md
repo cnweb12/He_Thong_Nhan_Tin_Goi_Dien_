@@ -1,150 +1,211 @@
 # Module Auth
 
-Module `auth` chịu trách nhiệm xác thực người dùng, phát hành token, quản lý refresh token và các API liên quan tới phiên đăng nhập.
+Module `auth` phu trach dang ky, dang nhap, cap lai access token, dang xuat va middleware JWT cho cac route protected.
 
-## Vai trò trong hệ thống
+## Vai tro
 
-Đây là module vào cửa của backend:
+Module nay la cua vao cua backend:
 
-- tạo tài khoản mới
-- đăng nhập và cấp `accessToken`
-- cấp lại access token bằng refresh token
-- đăng xuất một thiết bị hoặc toàn bộ thiết bị
-- cung cấp middleware xác thực JWT cho các module khác
+- Tao user moi bang so dien thoai va mat khau.
+- Dang nhap va cap `accessToken` ngan han.
+- Cap `refreshToken` de lay access token moi.
+- Quan ly logout tung thiet bi hoac tat ca thiet bi.
+- Cung cap helper tao, verify va doc JWT cho cac module khac.
 
-Module này liên kết trực tiếp với:
+Module lien quan truc tiep toi:
 
-- `users`
-  để tạo và đọc thông tin user
-- `devices`
-  để theo dõi trạng thái đăng nhập theo thiết bị
+- `users`: doc/tao user va luu password hash.
+- `devices`: cap nhat trang thai thiet bi khi login.
+- `refresh_tokens`: luu refresh token da hash theo user va device.
 
-## Cấu trúc module
+## Cau truc
 
-### Models
+- `controllers/auth.controller.js`: xu ly request HTTP cho auth.
+- `routes/auth.routes.js`: mount cac endpoint `/api/auth`.
+- `validators/auth.validator.js`: validate body register/login/refresh/profile.
+- `services/auth.service.js`: CRUD va revoke refresh token.
+- `models/refresh-token.model.js`: schema refresh token.
+- `middleware/auth.middleware.js`: hash token, generate token, generate/verify JWT, `authenticateJWT`.
+- `middleware/authorization.middleware.js`: guard theo role.
 
-- `models/refresh-token.model.js`
-  Lưu refresh token đã hash, gắn với `userId` và `deviceId`
+## Routes
 
-### Services
+Public routes:
 
-- `services/auth.service.js`
-  Xử lý nghiệp vụ refresh token:
-  - `createRefreshToken()`
-  - `findRefreshToken()`
-  - `findUserRefreshTokens()`
-  - `verifyRefreshToken()`
-  - `revokeRefreshToken()`
-  - `revokeAllUserRefreshTokens()`
-  - `revokeOtherDeviceTokens()`
-  - `deleteExpiredTokens()`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
 
-### Middleware
+Protected routes, can header `Authorization: Bearer <accessToken>`:
 
-- `middleware/auth.middleware.js`
-  Chứa các utility JWT:
-  - tạo JWT
-  - verify JWT
-  - tách token từ Authorization header
-  - middleware `authenticateJWT()`
+- `POST /api/auth/logout`
+- `POST /api/auth/logout-all`
+- `GET /api/auth/me`
+- `PATCH /api/auth/profile`
+- `POST /api/auth/change-password`
 
-### Validators
+## API chi tiet
 
-- `validators/auth.validator.js`
-  Kiểm tra dữ liệu đầu vào cho:
-  - register
-  - login
-  - refresh token
-  - update profile
+### `POST /api/auth/register`
 
-### Controllers
+Tao tai khoan moi.
 
-- `controllers/auth.controller.js`
-  Xử lý các request auth:
-  - `register()`
-  - `login()`
-  - `refreshAccessToken()`
-  - `logout()`
-  - `logoutAll()`
-  - `getProfile()`
-  - `updateProfile()`
-  - `changePassword()`
-
-### Routes
-
-- `routes/auth.routes.js`
-  Khai báo các endpoint `/api/auth`
-
-## Các API chính
-
-### Public routes
-
-**POST /api/auth/register**
+Body:
 
 ```json
 {
   "phone": "0901234567",
-  "displayName": "John Doe",
+  "displayName": "Nguyen Van A",
   "password": "password123",
   "passwordConfirm": "password123"
 }
 ```
 
-**POST /api/auth/login**
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "userId": "user_object_id",
+    "phone": "0901234567",
+    "displayName": "Nguyen Van A"
+  }
+}
+```
+
+### `POST /api/auth/login`
+
+Dang nhap, cap token va danh dau thiet bi dang online.
+
+Body:
 
 ```json
 {
   "phone": "0901234567",
   "password": "password123",
-  "deviceId": "device-uuid",
+  "deviceId": "web-device-1",
   "platform": "web"
 }
 ```
 
-**POST /api/auth/refresh**
+Response:
 
 ```json
 {
-  "refreshToken": "token-string",
-  "deviceId": "device-uuid"
+  "ok": true,
+  "data": {
+    "accessToken": "jwt_access_token",
+    "refreshToken": "plain_refresh_token",
+    "user": {
+      "userId": "user_object_id",
+      "phone": "0901234567",
+      "displayName": "Nguyen Van A",
+      "avatarUrl": "https://example.com/avatar.png"
+    }
+  }
 }
 ```
 
-### Protected routes
+Ghi chu:
 
-Các route sau yêu cầu `Authorization: Bearer <accessToken>`:
+- `platform` mac dinh la `web`.
+- `POST /api/auth/login` co dung `authLimiter`.
+- Access token TTL hien tai la 15 phut, rieng `NODE_ENV=test` la 1 gio.
+- Refresh token duoc hash truoc khi luu DB va het han sau 7 ngay.
 
-- `GET /api/auth/me`
-  Lấy thông tin user hiện tại
-- `PATCH /api/auth/profile`
-  Cập nhật hồ sơ cơ bản
-- `POST /api/auth/change-password`
-  Đổi mật khẩu
-- `POST /api/auth/logout`
-  Đăng xuất một thiết bị
-- `POST /api/auth/logout-all`
-  Đăng xuất toàn bộ thiết bị
+### `POST /api/auth/refresh`
 
-## Quản lý token
+Cap access token moi tu refresh token con hieu luc.
 
-- **Access Token**
-  JWT sống ngắn, hiện tại mặc định 1 giờ
-- **Refresh Token**
-  Token sống dài hơn, được hash trước khi lưu DB
-- **Device tracking**
-  Mỗi lần login sẽ create/update `user_device`
-- **Multi-device support**
-  Một user có thể có nhiều phiên đăng nhập song song
+Body:
 
-## Biến môi trường liên quan
+```json
+{
+  "refreshToken": "plain_refresh_token",
+  "deviceId": "web-device-1"
+}
+```
 
-- `JWT_SECRET`
-  Secret dùng để ký và verify access token
-- `NODE_ENV`
-  Ảnh hưởng cách app trả lỗi
+Response:
 
-## Lưu ý quan trọng
+```json
+{
+  "ok": true,
+  "data": {
+    "accessToken": "new_jwt_access_token"
+  }
+}
+```
 
-- backend không tin dữ liệu identity từ frontend
-- `userId` của request protected luôn phải lấy từ JWT đã verify
-- refresh token hiện được quản lý trong DB thay vì chỉ dựa vào JWT stateless
+### `POST /api/auth/logout`
+
+Dang xuat thiet bi hien tai bang cach revoke refresh token theo `userId` va `deviceId`.
+
+Body:
+
+```json
+{
+  "deviceId": "web-device-1"
+}
+```
+
+### `POST /api/auth/logout-all`
+
+Revoke tat ca refresh token cua user dang dang nhap.
+
+### `GET /api/auth/me`
+
+Lay profile user hien tai, loai bo `passwordHash`.
+
+### `PATCH /api/auth/profile`
+
+Cap nhat profile co ban.
+
+Body:
+
+```json
+{
+  "displayName": "Nguyen Van A",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+```
+
+### `POST /api/auth/change-password`
+
+Doi mat khau va revoke tat ca refresh token de bat user dang nhap lai.
+
+Body:
+
+```json
+{
+  "currentPassword": "old-password",
+  "newPassword": "new-password",
+  "confirmPassword": "new-password"
+}
+```
+
+## Validation chinh
+
+- `phone` bat buoc khi register/login.
+- `displayName` khi register phai co toi thieu 2 ky tu.
+- `password` khi register phai co toi thieu 6 ky tu.
+- `passwordConfirm` phai trung `password`.
+- `deviceId` bat buoc khi login/refresh/logout.
+- `displayName` khi update profile neu co phai co toi thieu 2 ky tu.
+
+## Bao mat
+
+- Backend khong tin identity tu frontend; protected route lay user tu JWT da verify.
+- Password va refresh token duoc hash bang helper trong `auth.middleware.js`.
+- Login sai tra ve message chung `Invalid phone or password`.
+- Doi mat khau se revoke toan bo refresh token.
+- Role cua JWT mac dinh la `user` neu document user khong co role.
+
+## Loi thuong gap
+
+- `400 Validation failed`: thieu field hoac sai format.
+- `401 Invalid phone or password`: sai thong tin dang nhap.
+- `401 Invalid or expired refresh token`: refresh token khong hop le, da revoke hoac het han.
+- `404 User not found`: user khong ton tai.
+- `409 User with this phone already exists`: dang ky trung so dien thoai.

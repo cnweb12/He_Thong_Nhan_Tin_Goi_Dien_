@@ -1,101 +1,220 @@
 # Module Users
 
-Module `users` chịu trách nhiệm quản lý dữ liệu hồ sơ người dùng và các hành vi liên quan trực tiếp tới tài khoản.
+Module `users` quan ly ho so nguoi dung, tim kiem user, cai dat ca nhan va luong ket ban co ban.
 
-## Cấu trúc hiện tại
+## Pham vi
 
-- `models/user.model.js`
-  Định nghĩa schema `users` trong MongoDB.
-- `models/friend.model.js`
-  Lưu quan hệ bạn bè và trạng thái lời mời giữa các user.
-- `services/user.service.js`
-  Xử lý nghiệp vụ liên quan tới người dùng.
-- `controllers/user.controller.js`
-  Nhận request HTTP, gọi validator và service.
-- `routes/user.routes.js`
-  Khai báo các API endpoint của module.
-- `validators/user.validator.js`
-  Kiểm tra dữ liệu đầu vào từ request.
+Module nay phu trach:
 
-## Chức năng đã triển khai
+- Lay thong tin user hien tai.
+- Lay public profile cua user khac.
+- Tim kiem user theo `displayName`, `username` hoac `phone`.
+- Cap nhat profile va settings cua user hien tai.
+- Gui, chap nhan, liet ke va xoa quan he ban be.
 
-- Lấy thông tin của user đang đăng nhập
-- Lấy thông tin user theo `id`
-- Tìm kiếm user theo `displayName`, `username`, hoặc `phone`
-- Cập nhật hồ sơ cá nhân:
-  `username`, `displayName`, `avatarUrl`
-- Cập nhật cài đặt người dùng:
-  `theme`, `language`, `allowStrangerMessage`, `readReceiptEnabled`
-- Gửi lời mời kết bạn
-- Chấp nhận lời mời kết bạn
-- Danh sách bạn bè hiện tại
-- Danh sách lời mời kết bạn đang chờ
-- Xóa quan hệ bạn bè
+Module nay khong phu trach dang nhap/dang ky. Cac flow auth nam trong module `auth`.
 
-## Chức năng liên quan đến bạn bè
+## Cau truc
 
-Module `users` hiện quản lý luôn luồng kết bạn cơ bản thông qua collection `user_friends`.
+- `models/user.model.js`: schema `users`.
+- `models/friend.model.js`: schema `user_friends`.
+- `services/user.service.js`: business logic cho user profile, search va friend.
+- `controllers/user.controller.js`: HTTP handlers.
+- `routes/user.routes.js`: route `/api/users`.
+- `validators/user.validator.js`: validate params/query/body.
 
-### Trạng thái quan hệ
+## Routes chinh
 
-- `pending`
-  User A đã gửi lời mời cho user B.
-- `accepted`
-  Hai user đã trở thành bạn bè.
-
-### Luồng nghiệp vụ
-
-- User gửi lời mời kết bạn tới một user khác bằng `POST /api/users/:userId/friends`
-- User nhận lời mời có thể chấp nhận bằng `POST /api/users/:userId/friends/accept`
-- User xem danh sách bạn bè của mình bằng `GET /api/users/me/friends`
-- User xem danh sách lời mời chờ xử lý bằng `GET /api/users/me/friend-requests`
-- User xóa quan hệ bạn bè bằng `DELETE /api/users/:userId/friends`
-
-### Quy tắc xử lý
-
-- Không cho gửi lời mời cho chính mình
-- Không cho gửi trùng lời mời đang ở trạng thái `pending`
-- Nếu hai user đã là bạn bè thì sẽ báo lỗi `Already friends`
-- Khi chấp nhận lời mời, hệ thống cập nhật cả hai chiều quan hệ nếu cần
-  
-## Luồng xử lý của module
-
-Một request đi qua module `users` thường theo thứ tự:
-
-1. `routes`
-2. `auth middleware`
-3. `controller`
-4. `validator`
-5. `service`
-6. `model`
-7. trả response
-
-## Các API chính
+Tat ca route trong `/api/users` deu can JWT.
 
 - `GET /api/users/me`
-  Lấy thông tin của user hiện tại
 - `PATCH /api/users/me`
-  Cập nhật hồ sơ user hiện tại
 - `PATCH /api/users/me/settings`
-  Cập nhật phần cài đặt
 - `GET /api/users/search?q=...`
-  Tìm kiếm user
 - `GET /api/users/:userId`
-  Lấy thông tin user theo `id`
 - `GET /api/users/me/friends`
-  Lấy danh sách bạn bè hiện tại
 - `GET /api/users/me/friend-requests`
-  Lấy danh sách lời mời kết bạn đang chờ
 - `POST /api/users/:userId/friends`
-  Gửi lời mời kết bạn tới user khác
 - `POST /api/users/:userId/friends/accept`
-  Chấp nhận lời mời kết bạn
 - `DELETE /api/users/:userId/friends`
-  Xóa quan hệ bạn bè giữa hai user
 
-## Kiểm thử
+Response thanh cong thuong co dang:
 
-Module này có test cho từng lớp:
+```json
+{
+  "ok": true,
+  "data": {}
+}
+```
+
+Mot so action khong can data, vi du gui friend request, se tra:
+
+```json
+{
+  "ok": true
+}
+```
+
+## User profile APIs
+
+### `GET /api/users/me`
+
+Lay profile user hien tai. Response co the bao gom phone vi day la chinh chu tai khoan.
+
+### `GET /api/users/:userId`
+
+Lay public profile cua user khac. Controller loai bo cac field nhay cam nhu `phone` va `settings` truoc khi response.
+
+### `GET /api/users/search?q=...`
+
+Tim kiem user, co `searchLimiter`.
+
+Query:
+
+- `q`: tu khoa tim kiem.
+- `limit`: optional, mac dinh `20`.
+
+Service se:
+
+- Trim query rong va tra `[]`.
+- Escape regex truoc khi tim theo `displayName`.
+- Normalize `username` va `phone`.
+- Loai user hien tai ra khoi ket qua.
+
+### `PATCH /api/users/me`
+
+Cap nhat profile co ban.
+
+Body:
+
+```json
+{
+  "username": "nguyenvana",
+  "displayName": "Nguyen Van A",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+```
+
+### `PATCH /api/users/me/settings`
+
+Cap nhat settings.
+
+Body:
+
+```json
+{
+  "theme": "light",
+  "language": "vi",
+  "allowStrangerMessage": true,
+  "readReceiptEnabled": true
+}
+```
+
+## Friend model
+
+Collection `user_friends` luu quan he theo huong `userId -> friendId`.
+
+```js
+{
+  userId: ObjectId,
+  friendId: ObjectId,
+  status: "pending" | "accepted",
+  createdAt: Date
+}
+```
+
+Index:
+
+- `{ userId: 1, friendId: 1 }` unique
+
+Trang thai:
+
+- `pending`: `userId` da gui loi moi toi `friendId`.
+- `accepted`: hai user da la ban be.
+
+Khi chap nhan friend request, service dam bao co quan he accepted hai chieu:
+
+- requester -> current user
+- current user -> requester
+
+## Friend APIs
+
+### `POST /api/users/:userId/friends`
+
+Gui loi moi ket ban tu user hien tai den `:userId`.
+
+Rule:
+
+- Khong duoc gui cho chinh minh.
+- `:userId` phai ton tai.
+- Neu da co pending request cung chieu thi tra `409 Friend request already sent`.
+- Neu da accepted thi tra `409 Already friends`.
+
+### `POST /api/users/:userId/friends/accept`
+
+User hien tai chap nhan loi moi tu `:userId`.
+
+Service tim record:
+
+```js
+{ userId: requesterId, friendId: currentUserId, status: "pending" }
+```
+
+Neu khong co request pending thi tra `404 Friend request not found`.
+
+### `GET /api/users/me/friends`
+
+Lay danh sach ban be accepted cua user hien tai.
+
+Response item:
+
+```json
+{
+  "userId": "friend_user_id",
+  "displayName": "Friend Name",
+  "phone": "0901234567"
+}
+```
+
+### `GET /api/users/me/friend-requests`
+
+Lay danh sach request pending gui den user hien tai.
+
+Response item:
+
+```json
+{
+  "userId": "requester_user_id",
+  "displayName": "Requester Name",
+  "phone": "0901234567"
+}
+```
+
+### `DELETE /api/users/:userId/friends`
+
+Xoa quan he ban be/request giua user hien tai va `:userId` theo ca hai chieu.
+
+Neu khong co record nao bi xoa thi tra `404 Friend relationship not found`.
+
+## Authorization
+
+- Tat ca `/api/users/*` deu di qua `authenticateJWT`.
+- Friend routes co them `requireUserRole()`, mac dinh chi cho role user thuong.
+- Controller luon lay current user tu `req.user.userId`, khong lay tu body.
+
+## Loi thuong gap
+
+- `400 Validation failed`: request sai format.
+- `400 Cannot send friend request to yourself`: tu ket ban voi chinh minh.
+- `404 User not found`: user dich khong ton tai.
+- `404 Friend request not found`: khong co request pending de accept.
+- `404 Friend relationship not found`: khong co quan he de xoa.
+- `409 Friend request already sent`: da gui loi moi truoc do.
+- `409 Already friends`: hai user da la ban.
+
+## Test
+
+Module co test cho cac lop:
 
 - `tests/modules/users/user.validator.test.js`
 - `tests/modules/users/user.service.test.js`
