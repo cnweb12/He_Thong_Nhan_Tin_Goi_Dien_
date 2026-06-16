@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Clock, Check, CheckCheck, AlertCircle, FileText, Download, Trash2, X, FileArchive, FileCode, FileAudio, FileVideo, File } from 'lucide-react';
 import Avatar from '../../../components/Avatar';
 
-function resolveSenderInConversation(fromId, chat) {
+export function resolveSenderInConversation(fromId, chat) {
     if (!fromId || !chat) return null;
 
     const candidates = [];

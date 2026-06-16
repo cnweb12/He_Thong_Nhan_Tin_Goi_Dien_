@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import MessageBubble from './MessageBubble';
+import MessageBubble, { resolveSenderInConversation } from './MessageBubble';
+import Avatar from '../../../components/Avatar';
 
 export default function MessageList({ messages, currentUserId, loading, error, chat, typingUsers = [] }) {
     const bottomRef = useRef(null);
@@ -62,9 +63,22 @@ export default function MessageList({ messages, currentUserId, loading, error, c
                 {/* Typing Indicator */}
                 {typingUsers.length > 0 && (
                     <div className="flex items-end justify-start gap-2 pt-2">
-                        <div className="w-7 h-7 rounded-full flex-shrink-0 bg-slate-300 flex items-center justify-center text-slate-700 text-[10px] font-semibold select-none">
-                            {typingUsers[0]?.displayName?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
+                        {typingUsers.map((u, i) => {
+                            if (i > 0) return null; // Chỉ hiện 1 avatar
+                            const resolvedUser = resolveSenderInConversation(u.userId, chat) || {};
+                            const name = u.displayName || u.username || resolvedUser.displayName || resolvedUser.username || resolvedUser.name || '?';
+                            const avatarUrl = u.avatarUrl || resolvedUser.avatarUrl || resolvedUser.displayAvatarUrl;
+                            
+                            return (
+                                <Avatar
+                                    key={u.userId}
+                                    src={avatarUrl}
+                                    name={name}
+                                    size="w-7 h-7"
+                                    textClass="text-[10px] font-semibold"
+                                />
+                            );
+                        })}
                         <div className="flex flex-col items-start gap-1">
                             <div className="bg-slate-200 dark:bg-[#182533] px-3.5 py-3 rounded-2xl rounded-bl-lg flex items-center gap-1.5 h-[36px]">
                                 <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -72,7 +86,10 @@ export default function MessageList({ messages, currentUserId, loading, error, c
                                 <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
                             <span className="text-[10px] text-slate-500 ml-1">
-                                {typingUsers.map(u => u.displayName).join(', ')} đang gõ...
+                                {typingUsers.map(u => {
+                                    const resolved = resolveSenderInConversation(u.userId, chat) || {};
+                                    return u.displayName || u.username || resolved.displayName || resolved.username || resolved.name || 'Ai đó';
+                                }).join(', ')} đang gõ...
                             </span>
                         </div>
                     </div>
