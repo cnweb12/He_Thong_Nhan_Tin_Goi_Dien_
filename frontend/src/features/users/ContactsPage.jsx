@@ -273,22 +273,22 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                     <div className="divide-y divide-slate-100 dark:divide-[#1e2d3d]/50">
                       {friends.map((friend) => (
                         <div key={friend.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <img
                               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                               alt={friend.displayName}
-                              className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                              className="w-10 h-10 rounded-full bg-slate-100 object-cover shrink-0"
                             />
-                            <div>
-                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{friend.displayName}</p>
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{friend.phone || 'Không công khai SĐT'}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100 truncate">{friend.displayName}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{friend.phone || 'Không công khai SĐT'}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 shrink-0 ml-3">
                             <button
                               onClick={() => onStartConversation({ userId: friend.userId, displayName: friend.displayName })}
-                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
                             >
                               <MessageSquare size={14} />
                               Nhắn tin
@@ -296,7 +296,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             <button
                               onClick={() => handleRemoveFriend(friend.userId, friend.displayName)}
                               disabled={actionLoadingId === friend.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38]"
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
                             >
                               Hủy kết bạn
                             </button>
@@ -321,30 +321,30 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                     <div className="divide-y divide-slate-100 dark:divide-[#1e2d3d]/50">
                       {requests.map((req) => (
                         <div key={req.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <img
                               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                               alt={req.displayName}
-                              className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                              className="w-10 h-10 rounded-full bg-slate-100 object-cover shrink-0"
                             />
-                            <div>
-                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{req.displayName}</p>
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{req.phone || 'SĐT: Ẩn'}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100 truncate">{req.displayName}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{req.phone || 'SĐT: Ẩn'}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 shrink-0 ml-3">
                             <button
                               onClick={() => handleAcceptRequest(req.userId, req.displayName)}
                               disabled={actionLoadingId === req.userId}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold shadow-sm cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                             >
                               Đồng ý
                             </button>
                             <button
                               onClick={() => handleDeclineRequest(req.userId, req.displayName)}
                               disabled={actionLoadingId === req.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38]"
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38] whitespace-nowrap shrink-0"
                             >
                               Từ chối
                             </button>
@@ -396,27 +396,27 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
 
                           return (
                             <div key={item.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <img
                                   src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                                   alt={item.displayName}
-                                  className="w-10 h-10 rounded-full bg-slate-100 object-cover"
+                                  className="w-10 h-10 rounded-full bg-slate-100 object-cover shrink-0"
                                 />
-                                <div>
-                                  <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{item.displayName}</p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500">@{item.username || 'user'}</p>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-slate-800 text-sm dark:text-slate-100 truncate">{item.displayName}</p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 truncate">@{item.username || 'user'}</p>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 shrink-0 ml-3">
                                 {isFriend ? (
                                   <>
-                                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100 whitespace-nowrap shrink-0">
                                       Bạn bè
                                     </span>
                                     <button
                                       onClick={() => onStartConversation({ userId: item.userId, displayName: item.displayName })}
-                                      className="p-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
+                                      className="p-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer shrink-0"
                                       title="Nhắn tin"
                                     >
                                       <MessageSquare size={16} />
@@ -425,23 +425,23 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                 ) : sentRequests.has(item.userId) ? (
                                   <button
                                     disabled
-                                    className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 transition text-xs font-semibold cursor-not-allowed dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-400"
+                                    className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 transition text-xs font-semibold cursor-not-allowed dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-400 whitespace-nowrap shrink-0"
                                   >
-                                    Đã gửi lời mời kết bạn
+                                    Đã gửi lời mời
                                   </button>
                                 ) : isPending ? (
                                   <button
                                     onClick={() => handleAcceptRequest(item.userId, item.displayName)}
                                     disabled={actionLoadingId === item.userId}
-                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold cursor-pointer"
+                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                                   >
-                                    Đồng ý kết bạn
+                                    Đồng ý
                                   </button>
                                 ) : (
                                   <button
                                     onClick={() => handleSendRequest(item.userId, item.displayName)}
                                     disabled={actionLoadingId === item.userId}
-                                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-xs font-semibold shadow-sm cursor-pointer"
+                                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-xs font-semibold shadow-sm cursor-pointer whitespace-nowrap shrink-0"
                                   >
                                     {actionLoadingId === item.userId ? (
                                       <Loader2 className="animate-spin" size={14} />
