@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen, hasUnreadChat, hasPendingRequests }) {
     const { logout, user } = useAuth();
     const avatarUrl = user?.avatarUrl
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || user?.name || 'U')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`;
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || user?.name || 'U')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45&length=1`;
 
     const navigate = useNavigate();
 

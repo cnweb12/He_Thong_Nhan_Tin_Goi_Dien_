@@ -3,11 +3,9 @@ import React, { useState } from 'react';
 /** Lấy chữ cái đầu từ tên (Hỗ trợ 2 ký tự như ui-avatars) */
 export function getInitials(name) {
     if (!name) return '?';
-    const words = name.trim().split(/\s+/);
-    if (words.length >= 2) {
-        return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
+    const cleanName = name.trim();
+    if (!cleanName) return '?';
+    return cleanName.charAt(0).toUpperCase();
 }
 
 /** Màu nền avatar từ tên — nhất quán, không random mỗi lần render */

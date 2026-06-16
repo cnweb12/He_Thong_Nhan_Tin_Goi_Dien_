@@ -273,7 +273,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                         <div key={friend.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                           <div className="flex items-center gap-3">
                             <img
-                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                               alt={friend.displayName}
                               className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                             />
@@ -321,7 +321,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                         <div key={req.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                           <div className="flex items-center gap-3">
                             <img
-                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                               alt={req.displayName}
                               className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                             />
@@ -396,7 +396,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             <div key={item.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                               <div className="flex items-center gap-3">
                                 <img
-                                  src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
+                                  src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45&length=1`}
                                   alt={item.displayName}
                                   className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                                 />
