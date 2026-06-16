@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import SidebarLeft from '../components/SidebarLeft';
 import ChatSidebar from '../features/chats/components/ChatSidebar';
@@ -79,7 +80,8 @@ export default function Home() {
     error: inboxError,
   } = useConversations();
 
-  const [sidebarView, setSidebarView] = useState('chat');
+  const location = useLocation();
+  const [sidebarView, setSidebarView] = useState(location.state?.sidebarView || 'chat');
   const [selectedId, setSelectedId] = useState(null);
   const [messagesByConversation, setMessagesByConversation] = useState({});
   const [messagesLoadingId, setMessagesLoadingId] = useState(null);

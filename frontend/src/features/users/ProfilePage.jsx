@@ -238,7 +238,7 @@ export default function ProfilePage() {
   return (
     <div className="relative h-screen flex w-full overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-none dark:bg-[#0e1621]">
       <div className="z-20 h-full flex-shrink-0 relative">
-        <SidebarLeft active="account" onSelect={() => navigate('/')} />
+        <SidebarLeft active="account" onSelect={(id) => navigate('/', { state: { sidebarView: id } })} />
       </div>
 
       <main className="flex-1 min-w-0 h-full overflow-y-auto">
