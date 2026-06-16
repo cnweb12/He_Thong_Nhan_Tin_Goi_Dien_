@@ -117,8 +117,24 @@ function createMessageService(dependencies = {}) {
     return membership;
   }
 
+  async function ensureNoSuperAdminInConversation(conversationId, session) {
+    const membersQuery = conversationMemberModel.find({ conversationId, isActive: true });
+    const members = session && typeof membersQuery.session === "function" ? await membersQuery.session(session) : await membersQuery;
+    
+    if (members && members.length > 0) {
+      const memberIds = members.map(m => m.userId);
+      const superAdminQuery = userModel.exists({ _id: { $in: memberIds }, role: { $in: ["super_admin", "admin"] } });
+      const hasSuperAdmin = session && typeof superAdminQuery.session === "function" ? await superAdminQuery.session(session) : await superAdminQuery;
+      
+      if (hasSuperAdmin) {
+        throw createHttpError(403, "Cannot send messages to a conversation involving an administrator.");
+      }
+    }
+  }
+
   async function sendMessageWithoutTransaction({ conversationId, senderId, type = "text", text, clientMessageId, attachments = [] }) {
     await ensureActiveMembership(conversationId, senderId);
+    await ensureNoSuperAdminInConversation(conversationId);
 
     const conversation = await conversationModel.findOneAndUpdate(
       { _id: conversationId },
@@ -215,6 +231,7 @@ function createMessageService(dependencies = {}) {
 
       await session.withTransaction(async () => {
         await ensureActiveMembership(conversationId, senderId, session);
+        await ensureNoSuperAdminInConversation(conversationId, session);
 
         const conversation = await conversationModel.findOneAndUpdate(
           { _id: conversationId },

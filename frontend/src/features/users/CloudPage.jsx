@@ -1,14 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   Cloud, Send, Paperclip, FileText, Image as ImageIcon, 
-  Trash2, Download, Search, CheckCircle2, UserRound, X
+  Trash2, Download, Search, CheckCircle2, UserRound, X, Loader2
 } from 'lucide-react';
 import { uploadFilesApi } from '../../services/upload.service';
+import { getDirectConversationApi } from '../conversations/services/conversationApi';
+import {
+  getConversationMessagesApi,
+  sendMessageApi,
+  recallMessageApi,
+  clearHistoryApi,
+} from '../messages/services/messageApi';
 
 export default function CloudPage({ accessToken, currentUser }) {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [conversationId, setConversationId] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -17,41 +26,41 @@ export default function CloudPage({ accessToken, currentUser }) {
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   
-  const currentUserId = currentUser?.userId || currentUser?.id || currentUser?._id || 'guest';
-  const localStorageKey = `cloud_messages_${currentUserId}`;
+  const currentUserId = currentUser?.userId || currentUser?.id || currentUser?._id || '';
 
-  // Load history from localStorage
+  // Load history from Backend
   useEffect(() => {
-    const raw = localStorage.getItem(localStorageKey);
-    if (raw) {
+    let active = true;
+
+    const loadCloud = async () => {
+      if (!accessToken || !currentUserId) return;
       try {
-        setMessages(JSON.parse(raw));
-      } catch (e) {
-        console.error('Không tải được lịch sử Cloud:', e);
+        setLoading(true);
+        // Create or get self-conversation
+        const conv = await getDirectConversationApi(accessToken, currentUserId);
+        const cid = conv?.conversationId || conv?._id || conv?.id;
+        
+        if (active && cid) {
+          setConversationId(cid);
+          // Fetch messages
+          const rawMsgs = await getConversationMessagesApi(accessToken, cid, { limit: 100 });
+          setMessages(Array.isArray(rawMsgs) ? rawMsgs : []);
+        }
+      } catch (err) {
+        console.error('Không tải được lịch sử Cloud:', err);
+      } finally {
+        if (active) setLoading(false);
       }
-    } else {
-      // Seed default welcome message
-      const welcome = {
-        id: 'welcome',
-        text: 'Chào mừng bạn đến với Cloud của tôi! Đây là không gian riêng tư của bạn để lưu trữ nhanh các tin nhắn, hình ảnh và tài liệu quan trọng.',
-        createdAt: new Date().toISOString(),
-        type: 'text',
-        attachments: []
-      };
-      setMessages([welcome]);
-      localStorage.setItem(localStorageKey, JSON.stringify([welcome]));
-    }
-  }, [localStorageKey]);
+    };
+
+    loadCloud();
+    return () => { active = false; };
+  }, [accessToken, currentUserId]);
 
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const saveMessagesToLocal = (newMsgs) => {
-    setMessages(newMsgs);
-    localStorage.setItem(localStorageKey, JSON.stringify(newMsgs));
-  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -73,14 +82,14 @@ export default function CloudPage({ accessToken, currentUser }) {
 
   const handleSend = async () => {
     const text = inputText.trim();
-    if (!text && !selectedFile) return;
+    if ((!text && !selectedFile) || !conversationId) return;
 
     let finalAttachments = [];
     setUploading(true);
+    setStatusMsg('Đang lưu vào Cloud...');
 
     try {
       if (selectedFile) {
-        setStatusMsg('Đang tải tệp lên Cloud...');
         // Call backend upload api to store the file
         const uploaded = await uploadFilesApi([selectedFile.file], accessToken);
         if (uploaded && uploaded.length > 0) {
@@ -93,37 +102,55 @@ export default function CloudPage({ accessToken, currentUser }) {
         }
       }
 
-      const newMsg = {
-        id: `cloud-${Date.now()}`,
-        text,
-        createdAt: new Date().toISOString(),
+      const clientMessageId = `cloud-${Date.now()}`;
+      const payload = {
+        conversationId,
+        clientMessageId,
         type: selectedFile ? (selectedFile.mimeType.startsWith('image/') ? 'image' : 'file') : 'text',
-        attachments: finalAttachments
       };
+      
+      if (text) payload.text = text;
+      if (finalAttachments.length > 0) payload.attachments = finalAttachments;
 
-      const updated = [...messages, newMsg];
-      saveMessagesToLocal(updated);
+      const sentMsg = await sendMessageApi(accessToken, payload);
+      
+      setMessages(prev => [...prev, sentMsg]);
       setInputText('');
       setSelectedFile(null);
       setStatusMsg('Đã lưu trữ thành công!');
       setTimeout(() => setStatusMsg(null), 2000);
     } catch (err) {
-      console.error('Không tải được tệp:', err);
-      alert('Không tải được tệp lên máy chủ. Đang gửi tạm dưới dạng văn bản.');
+      console.error('Lỗi khi gửi lên Cloud:', err);
+      alert('Không tải được tệp/ghi chú lên máy chủ Cloud.');
+      setStatusMsg(null);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDeleteMessage = (msgId) => {
+  const handleDeleteMessage = async (msgId) => {
     if (!window.confirm('Bạn muốn xóa mục này khỏi Cloud?')) return;
-    const updated = messages.filter((m) => m.id !== msgId);
-    saveMessagesToLocal(updated);
+    try {
+      await recallMessageApi(accessToken, msgId);
+      // Backend marks it as deleted or actually removes it? Usually it marks deletedAt.
+      // But for UI, let's just remove it
+      setMessages(prev => prev.filter(m => m._id !== msgId && m.id !== msgId));
+    } catch (e) {
+      console.error(e);
+      alert('Lỗi khi xóa ghi chú.');
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử Cloud? Hành động này không thể hoàn tác.')) return;
-    saveMessagesToLocal([]);
+    if (!conversationId) return;
+    try {
+      await clearHistoryApi(accessToken, conversationId);
+      setMessages([]);
+    } catch (e) {
+      console.error(e);
+      alert('Lỗi khi xóa toàn bộ lịch sử.');
+    }
   };
 
   const formatTime = (isoString) => {
@@ -139,6 +166,8 @@ export default function CloudPage({ accessToken, currentUser }) {
 
   // Filter messages by search query
   const filteredMessages = messages.filter((m) => {
+    // If backend soft-deletes, don't show
+    if (m.deletedAt) return false;
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
     const matchesText = (m.text || '').toLowerCase().includes(query);
@@ -147,9 +176,9 @@ export default function CloudPage({ accessToken, currentUser }) {
   });
 
   return (
-    <div className="w-full h-full flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
+    <div className="w-full flex-1 min-h-0 flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột trái phụ: Cloud Stats & Search */}
-      <div className="hidden md:flex w-[280px] h-full bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
+      <div className="hidden md:flex w-[280px] bg-white border-r border-slate-200 flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
         <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
             <Cloud className="text-blue-500" size={20} />
@@ -177,17 +206,18 @@ export default function CloudPage({ accessToken, currentUser }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái bộ nhớ</p>
               <div className="mt-2 p-3 bg-blue-50/50 border border-blue-100 rounded-xl dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Tổng số tệp/ghi chú</p>
-                <p className="text-lg font-extrabold text-blue-600 mt-1">{messages.length}</p>
-                <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 font-medium">⚠ Lưu trên trình duyệt này, chưa đồng bộ đa thiết bị.</p>
+                <p className="text-lg font-extrabold text-blue-600 mt-1">{messages.filter(m => !m.deletedAt).length}</p>
+                <p className="text-[10px] text-green-600 dark:text-green-500 mt-1 font-medium flex items-center gap-1">
+                  <CheckCircle2 size={12}/> Đã đồng bộ với hệ thống.
+                </p>
               </div>
             </div>
 
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lưu ý</p>
               <ul className="mt-2 text-xs text-slate-500 space-y-2 list-disc pl-4">
-                <li>File đính kèm được tải lên server (URL cố định).</li>
-                <li>Ghi chú và danh sách chỉ lưu trên trình duyệt hiện tại.</li>
-                <li>Xóa cache trình duyệt sẽ mất dữ liệu ghi chú.</li>
+                <li>Dữ liệu được mã hóa và lưu trữ an toàn trên máy chủ.</li>
+                <li>Hỗ trợ xem lại và tải xuống từ nhiều thiết bị khác nhau.</li>
               </ul>
             </div>
           </div>
@@ -203,7 +233,7 @@ export default function CloudPage({ accessToken, currentUser }) {
       </div>
 
       {/* Cột phải: Chat Area */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header */}
         <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div className="flex items-center gap-3">
@@ -220,14 +250,19 @@ export default function CloudPage({ accessToken, currentUser }) {
         {/* Thông báo tải tệp */}
         {statusMsg && (
           <div className="mx-6 mt-4 p-2.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-xl flex items-center gap-2 shadow-sm shrink-0">
-            <CheckCircle2 size={14} className="text-blue-600 animate-pulse" />
+            {uploading ? <Loader2 size={14} className="animate-spin text-blue-600" /> : <CheckCircle2 size={14} className="text-blue-600" />}
             {statusMsg}
           </div>
         )}
 
         {/* Danh sách ghi chú */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {filteredMessages.length === 0 ? (
+          {loading ? (
+             <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <Loader2 size={32} className="animate-spin text-blue-500 mb-2" />
+                <p className="text-sm font-semibold">Đang tải Cloud...</p>
+             </div>
+          ) : filteredMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400">
               <Cloud size={48} className="text-slate-200 mb-2" />
               <p className="text-sm font-semibold">Thư mục trống</p>
@@ -239,8 +274,10 @@ export default function CloudPage({ accessToken, currentUser }) {
               const showDateHeader = !prevMsg || 
                 new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString();
 
+              const msgId = msg._id || msg.id;
+
               return (
-                <div key={msg.id} className="space-y-3">
+                <div key={msgId} className="space-y-3">
                   {showDateHeader && (
                     <div className="flex justify-center my-4">
                       <span className="bg-slate-200/80 text-slate-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
@@ -254,7 +291,7 @@ export default function CloudPage({ accessToken, currentUser }) {
                       <div className="bg-blue-600 text-white rounded-2xl p-3 shadow-md relative group hover:shadow-lg transition">
                         {/* Nút xóa */}
                         <button
-                          onClick={() => handleDeleteMessage(msg.id)}
+                          onClick={() => handleDeleteMessage(msgId)}
                           className="absolute -left-9 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 shadow-sm opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer"
                           title="Xóa dòng này"
                         >
@@ -272,7 +309,7 @@ export default function CloudPage({ accessToken, currentUser }) {
                           return (
                             <div key={fIdx} className={`mt-2 ${msg.text ? 'border-t border-white/20 pt-2' : ''}`}>
                               {isImg ? (
-                                <a href={file.url} target="_blank" rel="noreferrer" className="block rounded-lg overflow-hidden border border-white/10 max-w-sm">
+                                <a href={file.url} target="_blank" rel="noreferrer" className="block rounded-lg overflow-hidden border border-white/10 max-w-sm bg-blue-700/50">
                                   <img src={file.url} alt="cloud preview" className="max-h-60 w-full object-cover block" />
                                 </a>
                               ) : (
@@ -347,7 +384,7 @@ export default function CloudPage({ accessToken, currentUser }) {
           <div className="p-4 flex items-center gap-3">
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || loading}
               className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex-shrink-0 cursor-pointer disabled:opacity-50 dark:bg-[#1c2b38] dark:hover:bg-[#223044] dark:text-slate-300"
               title="Đính kèm tài liệu hoặc ảnh"
             >
@@ -368,13 +405,13 @@ export default function CloudPage({ accessToken, currentUser }) {
                 if (e.key === 'Enter') handleSend();
               }}
               placeholder="Nhập ghi chú nhanh hoặc tin nhắn..."
-              disabled={uploading}
+              disabled={uploading || loading}
               className="flex-1 px-4 py-2.5 bg-slate-150 border-transparent rounded-2xl outline-none focus:bg-slate-100 focus:ring-2 focus:ring-blue-500 transition text-sm disabled:opacity-50 dark:bg-[#1c2b38] dark:text-slate-100 dark:placeholder-slate-500"
             />
 
             <button
               onClick={handleSend}
-              disabled={uploading || (!inputText.trim() && !selectedFile)}
+              disabled={uploading || loading || (!inputText.trim() && !selectedFile)}
               className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md hover:bg-blue-700 transition shrink-0 cursor-pointer disabled:opacity-50 disabled:bg-slate-350"
             >
               <Send size={16} />

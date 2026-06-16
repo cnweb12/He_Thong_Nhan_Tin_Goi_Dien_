@@ -49,18 +49,18 @@ export default function ChatHeader({
   const peer = inferredPeer || {};
 
   const title =
-    chat?.displayName || peer.displayName || chat?.name || "Chọn hội thoại";
+    peer?.displayName || chat?.displayName || chat?.name || "Chọn hội thoại";
   const subtitle =
-    chat?.phone ||
-    (isPhoneLike(chat?.username) ? chat.username : "") ||
     peer?.phone ||
     (isPhoneLike(peer?.username) ? peer.username : "") ||
+    chat?.phone ||
+    (isPhoneLike(chat?.username) ? chat.username : "") ||
     "";
   const avatarUrl =
+    peer?.avatarUrl ||
+    peer?.displayAvatarUrl ||
     chat?.displayAvatarUrl ||
     chat?.avatarUrl ||
-    peer.avatarUrl ||
-    peer.displayAvatarUrl ||
     "";
   const peerId = resolvePeerId(peer);
 

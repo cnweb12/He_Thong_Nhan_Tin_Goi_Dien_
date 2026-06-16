@@ -258,11 +258,13 @@ function createUserService(dependencies = {}) {
     const ids = relations.map((r) => r.friendId);
     if (!ids.length) return [];
 
-    const users = await userModel.find({ _id: { $in: ids } }).select("_id displayName phone");
+    const users = await userModel.find({ _id: { $in: ids } }).select("_id displayName phone avatarUrl username");
     return users.map((u) => ({
       userId: u._id,
       displayName: u.displayName,
       phone: u.phone,
+      avatarUrl: u.avatarUrl,
+      username: u.username
     }));
   }
 
@@ -271,11 +273,13 @@ function createUserService(dependencies = {}) {
     const ids = relations.map((r) => r.userId);
     if (!ids.length) return [];
 
-    const users = await userModel.find({ _id: { $in: ids } }).select("_id displayName phone");
+    const users = await userModel.find({ _id: { $in: ids } }).select("_id displayName phone avatarUrl username");
     return users.map((u) => ({
       userId: u._id,
       displayName: u.displayName,
       phone: u.phone,
+      avatarUrl: u.avatarUrl,
+      username: u.username
     }));
   }
 

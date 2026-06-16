@@ -12,16 +12,16 @@ const formatConversationTime = (isoDate) => {
 
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
 
-const resolveConversationTitle = (item) => item?.displayName
-  || item?.peer?.displayName
+const resolveConversationTitle = (item) => item?.peer?.displayName
   || item?.peer?.name
+  || item?.displayName
   || item?.name
   || 'Unknown';
 
-const resolveConversationAvatar = (item) => item?.displayAvatarUrl
-  || item?.avatarUrl
-  || item?.peer?.avatarUrl
+const resolveConversationAvatar = (item) => item?.peer?.avatarUrl
   || item?.peer?.displayAvatarUrl
+  || item?.displayAvatarUrl
+  || item?.avatarUrl
   || '';
 
 const resolveConversationPhone = (item) => item?.phone

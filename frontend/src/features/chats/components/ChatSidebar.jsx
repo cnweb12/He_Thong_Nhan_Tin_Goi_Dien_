@@ -72,7 +72,7 @@ export default function ChatSidebar({
     const isSearching = query.trim().length >= 2;
 
     return (
-        <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-[#232e3c]">
+        <div className="w-full min-h-0 flex flex-col bg-slate-50 dark:bg-[#232e3c]">
 
             {/* ── Header: thông tin user đang đăng nhập ── */}
             <header className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">

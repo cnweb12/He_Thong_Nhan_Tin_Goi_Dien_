@@ -33,6 +33,8 @@ const UserSchema = new Schema(
       default: "user",
       required: true,
     },
+    isLocked: { type: Boolean, default: false },
+    lockedAt: { type: Date },
     lastSeenAt: { type: Date },
   },
   { timestamps: true, versionKey: false },

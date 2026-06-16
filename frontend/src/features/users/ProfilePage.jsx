@@ -236,12 +236,12 @@ export default function ProfilePage() {
   const avatarLabel = getInitials(profile?.displayName || profile?.phone);
 
   return (
-    <div className="relative h-screen flex w-full overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-none dark:bg-[#0e1621]">
-      <div className="z-20 h-full flex-shrink-0 relative">
+    <div className="fixed inset-0 flex flex-col md:flex-row overflow-hidden text-slate-900 dark:text-slate-100 bg-[linear-gradient(135deg,_#f8fafc_0%,_#eef2f7_45%,_#f6f9fc_100%)] dark:bg-none dark:bg-[#0e1621]">
+      <div className="z-20 flex-shrink-0 order-last md:order-first w-full md:w-auto h-auto md:h-full relative">
         <SidebarLeft active="account" onSelect={(id) => navigate('/', { state: { sidebarView: id } })} />
       </div>
 
-      <main className="flex-1 min-w-0 h-full overflow-y-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 py-6 lg:px-8">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button

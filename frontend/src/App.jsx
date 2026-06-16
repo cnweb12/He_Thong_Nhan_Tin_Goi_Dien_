@@ -9,9 +9,10 @@ import { ConversationProvider } from './features/conversations/context/Conversat
 import Home from './pages/Home';
 import ProfilePage from './features/users/ProfilePage';
 import ErrorBoundary from './components/ErrorBoundary';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
 
 function App() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   // SocketProvider luôn render — không được đặt bên trong điều kiện loading
   // vì nếu đặt trong if(loading) return ..., mỗi lần loading đổi thì socket bị
@@ -23,7 +24,7 @@ function App() {
           <CallOverlay />
           <ConversationProvider>
             {loading ? (
-            <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eaf2ff,_#cfe0ff_35%,_#f8fbff_100%)] dark:bg-[#0e1621]">
+              <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eaf2ff,_#cfe0ff_35%,_#f8fbff_100%)] dark:bg-[#0e1621]">
                 <div className="rounded-3xl bg-white/85 dark:bg-[#17212b] backdrop-blur px-6 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.12)] border border-white/70 dark:border-[#1e2d3d] text-slate-700 dark:text-slate-200 font-medium">
                   Đang tải...
                 </div>
@@ -40,11 +41,19 @@ function App() {
                 />
                 <Route
                   path="/"
-                  element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />}
+                  element={
+                    isAuthenticated 
+                      ? (['admin', 'super_admin'].includes(user?.role) ? <Navigate to="/admin" replace /> : <Home />)
+                      : <Navigate to="/login" replace />
+                  }
                 />
                 <Route
                   path="/profile"
                   element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />}
+                />
+                <Route
+                  path="/admin"
+                  element={isAuthenticated && ['admin', 'super_admin'].includes(user?.role) ? <AdminDashboard /> : <Navigate to="/" replace />}
                 />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

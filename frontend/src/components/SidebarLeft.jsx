@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-    Clock3, LayoutGrid,
-    MessageCircle, Settings, UserRound, LogOut,
+    LayoutGrid,
+    MessageCircle, Settings, UserRound, LogOut, Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -11,7 +11,6 @@ const NAV_ITEMS = [
     { id: 'chat', icon: MessageCircle, label: 'Tin nhắn' },
     { id: 'contacts', icon: UserRound, label: 'Danh bạ' },
     { id: 'cloud', icon: LayoutGrid, label: 'Cloud' },
-    { id: 'task', icon: Clock3, label: 'Công việc' },
 ];
 
 /**
@@ -101,6 +100,20 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                     {/* Phần dưới: settings, logout */}
                     <div className="flex flex-col items-center gap-3">
+                        {user?.role === 'super_admin' && (
+                            <button
+                                type="button"
+                                onClick={() => navigate('/admin')}
+                                aria-label="Admin Dashboard"
+                                className="w-11 h-11 rounded-[1rem] bg-blue-500/10 border border-blue-500/20
+                                           text-blue-400 flex items-center justify-center
+                                           hover:bg-blue-500/20 hover:text-blue-300 transition-colors
+                                           focus:outline-none cursor-pointer"
+                            >
+                                <Shield size={18} />
+                            </button>
+                        )}
+
                         <button
                             type="button"
                             onClick={() => navigate('/profile')}
@@ -130,16 +143,16 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
             {/* ════════════════════════════════════════
                 MOBILE — thanh ngang cuối màn hình (< md)
-            ════════════════════════════════════════ */}
+            {/* Thanh điều hướng Mobile (ẩn trên desktop) */}
             <nav
                 className={[
-                    'md:hidden fixed bottom-0 left-0 right-0 z-50',
+                    'md:hidden w-full z-50 relative',
                     'bg-[#0f172a] text-white px-2 py-2',
                     'shadow-[0_-4px_24px_rgba(15,23,42,0.25)] border-t border-white/10',
                     active === 'chat' && !isChatListOpen ? 'hidden' : 'flex items-center justify-around'
                 ].join(' ')}
                 aria-label="Thanh điều hướng"
-                style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 8px)' }}
             >
                 {/* Nav items */}
                 {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
@@ -193,6 +206,21 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
                     </span>
                     <span className="text-[10px] font-medium leading-none text-white/50">Cài đặt</span>
                 </button>
+
+                {/* Admin Dashboard */}
+                {user?.role === 'super_admin' && (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/admin')}
+                        aria-label="Admin"
+                        className="flex flex-col items-center gap-1 flex-1 py-1 focus:outline-none"
+                    >
+                        <span className="w-10 h-10 rounded-[0.9rem] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                            <Shield size={18} />
+                        </span>
+                        <span className="text-[10px] font-medium leading-none text-blue-400/80">Admin</span>
+                    </button>
+                )}
 
                 {/* Avatar / Profile */}
                 <button

@@ -493,6 +493,7 @@ function initializeSocket(httpServer) {
 
           // Kịch bản Multi-device: Kiểm tra xem user còn thiết bị nào online không
           const onlineCount = await UserDeviceModel.countDocuments({ userId, isOnline: true });
+          
           if (onlineCount === 0) {
             const peerIds = await getPeerUserIds(userId);
             peerIds.forEach(peerId => {
@@ -520,6 +521,7 @@ function initializeSocket(httpServer) {
 
         // Kịch bản Multi-device: Kiểm tra xem đây có phải là thiết bị ĐẦU TIÊN online không
         const onlineCount = await UserDeviceModel.countDocuments({ userId, isOnline: true });
+
         if (onlineCount === 1) {
           const peerIds = await getPeerUserIds(userId);
           peerIds.forEach(peerId => {

@@ -42,18 +42,19 @@ export default function MessageBubble({ m, isMine, chat, isReadWatermark, onReca
     const messageSender = m.sender || m.senderInfo || m.user || m.fromUser;
     const resolvedSender = resolveSenderInConversation(m.from, chat);
 
-    // Merge: ưu tiên thông tin từ message, nhưng lấy avatar/displayName từ chat nếu message không có
-    const sender = messageSender
+    // Merge: ưu tiên thông tin động từ chat (resolvedSender) vì nó được cập nhật mới nhất, sau đó mới fallback về thông tin tĩnh lưu trong message
+    const sender = resolvedSender
         ? {
             ...messageSender,
-            avatarUrl: messageSender?.avatarUrl || resolvedSender?.avatarUrl,
-            displayAvatarUrl: messageSender?.displayAvatarUrl || resolvedSender?.displayAvatarUrl,
-            displayName: messageSender?.displayName || resolvedSender?.displayName,
-            name: messageSender?.name || resolvedSender?.name,
-            username: messageSender?.username || resolvedSender?.username,
-            phone: messageSender?.phone || resolvedSender?.phone,
+            ...resolvedSender,
+            avatarUrl: resolvedSender.avatarUrl || resolvedSender.displayAvatarUrl || messageSender?.avatarUrl || messageSender?.displayAvatarUrl,
+            displayAvatarUrl: resolvedSender.displayAvatarUrl || resolvedSender.avatarUrl || messageSender?.displayAvatarUrl || messageSender?.avatarUrl,
+            displayName: resolvedSender.displayName || resolvedSender.name || messageSender?.displayName || messageSender?.name,
+            name: resolvedSender.name || resolvedSender.displayName || messageSender?.name || messageSender?.displayName,
+            username: resolvedSender.username || messageSender?.username,
+            phone: resolvedSender.phone || messageSender?.phone,
         }
-        : resolvedSender;
+        : messageSender;
 
 
     const getStatusIcon = () => {
@@ -225,8 +226,8 @@ export default function MessageBubble({ m, isMine, chat, isReadWatermark, onReca
             <div className="w-4 h-4 shrink-0 flex items-end justify-center mb-1">
                 {isReadWatermark && (
                     <Avatar
-                        src={chat?.displayAvatarUrl || chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl}
-                        name={chat?.displayName || chat?.peer?.displayName || chat?.peer?.username || chat?.name || 'User'}
+                        src={chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl || chat?.displayAvatarUrl || chat?.avatarUrl}
+                        name={chat?.peer?.displayName || chat?.displayName || chat?.peer?.username || chat?.name || 'User'}
                         size="w-4 h-4"
                         textClass="text-[8px] font-bold"
                     />

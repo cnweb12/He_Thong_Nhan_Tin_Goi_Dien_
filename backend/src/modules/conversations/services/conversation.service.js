@@ -163,31 +163,32 @@ function createConversationService(dependencies = {}) {
 
     const conversation = createdConversation[0];
 
-    await conversationMemberModel.insertMany(
-      [
-        { conversationId: conversation._id, userId, role: "owner" },
-        { conversationId: conversation._id, userId: peerUserId, role: "member" },
-      ]
-    );
+    const isSelf = String(userId) === String(peerUserId);
+    const membersToInsert = [{ conversationId: conversation._id, userId, role: "owner" }];
+    if (!isSelf) {
+      membersToInsert.push({ conversationId: conversation._id, userId: peerUserId, role: "member" });
+    }
+    await conversationMemberModel.insertMany(membersToInsert);
 
-    await inboxModel.insertMany(
-      [
-        {
-          userId,
-          conversationId: conversation._id,
-          displayName: peerUser.displayName || "Direct chat",
-          displayAvatarUrl: peerUser.avatarUrl,
-          unreadCount: 0,
-        },
-        {
-          userId: peerUserId,
-          conversationId: conversation._id,
-          displayName: currentUser.displayName || "Direct chat",
-          displayAvatarUrl: currentUser.avatarUrl,
-          unreadCount: 0,
-        },
-      ]
-    );
+    const inboxToInsert = [
+      {
+        userId,
+        conversationId: conversation._id,
+        displayName: isSelf ? "Cloud của tôi" : (peerUser.displayName || "Direct chat"),
+        displayAvatarUrl: isSelf ? null : peerUser.avatarUrl,
+        unreadCount: 0,
+      }
+    ];
+    if (!isSelf) {
+      inboxToInsert.push({
+        userId: peerUserId,
+        conversationId: conversation._id,
+        displayName: currentUser.displayName || "Direct chat",
+        displayAvatarUrl: currentUser.avatarUrl,
+        unreadCount: 0,
+      });
+    }
+    await inboxModel.insertMany(inboxToInsert);
 
     const fullConversation = await getConversationWithMembers(conversation._id);
     return sanitizeConversation(fullConversation);
@@ -225,11 +226,15 @@ function createConversationService(dependencies = {}) {
   }
 
   async function createDirectConversation({ userId, peerUserId, createdBy = userId }) {
-    if (String(userId) === String(peerUserId)) {
-      throw createHttpError(400, "Cannot create a direct conversation with the same user");
+    const [currentUser, peerUser] = await Promise.all([ensureUserExists(userId), ensureUserExists(peerUserId)]);
+    
+    // Prevent conversations involving super admins, but allow self-conversation (Personal Cloud)
+    if (["super_admin", "admin"].includes(currentUser.role) || ["super_admin", "admin"].includes(peerUser.role)) {
+       if (String(userId) !== String(peerUserId)) {
+         throw createHttpError(403, "Cannot create or engage in a conversation with an administrator.");
+       }
     }
 
-    const [currentUser, peerUser] = await Promise.all([ensureUserExists(userId), ensureUserExists(peerUserId)]);
     const directKey = normalizeDirectKey(userId, peerUserId);
 
     if (!useTransactions) {
@@ -271,33 +276,32 @@ function createConversationService(dependencies = {}) {
 
         conversation = created[0];
 
-        await conversationMemberModel.insertMany(
-          [
-            { conversationId: conversation._id, userId, role: "owner" },
-            { conversationId: conversation._id, userId: peerUserId, role: "member" },
-          ],
-          { session }
-        );
+        const isSelf = String(userId) === String(peerUserId);
+        const membersToInsert = [{ conversationId: conversation._id, userId, role: "owner" }];
+        if (!isSelf) {
+          membersToInsert.push({ conversationId: conversation._id, userId: peerUserId, role: "member" });
+        }
+        await conversationMemberModel.insertMany(membersToInsert, { session });
 
-        await inboxModel.insertMany(
-          [
-            {
-              userId,
-              conversationId: conversation._id,
-              displayName: peerUser.displayName || "Direct chat",
-              displayAvatarUrl: peerUser.avatarUrl,
-              unreadCount: 0,
-            },
-            {
-              userId: peerUserId,
-              conversationId: conversation._id,
-              displayName: currentUser.displayName || "Direct chat",
-              displayAvatarUrl: currentUser.avatarUrl,
-              unreadCount: 0,
-            },
-          ],
-          { session }
-        );
+        const inboxToInsert = [
+          {
+            userId,
+            conversationId: conversation._id,
+            displayName: isSelf ? "Cloud của tôi" : (peerUser.displayName || "Direct chat"),
+            displayAvatarUrl: isSelf ? null : peerUser.avatarUrl,
+            unreadCount: 0,
+          }
+        ];
+        if (!isSelf) {
+          inboxToInsert.push({
+            userId: peerUserId,
+            conversationId: conversation._id,
+            displayName: currentUser.displayName || "Direct chat",
+            displayAvatarUrl: currentUser.avatarUrl,
+            unreadCount: 0,
+          });
+        }
+        await inboxModel.insertMany(inboxToInsert, { session });
       });
 
       const fullConversation = await getConversationWithMembers(conversation._id, session);
