@@ -136,12 +136,97 @@ Các route sau yêu cầu `Authorization: Bearer <accessToken>`:
 - **Multi-device support**
   Một user có thể có nhiều phiên đăng nhập song song
 
-## Biến môi trường liên quan
+## Ví dụ response (tóm tắt)
 
-- `JWT_SECRET`
-  Secret dùng để ký và verify access token
-- `NODE_ENV`
-  Ảnh hưởng cách app trả lỗi
+- **POST /api/auth/register** (201 Created)
+
+```json
+{
+  "user": { "_id": "u123", "phone": "0901234567", "displayName": "John Doe" },
+  "accessToken": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "expiresIn": 3600
+}
+```
+
+- **POST /api/auth/login** (200 OK)
+
+```json
+{
+  "accessToken": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "expiresIn": 3600
+}
+```
+
+- **POST /api/auth/refresh** (200 OK)
+
+```json
+{
+  "accessToken": "<new-access-token>",
+  "expiresIn": 3600
+}
+```
+
+## Biến môi trường liên quan (khai quát)
+
+- `JWT_SECRET` — secret dùng để ký/verify access token
+- `JWT_EXPIRES_IN` — TTL access token (ví dụ `1h`) nếu cấu hình trong app
+- `REFRESH_TOKEN_EXPIRES_IN` — (tùy implementation) TTL cho refresh token nếu có
+- `NODE_ENV` — ảnh hưởng cách app trả lỗi
+- `DATABASE_URL` / `MONGO_URI` — kết nối DB (nếu module đọc trực tiếp)
+
+Lưu ý: tên env var có thể khác trong codebase; kiểm tra `config/` hoặc `src/config` để biết chính xác.
+
+## Mount router
+
+Module được mount tại router tổng; tham khảo [src/routes/index.js](src/routes/index.js#L1) để biết vị trí mount và middleware chung.
+
+## Hướng dẫn test nhanh
+
+- Ví dụ `curl` login:
+
+```bash
+curl -X POST "http://localhost:3000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"0901234567","password":"password123","deviceId":"dev-1"}'
+```
+
+- Ví dụ `curl` refresh:
+
+```bash
+curl -X POST "http://localhost:3000/api/auth/refresh" \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"<refresh-token>","deviceId":"dev-1"}'
+```
+
+- Snippet supertest (khung):
+
+```js
+const request = require('supertest');
+const app = require('../../../app');
+
+it('login and refresh flow', async () => {
+  const loginRes = await request(app)
+    .post('/api/auth/login')
+    .send({ phone: '0901234567', password: 'password123', deviceId: 'dev-1' });
+
+  const { refreshToken } = loginRes.body;
+
+  const refreshRes = await request(app)
+    .post('/api/auth/refresh')
+    .send({ refreshToken, deviceId: 'dev-1' });
+
+  expect(refreshRes.status).toBe(200);
+  expect(refreshRes.body.accessToken).toBeDefined();
+});
+```
+
+## Bảo mật & hardening (đề xuất)
+
+- Áp dụng rate-limit / captcha cho `POST /api/auth/login` để giảm brute-force.
+- Log và cảnh báo khi có nhiều lần refresh/revoke thất bại.
+- Hạn chế thông tin lỗi trả về (tránh leak lý do không thành công quá chi tiết).
 
 ## Lưu ý quan trọng
 
