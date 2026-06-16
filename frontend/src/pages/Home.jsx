@@ -561,8 +561,8 @@ export default function Home() {
   return (
     <div className={`relative flex w-full overflow-hidden text-slate-900 bg-slate-100 ${
       isMobileNavVisible
-        ? 'h-[calc(100svh-64px)] md:h-screen'
-        : 'h-screen'
+        ? 'h-[calc(100dvh-64px)] md:h-[100dvh]'
+        : 'h-[100dvh]'
     }`}>
       {socketError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm px-4 py-2 rounded-md shadow">

@@ -136,7 +136,10 @@ export default function MessageInput({ onSend, disabled = false, sending = false
     };
 
     return (
-        <div className="flex flex-col bg-white dark:bg-[#17212b] border-t border-slate-200 dark:border-[#1e2d3d] shrink-0">
+        <div
+            className="flex flex-col bg-white dark:bg-[#17212b] border-t border-slate-200 dark:border-[#1e2d3d] shrink-0"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
             {selectedFile && (
                 <div className="px-4 pt-3 pb-1">
                     <div className="relative inline-block group">
