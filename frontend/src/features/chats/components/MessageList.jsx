@@ -26,9 +26,30 @@ export default function MessageList({ messages, currentUserId, loading, error, c
                         Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.
                     </div>
                 )}
-                {messages.map((m, idx) => (
-                    <MessageBubble key={m.id || idx} m={m} isMine={m.from === currentUserId} chat={chat} />
-                ))}
+                {messages.map((m, idx) => {
+                    const isMine = m.from === currentUserId;
+                    // Mốc đã xem (read watermark): tin nhắn cuối cùng thỏa mãn một trong 2 điều kiện:
+                    // 1. Là tin nhắn của người kia (người kia nhắn thì chắc chắn đã xem các tin trước)
+                    // 2. Là tin nhắn của mình và có trạng thái 'read'
+                    let isReadWatermark = false;
+                    if (!isMine || m.status === 'read') {
+                        // Kiểm tra xem từ tin nhắn này trở về cuối, có tin nhắn nào khác đè lên mốc đã xem không
+                        const hasNewerWatermark = messages.slice(idx + 1).some(
+                            newerMsg => newerMsg.from !== currentUserId || newerMsg.status === 'read'
+                        );
+                        isReadWatermark = !hasNewerWatermark;
+                    }
+
+                    return (
+                        <MessageBubble 
+                            key={m.id || idx} 
+                            m={m} 
+                            isMine={isMine} 
+                            chat={chat} 
+                            isReadWatermark={isReadWatermark} 
+                        />
+                    );
+                })}
                 
                 {/* Typing Indicator */}
                 {typingUsers.length > 0 && (

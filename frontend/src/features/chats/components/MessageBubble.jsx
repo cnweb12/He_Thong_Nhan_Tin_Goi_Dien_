@@ -37,7 +37,7 @@ function resolveSenderInConversation(fromId, chat) {
     return null;
 }
 
-export default function MessageBubble({ m, isMine, currentUserId, chat }) {
+export default function MessageBubble({ m, isMine, currentUserId, chat, isReadWatermark }) {
     const [previewImage, setPreviewImage] = useState(null);
     const messageSender = m.sender || m.senderInfo || m.user || m.fromUser;
     const resolvedSender = resolveSenderInConversation(m.from, chat);
@@ -64,16 +64,14 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     });
 
     const getStatusIcon = () => {
+        // Nếu không phải tin của mình thì không hiển thị status icon (seen watermark sẽ được xử lý riêng ở ngoài)
         if (!isMine || !m.status) return null;
+
         switch (m.status) {
             case 'sending': return <Clock className="w-3 h-3 text-slate-400" />;
             case 'error': return <AlertCircle className="w-3 h-3 text-red-500" />;
             case 'sent': return <Check className="w-3 h-3 text-slate-400" />;
-            case 'read': {
-                const readAvatar = chat?.displayAvatarUrl || chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl;
-                if (readAvatar) return <img src={readAvatar} alt="read" className="w-3.5 h-3.5 rounded-full object-cover shadow-sm" />;
-                return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
-            }
+            case 'read': return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
             default: return null;
         }
     };
@@ -126,78 +124,90 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
     };
 
     return (
-        <div className={`flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
-            {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
-            {!isMine && <Avatar
-                src={sender?.avatarUrl || sender?.displayAvatarUrl}
-                name={sender?.displayName || sender?.username || sender?.phone || sender?.name || ''}
-                size="w-7 h-7"
-                textClass="text-[10px] font-bold"
-            />}
+        <div className="flex w-full items-end justify-between gap-1">
+            <div className={`flex-1 flex items-end ${isMine ? 'justify-end' : 'justify-start'} gap-2 min-w-0`}>
+                {/* Avatar người gửi (chỉ hiện khi không phải mình) */}
+                {!isMine && <Avatar
+                    src={sender?.avatarUrl || sender?.displayAvatarUrl}
+                    name={sender?.displayName || sender?.username || sender?.phone || sender?.name || ''}
+                    size="w-7 h-7"
+                    textClass="text-[10px] font-bold"
+                />}
 
-            <div className={`flex flex-col max-w-[90%] sm:max-w-[65%] ${isMine ? 'items-end' : 'items-start'} gap-1.5 min-w-0`}>
-                {/* File / ảnh đính kèm */}
-                {hasAttachments && (
-                    <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
-                        {attachments.map((att, idx) => {
-                            const isImage = att.mimeType?.startsWith('image/')
-                                || m.type === 'image'
-                                || (att.url && att.url.match(/\.(jpg|jpeg|png|gif|webp|svg)(?:\?.*)?$/i));
+                <div className={`flex flex-col max-w-[90%] sm:max-w-[70%] ${isMine ? 'items-end' : 'items-start'} gap-1.5`}>
+                    {/* File / ảnh đính kèm */}
+                    {hasAttachments && (
+                        <div className={`flex flex-col gap-2 w-full ${isMine ? 'items-end' : 'items-start'}`}>
+                            {attachments.map((att, idx) => {
+                                const isImage = att.mimeType?.startsWith('image/')
+                                    || m.type === 'image'
+                                    || (att.url && att.url.match(/\.(jpg|jpeg|png|gif|webp|svg)(?:\?.*)?$/i));
 
-                            if (isImage) {
+                                if (isImage) {
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="relative group overflow-hidden rounded-xl border border-black/10 shadow-sm max-w-[240px] sm:max-w-xs cursor-pointer active:scale-[0.98] transition-transform"
+                                            onClick={(e) => { e.stopPropagation(); setPreviewImage(att); }}
+                                        >
+                                            <img src={att.url} alt={att.fileName || 'image'} className="w-full object-cover bg-slate-200 block pointer-events-none select-none" style={{ maxHeight: '280px' }} />
+                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                        </div>
+                                    );
+                                }
+
                                 return (
-                                    <div
+                                    <button
                                         key={idx}
-                                        className="relative group overflow-hidden rounded-xl border border-black/10 shadow-sm max-w-[240px] sm:max-w-xs cursor-pointer active:scale-[0.98] transition-transform"
-                                        onClick={(e) => { e.stopPropagation(); setPreviewImage(att); }}
-                                    >
-                                        <img src={att.url} alt={att.fileName || 'image'} className="w-full object-cover bg-slate-200 block pointer-events-none select-none" style={{ maxHeight: '280px' }} />
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                                    </div>
-                                );
-                            }
-
-                            return (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={(e) => handleDownloadFile(e, att.url, att.fileName)}
-                                    className={`flex items-center gap-3 p-2.5 rounded-xl border shadow-sm transition-colors max-w-[250px] sm:max-w-xs cursor-pointer text-left w-full
+                                        type="button"
+                                        onClick={(e) => handleDownloadFile(e, att.url, att.fileName)}
+                                        className={`flex items-center gap-3 p-2.5 rounded-xl border shadow-sm transition-colors max-w-[250px] sm:max-w-xs cursor-pointer text-left w-full
                                         ${isMine ? 'bg-blue-500 border-blue-600/50 hover:bg-blue-600 text-white' : 'bg-slate-200 dark:bg-[#1c2b38] border-slate-300/80 dark:border-[#1e2d3d] hover:bg-slate-300/70 dark:hover:bg-[#223044] text-slate-800 dark:text-slate-100'}`}
-                                >
-                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isMine ? 'bg-blue-600/80 text-blue-100' : 'bg-white/80 text-slate-600'}`}>
-                                        {getFileIcon(att.fileName)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold truncate">{att.fileName || 'Tài liệu đính kèm'}</div>
-                                        {att.size && <div className={`text-xs mt-0.5 ${isMine ? 'text-blue-100' : 'text-slate-500'}`}>{(att.size / 1024).toFixed(1)} KB</div>}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
+                                    >
+                                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isMine ? 'bg-blue-600/80 text-blue-100' : 'bg-white/80 text-slate-600'}`}>
+                                            {getFileIcon(att.fileName)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-semibold truncate">{att.fileName || 'Tài liệu đính kèm'}</div>
+                                            {att.size && <div className={`text-xs mt-0.5 ${isMine ? 'text-blue-100' : 'text-slate-500'}`}>{(att.size / 1024).toFixed(1)} KB</div>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
-                {/* Text */}
-                {hasText && (
-                    <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]
+                    {/* Text */}
+                    {hasText && (
+                        <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]
                         ${isMine
-                            ? 'bg-[#2b5278] text-white rounded-2xl rounded-br-lg'
-                            : 'bg-slate-200 dark:bg-[#182533] text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-lg'
-                        }`}
-                    >
-                        {m.text}
-                    </div>
-                )}
+                                ? 'bg-[#2b5278] text-white rounded-2xl rounded-br-lg'
+                                : 'bg-slate-200 dark:bg-[#182533] text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-lg'
+                            }`}
+                        >
+                            {m.text}
+                        </div>
+                    )}
 
-                {/* Timestamp + status */}
-                <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    {m.time && <span className="text-[10px] text-slate-400">{m.time}</span>}
-                    {getStatusIcon()}
+                    {/* Timestamp + status */}
+                    <div className={`flex items-center gap-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                        {m.time && <span className="text-[10px] text-slate-400">{m.time}</span>}
+                        {getStatusIcon()}
+                    </div>
                 </div>
             </div>
 
-            {isMine && <div className="w-7 h-7 shrink-0" />}
+            {/* Read Watermark hiển thị ở lề bên phải ngoài cùng của màn hình */}
+            <div className="w-4 h-4 shrink-0 flex items-end justify-center mb-1">
+                {isReadWatermark && (
+                    <Avatar
+                        src={chat?.displayAvatarUrl || chat?.peer?.avatarUrl || chat?.peer?.displayAvatarUrl}
+                        name={chat?.displayName || chat?.peer?.displayName || chat?.peer?.username || chat?.name || 'User'}
+                        size="w-4 h-4"
+                        textClass="text-[8px] font-bold"
+                    />
+                )}
+            </div>
 
             {/* Lightbox */}
             {previewImage && createPortal(
