@@ -96,15 +96,6 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                 {/* ── Phần dưới: bell, settings, logout ── */}
                 <div className="flex flex-col items-center gap-3">
-                    <button
-                        type="button"
-                        aria-label="Thông báo"
-                        className="w-11 h-11 rounded-[1rem] bg-white/5 border border-white/10
-                                   flex items-center justify-center
-                                   hover:bg-white/10 hover:border-white/20 focus:outline-none cursor-pointer"
-                    >
-                        <Bell size={18} />
-                    </button>
 
                     <button
                         type="button"
