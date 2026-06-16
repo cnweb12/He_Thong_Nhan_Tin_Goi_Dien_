@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginApi, logoutApi, logoutAllApi, getMeApi, refreshApi } from '../services/authApi';
+import { applyTheme } from '../../../utils/themeUtils';
 
 export const AuthContext = createContext(null);
 
@@ -74,6 +75,8 @@ export function AuthProvider({ children }) {
                 if (profile) {
                     setUser(profile);
                     localStorage.setItem(USER_KEY, JSON.stringify(profile));
+                    // Áp dụng theme sau khi lấy được profile từ server
+                    applyTheme(profile?.settings?.theme || 'light');
                 }
                 setIsAuthenticated(true);
             } catch {
@@ -104,6 +107,8 @@ export function AuthProvider({ children }) {
             if (data.user) {
                 localStorage.setItem(USER_KEY, JSON.stringify(data.user));
                 setUser(data.user);
+                // Áp dụng theme ngay sau đăng nhập
+                applyTheme(data.user?.settings?.theme || 'light');
             }
 
             setIsAuthenticated(true);

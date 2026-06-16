@@ -92,8 +92,8 @@ export default function ChatItem({ chat, active, onClick }) {
             onClick={() => onClick?.(convId)}
             className={[
                 'w-full flex items-center gap-3 px-4 py-3 text-left',
-                'transition-colors duration-150 cursor-pointer border-b border-slate-100',
-                active ? 'bg-blue-50/80 dark:bg-blue-500/10' : 'hover:bg-slate-100 dark:hover:bg-slate-700/60',
+                'transition-colors duration-150 cursor-pointer border-b border-slate-100 dark:border-[#1e2d3d]/40',
+                active ? 'bg-blue-50/80 dark:bg-[#2b5278]/30' : 'hover:bg-slate-100 dark:hover:bg-[#1c2b38]',
             ].join(' ')}
         >
             {/* ── Avatar ── */}
@@ -131,7 +131,7 @@ export default function ChatItem({ chat, active, onClick }) {
                 <span className="text-[11px] text-slate-400 dark:text-slate-500">{time}</span>
                 {hasUnread && (
                     <span className="mt-1.5 min-w-[20px] h-5 px-1 flex items-center justify-center
-                                     rounded-full bg-blue-500 text-white text-[10px] font-bold shadow">
+                                     rounded-full bg-red-500 text-white text-[10px] font-bold shadow">
                         {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}

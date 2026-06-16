@@ -136,12 +136,12 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
   };
 
   return (
-    <div className="w-full h-full flex overflow-hidden bg-slate-50">
+    <div className="w-full h-full flex overflow-hidden bg-slate-50 dark:bg-[#0e1621]">
       {/* Cột phụ bên trái: Danh mục */}
-      <div className="w-[280px] h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-800">Danh bạ</h2>
-          <p className="text-xs text-slate-500">Quản lý bạn bè và kết nối</p>
+      <div className="w-[280px] h-full bg-white border-r border-slate-200 flex flex-col flex-shrink-0 dark:bg-[#232e3c] dark:border-[#1e2d3d]">
+        <div className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Danh bạ</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Quản lý bạn bè và kết nối</p>
         </div>
         
         <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
@@ -149,14 +149,14 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
             onClick={() => setActiveTab('friends')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
               activeTab === 'friends' 
-                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
+                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
             }`}
           >
             <Users size={18} />
             Danh sách bạn bè
             {friends.length > 0 && (
-              <span className="ml-auto bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full">
+              <span className="ml-auto bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full dark:bg-[#1c2b38] dark:text-slate-300">
                 {friends.length}
               </span>
             )}
@@ -166,8 +166,8 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
             onClick={() => setActiveTab('requests')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
               activeTab === 'requests' 
-                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
+                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
             }`}
           >
             <Inbox size={18} />
@@ -183,8 +183,8 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
             onClick={() => setActiveTab('search')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition ${
               activeTab === 'search' 
-                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50 dark:bg-[#2b5278]/20 dark:text-blue-300' 
+                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#1c2b38]'
             }`}
           >
             <UserPlus size={18} />
@@ -194,11 +194,11 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
       </div>
 
       {/* Cột chính bên phải: Danh sách chi tiết */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100">
+      <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
         {/* Header chi tiết */}
-        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+        <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
           <div>
-            <h1 className="font-bold text-slate-800">
+            <h1 className="font-bold text-slate-800 dark:text-slate-100">
               {activeTab === 'friends' && 'Danh sách bạn bè'}
               {activeTab === 'requests' && 'Lời mời kết bạn đã nhận'}
               {activeTab === 'search' && 'Tìm kiếm bạn mới'}
@@ -230,9 +230,9 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm flex items-center gap-2">
+              <div className="bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm flex items-center gap-2 dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
                 <Loader2 className="animate-spin text-blue-500" size={20} />
-                <span className="text-slate-600 font-medium text-sm">Đang tải danh sách...</span>
+                <span className="text-slate-600 font-medium text-sm dark:text-slate-300">Đang tải danh sách...</span>
               </div>
             </div>
           ) : (
@@ -240,7 +240,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
               
               {/* TAB: BẠN BÈ */}
               {activeTab === 'friends' && (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
                   {friends.length === 0 ? (
                     <div className="p-8 text-center text-slate-500">
                       <Users size={36} className="mx-auto text-slate-300 mb-2" />
@@ -248,9 +248,9 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                       <p className="text-xs mt-1">Hãy chuyển sang tab "Tìm bạn mới" để kết nối.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-[#1e2d3d]/50">
                       {friends.map((friend) => (
-                        <div key={friend.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                        <div key={friend.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                           <div className="flex items-center gap-3">
                             <img
                               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(friend.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
@@ -258,8 +258,8 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                               className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                             />
                             <div>
-                              <p className="font-semibold text-slate-800 text-sm">{friend.displayName}</p>
-                              <p className="text-xs text-slate-400">{friend.phone || 'Không công khai SĐT'}</p>
+                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{friend.displayName}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{friend.phone || 'Không công khai SĐT'}</p>
                             </div>
                           </div>
 
@@ -274,7 +274,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             <button
                               onClick={() => handleRemoveFriend(friend.userId, friend.displayName)}
                               disabled={actionLoadingId === friend.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38]"
                             >
                               Hủy kết bạn
                             </button>
@@ -288,7 +288,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
 
               {/* TAB: LỜI MỜI */}
               {activeTab === 'requests' && (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
                   {requests.length === 0 ? (
                     <div className="p-8 text-center text-slate-500">
                       <Inbox size={36} className="mx-auto text-slate-300 mb-2" />
@@ -296,9 +296,9 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                       <p className="text-xs mt-1">Khi ai đó gửi yêu cầu, nó sẽ hiển thị ở đây.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-[#1e2d3d]/50">
                       {requests.map((req) => (
-                        <div key={req.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                        <div key={req.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                           <div className="flex items-center gap-3">
                             <img
                               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
@@ -306,8 +306,8 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                               className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                             />
                             <div>
-                              <p className="font-semibold text-slate-800 text-sm">{req.displayName}</p>
-                              <p className="text-xs text-slate-400">{req.phone || 'SĐT: Ẩn'}</p>
+                              <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{req.displayName}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{req.phone || 'SĐT: Ẩn'}</p>
                             </div>
                           </div>
 
@@ -322,7 +322,7 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                             <button
                               onClick={() => handleDeclineRequest(req.userId, req.displayName)}
                               disabled={actionLoadingId === req.userId}
-                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition text-xs font-semibold cursor-pointer disabled:opacity-50 dark:border-[#1e2d3d] dark:text-slate-400 dark:hover:bg-[#1c2b38]"
                             >
                               Từ chối
                             </button>
@@ -345,13 +345,13 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Tìm kiếm theo Tên hiển thị, Username hoặc Số điện thoại..."
-                      className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 text-sm dark:bg-[#1c2b38] dark:border-[#1e2d3d] dark:text-slate-100 dark:placeholder-slate-500"
                     />
                   </div>
 
                   {/* Kết quả tìm kiếm */}
-                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500 flex items-center justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
+                    <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500 flex items-center justify-between dark:bg-[#17212b] dark:border-[#1e2d3d]/50 dark:text-slate-400">
                       <span>KẾT QUẢ TÌM KIẾM</span>
                       {searchLoading && <Loader2 className="animate-spin text-blue-500" size={14} />}
                     </div>
@@ -367,13 +367,13 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                         <p className="text-xs mt-1">Vui lòng kiểm tra lại thông tin tìm kiếm.</p>
                       </div>
                     ) : (
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-slate-100 dark:divide-[#1e2d3d]/50">
                         {searchResults.map((item) => {
                           const isFriend = friends.some((f) => f.userId === item.userId);
                           const isPending = requests.some((r) => r.userId === item.userId);
 
                           return (
-                            <div key={item.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                            <div key={item.userId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition dark:hover:bg-[#223044]">
                               <div className="flex items-center gap-3">
                                 <img
                                   src={item.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.displayName || 'U')}&background=random&color=fff&rounded=true&font-size=0.45`}
@@ -381,8 +381,8 @@ export default function ContactsPage({ accessToken, onStartConversation }) {
                                   className="w-10 h-10 rounded-full bg-slate-100 object-cover"
                                 />
                                 <div>
-                                  <p className="font-semibold text-slate-800 text-sm">{item.displayName}</p>
-                                  <p className="text-xs text-slate-400">@{item.username || 'user'}</p>
+                                  <p className="font-semibold text-slate-800 text-sm dark:text-slate-100">{item.displayName}</p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500">@{item.username || 'user'}</p>
                                 </div>
                               </div>
 

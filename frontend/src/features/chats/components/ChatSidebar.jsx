@@ -73,10 +73,10 @@ export default function ChatSidebar({
     const isSearching = query.trim().length >= 2;
 
     return (
-        <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-slate-800">
+        <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-[#232e3c]">
 
             {/* ── Header: thông tin user đang đăng nhập ── */}
-            <header className="p-4 border-b border-slate-200 dark:border-slate-700">
+            <header className="p-4 border-b border-slate-200 dark:border-[#1e2d3d]">
                 <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                         <img
@@ -84,7 +84,7 @@ export default function ChatSidebar({
                             alt="Avatar"
                             className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 object-cover"
                         />
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-[#232e3c] rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">
@@ -98,7 +98,7 @@ export default function ChatSidebar({
             </header>
 
             {/* ── Ô tìm kiếm ── */}
-            <div className="border-b border-slate-200 dark:border-slate-700">
+            <div className="border-b border-slate-200 dark:border-[#1e2d3d]">
                 <SearchBar
                     value={query}
                     onChange={setQuery}
@@ -111,7 +111,7 @@ export default function ChatSidebar({
             {/* ── Kết quả tìm kiếm user (dropdown) ── */}
             {isSearching && (
                 <div className="px-3 pb-3">
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                    <div className="rounded-xl border border-slate-200 dark:border-[#1e2d3d] bg-white dark:bg-[#17212b] shadow-sm overflow-hidden">
                         <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
                             {searchLoading ? 'Đang tìm kiếm...' : 'Gợi ý liên hệ'}
                         </div>
@@ -140,7 +140,7 @@ export default function ChatSidebar({
                                         type="button"
                                         onClick={() => onStartConversation?.(item)}
                                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left
-                                                   hover:bg-sky-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                                                   hover:bg-sky-50 dark:hover:bg-[#1c2b38] transition cursor-pointer"
                                     >
                                         <img
                                             src={itemAvatar}

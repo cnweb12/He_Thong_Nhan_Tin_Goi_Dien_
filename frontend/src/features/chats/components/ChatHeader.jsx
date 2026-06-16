@@ -87,12 +87,11 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
     };
 
     return (
-        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <div className="h-[68px] flex-shrink-0 flex items-center justify-between px-4 border-b border-slate-200 dark:border-[#1e2d3d] bg-white dark:bg-[#17212b]">
             <div className="flex items-center gap-3">
                 <button
                     onClick={onBack}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 sm:hidden text-slate-600 dark:text-slate-300"
-                >
+                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] sm:hidden text-slate-600 dark:text-slate-300">
                     <ArrowLeft size={20} />
                 </button>
 
@@ -103,7 +102,7 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
                         className="w-10 h-10 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
                     />
                     {peer.isOnline && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-[#17212b] rounded-full" />
                     )}
                 </div>
 
@@ -114,21 +113,21 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
                             ? 'Đang hoạt động'
                             : peer.lastActiveAt
                                 ? `Hoạt động ${formatRelativeTime(peer.lastActiveAt)}`
-                                : 'Không hoạt động'}
+                                : null}
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400" title="Gọi thoại">
+                <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400" title="Gọi thoại">
                     <Phone size={20} />
                 </button>
-                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer text-blue-600 dark:text-blue-400" title="Gọi video">
+                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer text-blue-600 dark:text-blue-400" title="Gọi video">
                     <Video size={20} />
                 </button>
                 <button
                     onClick={onToggleInfo}
-                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer"
                     title="Thông tin hội thoại"
                 >
                     <Info size={20} />

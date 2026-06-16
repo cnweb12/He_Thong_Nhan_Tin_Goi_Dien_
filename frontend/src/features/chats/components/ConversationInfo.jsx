@@ -30,11 +30,11 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
     }, []);
 
     return (
-        <div className="w-full h-full flex-shrink-0 bg-white dark:bg-slate-800 p-6 overflow-y-auto flex flex-col relative z-10">
+        <div className="w-full h-full flex-shrink-0 bg-white dark:bg-[#17212b] p-6 overflow-y-auto flex flex-col relative z-10">
             {onClose && (
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors z-20 cursor-pointer"
+                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] text-slate-500 dark:text-slate-400 transition-colors z-20 cursor-pointer"
                     aria-label="Đóng thông tin"
                 >
                     <X size={20} />
@@ -57,7 +57,7 @@ export default function ConversationInfo({ chat, messages, currentUserId, onClos
                         </div>
                     </div>
 
-                    <div className="mb-6 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-4 rounded-[1.25rem] shadow-sm">
+                    <div className="mb-6 bg-slate-50/50 dark:bg-[#1c2b38] border border-slate-200 dark:border-[#1e2d3d] p-4 rounded-[1.25rem] shadow-sm">
                         <h4 className="font-semibold mb-3 text-slate-800 dark:text-slate-200 text-sm tracking-wide">THÔNG TIN NHANH</h4>
                         <div className="text-sm text-slate-600 dark:text-slate-300 space-y-2.5">
                             <div className="flex justify-between items-center">

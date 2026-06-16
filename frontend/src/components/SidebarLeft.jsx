@@ -23,7 +23,7 @@ const NAV_ITEMS = [
  *  - isChatListOpen    : boolean — danh sách chat đang mở hay đóng
  *  - setIsChatListOpen : setter để toggle
  */
-export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen }) {
+export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsChatListOpen, hasUnreadChat, hasPendingRequests }) {
     const { logout, user } = useAuth();
     const avatarUrl = user?.avatarUrl
     || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || user?.name || 'U')}&background=0D8ABC&color=fff&rounded=true&font-size=0.45`;
@@ -43,7 +43,7 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
             className="h-full flex-shrink-0 relative z-50 w-[84px]"
             aria-label="Thanh điều hướng"
         >
-            <div className="h-full flex flex-col justify-between bg-[#0f172a] text-white px-3 py-5 shadow-[12px_0_40px_rgba(15,23,42,0.18)]">
+            <div className="h-full flex flex-col justify-between bg-[#0f172a] dark:bg-[#1c2733] text-white px-3 py-5 shadow-[12px_0_40px_rgba(15,23,42,0.18)]">
 
                 {/* ── Phần trên: toggle + avatar ── */}
                 <div className="flex flex-col items-center gap-4">
@@ -75,23 +75,32 @@ export default function SidebarLeft({ active, onSelect, isChatListOpen, setIsCha
 
                 {/* ── Phần giữa: nav items ── */}
                 <nav className="flex flex-col items-center gap-2">
-                    {NAV_ITEMS.map(({ id, icon: Icon, label }) => (
-                        <button
-                            type="button"
-                            key={id}
-                            onClick={() => handleSelect(id)}
-                            aria-label={label}
-                            aria-current={active === id ? 'page' : undefined}
-                            className={[
-                                'w-11 h-11 rounded-[1rem] flex items-center justify-center transition duration-200 border cursor-pointer focus:outline-none',
-                                active === id
-                                    ? 'bg-white text-slate-900 border-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
-                                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20',
-                            ].join(' ')}
-                        >
-                            <Icon size={21} strokeWidth={active === id ? 2.4 : 2} />
-                        </button>
-                    ))}
+                    {NAV_ITEMS.map(({ id, icon: Icon, label }) => {
+                        // Kiểm tra xem mục này có thông báo mới hay không
+                        const hasBadge = (id === 'chat' && hasUnreadChat) || (id === 'contacts' && hasPendingRequests);
+
+                        return (
+                            <button
+                                type="button"
+                                key={id}
+                                onClick={() => handleSelect(id)}
+                                aria-label={label}
+                                aria-current={active === id ? 'page' : undefined}
+                                className={[
+                                    'relative w-11 h-11 rounded-[1rem] flex items-center justify-center transition duration-200 border cursor-pointer focus:outline-none',
+                                    active === id
+                                        ? 'bg-white text-slate-900 border-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]'
+                                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20',
+                                ].join(' ')}
+                            >
+                                <Icon size={21} strokeWidth={active === id ? 2.4 : 2} />
+                                {/* Dấu chấm đỏ thông báo */}
+                                {hasBadge && (
+                                    <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-[#0f172a] dark:border-[#1c2733] rounded-full translate-x-1 -translate-y-1" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </nav>
 
                 {/* ── Phần dưới: bell, settings, logout ── */}

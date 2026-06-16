@@ -138,8 +138,6 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
         if (!isMine || !m.status) return null;
         switch (m.status) {
             case 'sending': return <Clock className="w-3 h-3 text-slate-400" />;
-            case 'sent': return <Check className="w-3 h-3 text-blue-400" title="Đã gửi" />;
-            case 'read': return <CheckCheck className="w-3 h-3 text-blue-500" title="Đã xem" />;
             case 'error': return <AlertCircle className="w-3 h-3 text-red-500" />;
             default: return null;
         }
@@ -225,7 +223,7 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
                                     type="button"
                                     onClick={(e) => handleDownloadFile(e, att.url, att.fileName)}
                                     className={`flex items-center gap-3 p-2.5 rounded-xl border shadow-sm transition-colors max-w-[250px] sm:max-w-xs cursor-pointer text-left w-full
-                                        ${isMine ? 'bg-blue-500 border-blue-600/50 hover:bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 border-slate-300/80 dark:border-slate-600 hover:bg-slate-300/70 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100'}`}
+                                        ${isMine ? 'bg-blue-500 border-blue-600/50 hover:bg-blue-600 text-white' : 'bg-slate-200 dark:bg-[#1c2b38] border-slate-300/80 dark:border-[#1e2d3d] hover:bg-slate-300/70 dark:hover:bg-[#223044] text-slate-800 dark:text-slate-100'}`}
                                 >
                                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isMine ? 'bg-blue-600/80 text-blue-100' : 'bg-white/80 text-slate-600'}`}>
                                         {getFileIcon(att.fileName)}
@@ -244,8 +242,8 @@ export default function MessageBubble({ m, isMine, currentUserId, chat }) {
                 {hasText && (
                     <div className={`px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words
                         ${isMine
-                            ? 'bg-blue-500 text-white rounded-2xl rounded-br-lg'
-                            : 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-lg'
+                            ? 'bg-[#2b5278] text-white rounded-2xl rounded-br-lg'
+                            : 'bg-slate-200 dark:bg-[#182533] text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-lg'
                         }`}
                     >
                         {m.text}

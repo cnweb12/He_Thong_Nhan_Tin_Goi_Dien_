@@ -127,16 +127,16 @@ export default function TasksPage({ currentUser }) {
   const doneTasks = tasks.filter((t) => t.status === 'done');
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-slate-100">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-slate-100 dark:bg-[#0e1621]">
       {/* Header */}
-      <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+      <header className="h-[68px] border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0 dark:border-[#1e2d3d] dark:bg-[#17212b]">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white shadow-md">
             <CheckSquare size={22} />
           </div>
           <div>
-            <h1 className="font-bold text-slate-800 text-sm">Giao việc & Công việc</h1>
-            <p className="text-xs text-slate-400">Theo dõi tiến trình công việc cá nhân của bạn</p>
+            <h1 className="font-bold text-slate-800 text-sm dark:text-slate-100">Giao việc & Công việc</h1>
+            <p className="text-xs text-slate-400 dark:text-slate-500">Theo dõi tiến trình công việc cá nhân của bạn</p>
           </div>
         </div>
 
@@ -153,42 +153,42 @@ export default function TasksPage({ currentUser }) {
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Form Add Task Modal / Collapse */}
         {showAddForm && (
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-md max-w-2xl mx-auto transition-all animate-fadeIn">
-            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-md max-w-2xl mx-auto transition-all animate-fadeIn dark:bg-[#1c2b38] dark:border-[#1e2d3d]">
+            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-100">
               <ListTodo size={18} className="text-indigo-600" />
               Tạo công việc mới
             </h2>
             <form onSubmit={handleAddTask} className="space-y-4">
               <label className="block">
-                <span className="text-xs font-bold text-slate-600">Tiêu đề công việc *</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Tiêu đề công việc *</span>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Nhập tiêu đề..."
                   required
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 dark:bg-[#17212b] dark:border-[#1e2d3d] dark:text-slate-100"
                 />
               </label>
 
               <label className="block">
-                <span className="text-xs font-bold text-slate-600">Mô tả công việc</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Mô tả công việc</span>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Mô tả cụ thể nhiệm vụ..."
                   rows={2}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 resize-none"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 resize-none dark:bg-[#17212b] dark:border-[#1e2d3d] dark:text-slate-100"
                 />
               </label>
 
               <div className="grid grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-xs font-bold text-slate-600">Độ ưu tiên</span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Độ ưu tiên</span>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 bg-white text-sm outline-none transition focus:border-indigo-500"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 bg-white text-sm outline-none transition focus:border-indigo-500 dark:bg-[#17212b] dark:border-[#1e2d3d] dark:text-slate-100"
                   >
                     <option value="low">Thấp</option>
                     <option value="medium">Trung bình</option>
@@ -197,12 +197,12 @@ export default function TasksPage({ currentUser }) {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-bold text-slate-600">Hạn chót (Due Date)</span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Hạn chót (Due Date)</span>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-indigo-500 dark:bg-[#17212b] dark:border-[#1e2d3d] dark:text-slate-100"
                   />
                 </label>
               </div>
@@ -211,7 +211,7 @@ export default function TasksPage({ currentUser }) {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs transition cursor-pointer dark:border-[#1e2d3d] dark:text-slate-300 dark:hover:bg-[#1c2b38]"
                 >
                   Hủy bỏ
                 </button>
@@ -230,13 +230,13 @@ export default function TasksPage({ currentUser }) {
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto items-start">
           
           {/* Column 1: TODO */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px]">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px] dark:bg-[#1c2b38]/50 dark:border-[#1e2d3d]">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1e2d3d]">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <h3 className="font-bold text-slate-700 text-sm">Cần làm</h3>
+                <h3 className="font-bold text-slate-700 text-sm dark:text-slate-200">Cần làm</h3>
               </div>
-              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold dark:bg-[#17212b] dark:text-slate-300">
                 {todoTasks.length}
               </span>
             </div>
@@ -246,7 +246,7 @@ export default function TasksPage({ currentUser }) {
                 <p className="text-xs text-slate-400 text-center py-8">Chưa có công việc cần làm</p>
               ) : (
                 todoTasks.map((task) => (
-                  <div key={task.id} className={`p-4 rounded-xl border-l-4 bg-white shadow-sm border border-slate-200/60 ${getPriorityColor(task.priority)} flex flex-col justify-between group hover:shadow-md transition duration-200`}>
+                  <div key={task.id} className={`p-4 rounded-xl border-l-4 bg-white shadow-sm border border-slate-200/60 ${getPriorityColor(task.priority)} flex flex-col justify-between group hover:shadow-md transition duration-200 dark:bg-[#17212b] dark:border-[#1e2d3d]`}>
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getPriorityBadge(task.priority)} uppercase`}>
@@ -260,13 +260,13 @@ export default function TasksPage({ currentUser }) {
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <h4 className="font-bold text-slate-800 text-sm mt-2 leading-tight">{task.title}</h4>
+                      <h4 className="font-bold text-slate-800 text-sm mt-2 leading-tight dark:text-slate-100">{task.title}</h4>
                       {task.description && (
-                        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-3">{task.description}</p>
+                        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-3 dark:text-slate-400">{task.description}</p>
                       )}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between dark:border-[#1e2d3d]/50">
                       <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold">
                         <Calendar size={11} />
                         <span>{task.dueDate}</span>
@@ -286,13 +286,13 @@ export default function TasksPage({ currentUser }) {
           </div>
 
           {/* Column 2: IN PROGRESS */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px]">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px] dark:bg-[#1c2b38]/50 dark:border-[#1e2d3d]">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1e2d3d]">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <h3 className="font-bold text-slate-700 text-sm">Đang thực hiện</h3>
+                <h3 className="font-bold text-slate-700 text-sm dark:text-slate-200">Đang thực hiện</h3>
               </div>
-              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold dark:bg-[#17212b] dark:text-slate-300">
                 {inProgressTasks.length}
               </span>
             </div>
@@ -302,7 +302,7 @@ export default function TasksPage({ currentUser }) {
                 <p className="text-xs text-slate-400 text-center py-8">Không có công việc đang làm</p>
               ) : (
                 inProgressTasks.map((task) => (
-                  <div key={task.id} className={`p-4 rounded-xl border-l-4 bg-white shadow-sm border border-slate-200/60 ${getPriorityColor(task.priority)} flex flex-col justify-between group hover:shadow-md transition duration-200`}>
+                  <div key={task.id} className={`p-4 rounded-xl border-l-4 bg-white shadow-sm border border-slate-200/60 ${getPriorityColor(task.priority)} flex flex-col justify-between group hover:shadow-md transition duration-200 dark:bg-[#17212b] dark:border-[#1e2d3d]`}>
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getPriorityBadge(task.priority)} uppercase`}>
@@ -316,13 +316,13 @@ export default function TasksPage({ currentUser }) {
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <h4 className="font-bold text-slate-800 text-sm mt-2 leading-tight">{task.title}</h4>
+                      <h4 className="font-bold text-slate-800 text-sm mt-2 leading-tight dark:text-slate-100">{task.title}</h4>
                       {task.description && (
-                        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-3">{task.description}</p>
+                        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-3 dark:text-slate-400">{task.description}</p>
                       )}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between dark:border-[#1e2d3d]/50">
                       <div className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold">
                         <Clock size={11} className="text-amber-500" />
                         <span>Hạn: {task.dueDate}</span>
@@ -342,13 +342,13 @@ export default function TasksPage({ currentUser }) {
           </div>
 
           {/* Column 3: DONE */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px]">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex flex-col min-h-[500px] dark:bg-[#1c2b38]/50 dark:border-[#1e2d3d]">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1e2d3d]">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <h3 className="font-bold text-slate-700 text-sm">Đã hoàn thành</h3>
+                <h3 className="font-bold text-slate-700 text-sm dark:text-slate-200">Đã hoàn thành</h3>
               </div>
-              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold dark:bg-[#17212b] dark:text-slate-300">
                 {doneTasks.length}
               </span>
             </div>
@@ -358,10 +358,10 @@ export default function TasksPage({ currentUser }) {
                 <p className="text-xs text-slate-400 text-center py-8">Chưa hoàn thành công việc nào</p>
               ) : (
                 doneTasks.map((task) => (
-                  <div key={task.id} className="p-4 rounded-xl border border-slate-200 bg-white/70 shadow-sm flex flex-col justify-between group opacity-75 hover:opacity-100 hover:bg-white transition duration-200">
+                  <div key={task.id} className="p-4 rounded-xl border border-slate-200 bg-white/70 shadow-sm flex flex-col justify-between group opacity-75 hover:opacity-100 hover:bg-white transition duration-200 dark:bg-[#17212b]/70 dark:border-[#1e2d3d] dark:hover:bg-[#17212b]">
                     <div>
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase dark:bg-[#1c2b38] dark:text-slate-400">
                           Hoàn thành
                         </span>
                         <button
@@ -372,10 +372,10 @@ export default function TasksPage({ currentUser }) {
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <h4 className="font-bold text-slate-500 text-sm mt-2 leading-tight line-through">{task.title}</h4>
+                      <h4 className="font-bold text-slate-500 text-sm mt-2 leading-tight line-through dark:text-slate-500">{task.title}</h4>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between dark:border-[#1e2d3d]/50">
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">
                         <CheckCircle2 size={9} />
                         Đã đóng

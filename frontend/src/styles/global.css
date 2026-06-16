@@ -175,8 +175,10 @@ button {
 } */
 @import "tailwindcss";
 
-/* Dark mode theo class: applyTheme() thêm class="dark" vào <html> */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Bật class-based dark mode cho Tailwind v4. 
+   Sử dụng :is(.dark *) thay vì :where để có specificity cao hơn, 
+   giúp dark:bg-xxx ghi đè được bg-white */
+@custom-variant dark (&:is(.dark *));
 
 * {
     box-sizing: border-box;
@@ -199,6 +201,13 @@ body {
     background-attachment: fixed;
     color: #ffffff;
     /* Đổi text mặc định sang trắng để dễ đọc trên nền tối */
+}
+
+/* Dark mode body: dùng màu Telegram dark thuần, bỏ qua background image */
+.dark body {
+    background-image: none;
+    background-color: #0e1621;
+    color: #e8edf3;
 }
 
 a {
@@ -233,7 +242,11 @@ button {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.3);
+    background: rgba(100, 130, 170, 0.25);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 130, 170, 0.4);
 }
 
 ::-webkit-scrollbar-track {
@@ -368,4 +381,87 @@ button {
 
 .cursor-not-allowed {
     cursor: not-allowed;
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES — Telegram-style palette
+   Đây là fallback CSS bổ sung để đảm bảo dark mode hoạt động
+   ngay cả khi Tailwind @custom-variant có specificity thấp hơn.
+   ============================================================ */
+
+/* ============================================================
+   DARK MODE FORCED OVERRIDES
+   Do Vite/Tailwind v4 có thể bị lỗi không tự động cập nhật class dark:
+   nên ta sẽ ép (force) toàn bộ màu sáng thành màu tối khi bật dark mode.
+   ============================================================ */
+
+.dark .bg-white,
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+    background-color: #17212b !important;
+    color: #e8edf3 !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-100 {
+    border-color: #334155 !important; /* Màu xám trắng nhạt phân tách theo ý người dùng */
+}
+
+.dark .text-slate-800,
+.dark .text-slate-900,
+.dark .text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-600 {
+    color: #94a3b8 !important;
+}
+
+/* Các trường hợp hover */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover {
+    background-color: #1e293b !important;
+}
+
+/* Form inputs & cards */
+.dark input,
+.dark textarea,
+.dark select {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Các thông báo lỗi/thành công */
+.dark .bg-emerald-50 {
+    background-color: rgba(6, 78, 59, 0.3) !important; /* emerald-900/30 */
+    color: #34d399 !important; /* emerald-400 */
+}
+.dark .border-emerald-200,
+.dark .border-emerald-100 {
+    border-color: #065f46 !important; /* emerald-800 */
+}
+.dark .text-emerald-700,
+.dark .text-emerald-600 {
+    color: #34d399 !important; /* emerald-400 */
+}
+
+.dark .bg-red-50 {
+    background-color: rgba(127, 29, 29, 0.3) !important; /* red-900/30 */
+    color: #f87171 !important; /* red-400 */
+}
+.dark .border-red-200,
+.dark .border-red-100 {
+    border-color: #991b1b !important; /* red-800 */
+}
+.dark .text-red-700,
+.dark .text-red-600 {
+    color: #f87171 !important; /* red-400 */
+}
+
+/* Tinh chỉnh riêng màu nền chính */
+.dark .page-main-area,
+.dark .chat-area-bg {
+    background-color: #0e1621 !important;
 }
