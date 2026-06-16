@@ -25,8 +25,6 @@ function createTwilioController(dependencies = {}) {
 
       if (to) {
         const dial = response.dial({
-          // Set a callerId for the dialed party. If the caller is a client,
-          // we can specify the From value as is or clean it up.
           callerId: req.body.From || "client:unknown",
         });
         
