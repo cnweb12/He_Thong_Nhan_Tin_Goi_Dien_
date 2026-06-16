@@ -27,6 +27,7 @@ export default function ChatSidebar({
     selectedId,
     onSelect,
     onStartConversation,
+    typingUsers = {},
 }) {
     const [query,         setQuery]         = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -172,12 +173,13 @@ export default function ChatSidebar({
                     </p>
                 )}
 
-                {filteredConversations.map((conv) => (
+                {filteredConversations.map((c) => (
                     <ChatItem
-                        key={resolveConversationId(conv)}
-                        chat={conv}
-                        active={resolveConversationId(conv) === selectedId}
+                        key={resolveConversationId(c)}
+                        chat={c}
+                        active={resolveConversationId(c) === selectedId}
                         onClick={onSelect}
+                        typingUsers={typingUsers[resolveConversationId(c)] || []}
                     />
                 ))}
             </div>

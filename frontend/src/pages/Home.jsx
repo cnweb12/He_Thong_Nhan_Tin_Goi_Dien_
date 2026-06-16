@@ -93,6 +93,7 @@ export default function Home() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isChatListOpen, setIsChatListOpen] = useState(true);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [typingUsers, setTypingUsers] = useState({});
 
   const currentUserId = user?.userId || user?.id || user?._id || '';
   const joinedRoomsRef = useRef(new Set());
@@ -274,19 +275,73 @@ export default function Home() {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleMessageRead = ({ conversationId, userId }) => {
-      if (userId !== currentUserIdRef.current) {
+    const handleMessageRead = ({ conversationId, userId, lastSeenSeq }) => {
+      if (userId === currentUserIdRef.current) {
         setConversations((prev) =>
           prev.map((c) =>
             resolveConversationId(c) === conversationId ? { ...c, unread: 0 } : c
           )
         );
+      } else if (lastSeenSeq != null) {
+        // Đối phương đã đọc -> Đánh dấu tin nhắn cuối cùng mình gửi (<= lastSeenSeq) là 'read'
+        setMessagesByConversation((prev) => {
+          const cur = prev[conversationId] || [];
+          if (cur.length === 0) return prev;
+          
+          let updated = cur.map(msg => {
+              if (msg.from === currentUserIdRef.current && msg.status === 'read') {
+                  return { ...msg, status: 'sent' }; // Xóa trạng thái read cũ
+              }
+              return msg;
+          });
+          
+          // Tìm tin nhắn cuối cùng của mình mà đối phương đã xem
+          for (let i = updated.length - 1; i >= 0; i--) {
+              if (updated[i].from === currentUserIdRef.current && updated[i].seq <= lastSeenSeq) {
+                  updated[i] = { ...updated[i], status: 'read' };
+                  break;
+              }
+          }
+          return { ...prev, [conversationId]: updated };
+        });
       }
     };
 
     socket.on('message_read', handleMessageRead);
     return () => socket.off('message_read', handleMessageRead);
   }, [socket, isConnected, setConversations]);
+
+  // ── Typing Indicator ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    
+    const handleTypingStart = ({ conversationId, userId, displayName }) => {
+      if (userId === currentUserIdRef.current) return;
+      setTypingUsers(prev => {
+         const current = prev[conversationId] || [];
+         if (current.find(u => u.userId === userId)) return prev;
+         return { ...prev, [conversationId]: [...current, { userId, displayName }] };
+      });
+    };
+    
+    const handleTypingStop = ({ conversationId, userId }) => {
+      if (userId === currentUserIdRef.current) return;
+      setTypingUsers(prev => {
+         const current = prev[conversationId] || [];
+         const updated = current.filter(u => u.userId !== userId);
+         if (updated.length === current.length) return prev;
+         return { ...prev, [conversationId]: updated };
+      });
+    };
+
+    socket.on('typing_start', handleTypingStart);
+    socket.on('typing_stop', handleTypingStop);
+    
+    return () => {
+       socket.off('typing_start', handleTypingStart);
+       socket.off('typing_stop', handleTypingStop);
+    };
+  }, [socket, isConnected]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const selected = useMemo(
@@ -528,6 +583,7 @@ export default function Home() {
                 selectedId={selectedId}
                 onSelect={handleSelectConversation}
                 onStartConversation={handleStartConversation}
+                typingUsers={typingUsers}
               />
             </div>
 
@@ -542,6 +598,7 @@ export default function Home() {
                   error={threadError}
                   onSend={handleSend}
                   sending={sendingMessage}
+                  typingUsers={typingUsers[selectedId] || []}
                   onToggleInfo={() => setIsInfoOpen((v) => !v)}
                   onBack={() => {
                     setSelectedId(null);

@@ -70,7 +70,7 @@ function AvatarCircle({ name, size = 'w-10 h-10' }) {
  *  - active : boolean — đang được chọn
  *  - onClick: (conversationId: string) => void
  */
-export default function ChatItem({ chat, active, onClick }) {
+export default function ChatItem({ chat, active, onClick, typingUsers = [] }) {
     const peer = chat?.peer || {};
     const title = chat?.displayName || peer.displayName || chat?.name || 'Cuộc trò chuyện';
     const avatar = chat?.displayAvatarUrl || chat?.avatarUrl || peer.avatarUrl || peer.displayAvatarUrl;
@@ -118,12 +118,26 @@ export default function ChatItem({ chat, active, onClick }) {
                 ].join(' ')}>
                     {title}
                 </p>
-                <p className={[
-                    'text-xs truncate mt-0.5',
-                    hasUnread ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-500 dark:text-slate-400',
-                ].join(' ')}>
-                    {lastMsg}
-                </p>
+                {/* Dòng 2: Tin nhắn cuối cùng & Đang gõ */}
+                <div className="flex items-center gap-2 text-[13px]">
+                    <div className="flex-1 truncate">
+                        {typingUsers.length > 0 ? (
+                            <span className="text-emerald-500 font-medium italic">
+                                {typingUsers[0].displayName} đang gõ...
+                            </span>
+                        ) : (
+                            <span
+                                className={[
+                                    hasUnread
+                                        ? 'text-slate-800 dark:text-slate-100 font-semibold'
+                                        : 'text-slate-500 dark:text-slate-400',
+                                ].join(' ')}
+                            >
+                                {lastMsg}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* ── Giờ + badge unread ── */}
