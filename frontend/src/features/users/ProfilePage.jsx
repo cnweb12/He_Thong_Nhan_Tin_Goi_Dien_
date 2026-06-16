@@ -381,51 +381,6 @@ export default function ProfilePage() {
                   </div>
                 </form>
 
-                <form onSubmit={saveSettings} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                      <Eye size={20} />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Cài đặt riêng tư</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Kiểm soát quyền riêng tư và trải nghiệm của bạn.</p>
-                    </div>
-                  </div>
-
-                  {/* Đã xóa Ngôn ngữ và thiết lập lại grid cho mục Giao diện hiển thị full chiều ngang */}
-                  <div className="grid gap-4 md:grid-cols-1">
-                    <label className="block">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Giao diện</span>
-                      <select
-                        name="theme"
-                        value={settingsForm.theme}
-                        onChange={(e) => {
-                          handleSettingsChange(e);
-                          // Preview theme ngay khi chọn
-                          applyTheme(e.target.value);
-                        }}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      >
-                        <option value="light">☀️ Sáng</option>
-                        <option value="dark">🌙 Tối</option>
-                      </select>
-                      <p className="mt-1 text-xs text-slate-400">Thay đổi màu nền toàn bộ ứng dụng.</p>
-                    </label>
-                  </div>
-                  {/* Đã xóa cụm Toggle switches (Cho phép người lạ nhắn tin, Xác nhận đã đọc) */}
-
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={savingSettings}
-                      className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-                    >
-                      {savingSettings ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
-                      Lưu cài đặt
-                    </button>
-                  </div>
-                </form>
-
                 <form onSubmit={changePassword} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
                   <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
