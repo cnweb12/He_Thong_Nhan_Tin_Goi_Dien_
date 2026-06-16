@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Info, MoreVertical, Phone, Search, Video } from 'lucide-react';
+import { ArrowLeft, Info, MoreVertical, Phone, Search } from 'lucide-react';
 import { useCall } from '../../calls/hooks/useCall';
 
 const isPhoneLike = (value) => typeof value === 'string' && /^[+]?\d[\d\s()-]{5,}$/.test(value.trim());
@@ -121,9 +121,6 @@ export default function ChatHeader({ chat, onToggleInfo, onBack }) {
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                 <button onClick={() => handleCallClick('audio')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400" title="Gọi thoại">
                     <Phone size={20} />
-                </button>
-                <button onClick={() => handleCallClick('video')} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c2b38] transition-colors cursor-pointer text-blue-600 dark:text-blue-400" title="Gọi video">
-                    <Video size={20} />
                 </button>
                 <button
                     onClick={onToggleInfo}
